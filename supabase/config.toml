@@ -1,0 +1,46 @@
+# Supabase Configuration for PoseProof
+# This file is used by the Supabase CLI for local development
+
+[project]
+# Replace with your actual project ID when deployed
+project_id = "your-project-id"
+
+[api]
+# Port to use for the API gateway
+port = 54321
+# Schemas to expose in the API
+schemas = ["public", "storage"]
+# Extra search path for the API
+extra_search_path = ["public"]
+# Max rows to return per request
+max_rows = 1000
+
+[db]
+# Port to use for the local database
+port = 54322
+# The database schema to use for migrations
+major_version = 15
+
+[studio]
+# Port to use for Supabase Studio
+port = 54323
+
+[auth]
+# Enable authentication
+enabled = true
+# Site URL for redirects
+site_url = "http://localhost:3000"
+# Additional redirect URLs (comma separated)
+additional_redirect_urls = ["https://poseproof.com"]
+# JWT expiry time in seconds
+jwt_expiry = 3600
+# Enable email confirmations
+enable_confirmations = false
+
+[auth.email]
+# Enable email authentication
+enable_signup = true
+# Enable email confirmation
+double_confirm_changes = true
+# Enable secure email change
+enable_confirmations = false

@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+/* ===================================
+   CSS Custom Properties
+   =================================== */
+
+:root {
+  /* Legacy variables */
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Surface Colors (Light Mode) */
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8fafc;
+
+  /* Text Colors (Light Mode) */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+
+  /* Border Colors (Light Mode) */
+  --border-default: #e2e8f0;
+
+  /* Brand Colors */
+  --brand-primary: #3B82F6;
+  --brand-secondary: #10B981;
+  --brand-accent: #F59E0B;
+
+  /* Semantic Colors */
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+
+  /* Additional UI Colors */
+  --surface-tertiary: #f1f5f9;
+  --text-tertiary: #94a3b8;
+  --border-focus: #3b82f6;
+  --gray-50: #f9fafb;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-300: #d1d5db;
+  --gray-400: #9ca3af;
+  --gray-500: #6b7280;
+  --gray-600: #4b5563;
+  --gray-700: #374151;
+  --gray-800: #1f2937;
+  --gray-900: #111827;
+}
+
+.dark {
+  /* Surface Colors (Dark Mode) */
+  --surface-primary: #0f172a;
+  --surface-secondary: #1e293b;
+  --surface-tertiary: #334155;
+
+  /* Text Colors (Dark Mode) */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+
+  /* Border Colors (Dark Mode) */
+  --border-default: #334155;
+  --border-focus: #60a5fa;
+
+  /* Semantic Colors - adjusted for dark mode */
+  --success: #34d399;
+  --error: #f87171;
+  --warning: #fbbf24;
+  --info: #60a5fa;
+
+  /* Gray scale adjusted for dark mode */
+  --gray-50: #1e293b;
+  --gray-100: #334155;
+  --gray-200: #475569;
+  --gray-300: #64748b;
+  --gray-400: #94a3b8;
+  --gray-500: #cbd5e1;
+  --gray-600: #e2e8f0;
+  --gray-700: #f1f5f9;
+  --gray-800: #f8fafc;
+  --gray-900: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+/* ===================================
+   Tailwind v4 Theme Configuration
+   =================================== */
+
+@theme inline {
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Colors - Map CSS vars to Tailwind utilities */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface-primary: var(--surface-primary);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border-default: var(--border-default);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+
+  /* Typography - Large Display Fonts */
+  --font-size-display-2xl: 4.5rem; /* 72px */
+  --font-size-display-xl: 3.75rem; /* 60px */
+  --font-size-display-lg: 3rem; /* 48px */
+
+  --line-height-display-2xl: 1.1;
+  --line-height-display-xl: 1.1;
+  --line-height-display-lg: 1.15;
+
+  --letter-spacing-display-2xl: -0.02em;
+  --letter-spacing-display-xl: -0.02em;
+  --letter-spacing-display-lg: -0.015em;
+
+  --font-weight-display-2xl: 700;
+  --font-weight-display-xl: 700;
+  --font-weight-display-lg: 600;
+
+  /* Spacing - Generous Section Padding */
+  --spacing-section: 7.5rem; /* 120px */
+  --spacing-section-lg: 10rem; /* 160px */
+  --spacing-section-xl: 12.5rem; /* 200px */
+
+  /* Animations - Apple-style Easing */
+  --ease-apple: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-apple-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Shadows - Layered, Subtle */
+  --shadow-md: 0 4px 12px -4px rgb(0 0 0 / 0.1), 0 8px 24px -8px rgb(0 0 0 / 0.08);
+  --shadow-lg: 0 8px 24px -8px rgb(0 0 0 / 0.12), 0 16px 48px -12px rgb(0 0 0 / 0.1);
+
+  /* Border Radius - Generous, Consistent */
+  --radius-xl: 1rem; /* 16px */
+  --radius-2xl: 1.25rem; /* 20px */
+  --radius-3xl: 1.5rem; /* 24px */
+}
+
+/* ===================================
+   Base Styles
+   =================================== */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
