@@ -1,0 +1,59 @@
+AlignmentControls Component Structure
+=====================================
+
+Component Tree:
+---------------
+AlignmentControls (div)
+├── Anchor Selection Section
+│   ├── Label: "Align by:"
+│   └── ToggleGroup (Radix UI)
+│       ├── Head
+│       ├── Shoulders (default)
+│       ├── Hips
+│       └── Full Body
+│
+├── Scale & Offset Section
+│   ├── Scale Slider
+│   │   ├── Label: "Scale"
+│   │   ├── Range: 0.5x - 2.0x
+│   │   └── Value Display: "1.0x"
+│   │
+│   └── Offset Controls
+│       ├── Y-axis: ↓ [value] ↑
+│       └── X-axis: ← [value] →
+│
+├── Toggle Options Section
+│   ├── Show landmarks (toggle)
+│   ├── Show grid (toggle)
+│   └── Link zoom (toggle)
+│
+└── Action Buttons Section
+    ├── Reset (secondary)
+    └── Auto-align (primary)
+
+State Connections:
+------------------
+From useEditorStore():
+- alignment (anchor, scale, offsetX, offsetY)
+- showLandmarks
+- showGrid
+- linkedZoom
+
+Actions:
+- updateAlignment()
+- toggleLandmarks()
+- toggleGrid()
+- toggleLinkedZoom()
+
+Props:
+------
+- className?: string
+- onAutoAlign?: () => void
+
+Styling:
+--------
+- Apple-style design tokens
+- Responsive (stacks on mobile)
+- Dark mode support
+- Smooth transitions (--ease-apple)
+- Generous padding and rounded corners

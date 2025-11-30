@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { DropZone } from './DropZone';
 import { LandmarkOverlay } from './LandmarkOverlay';
 import { usePoseDetection } from '@/hooks/usePoseDetection';
+import { useEditorStore } from '@/stores/editor-store';
 import type { Photo } from '@/types/editor';
 import type { Landmark } from '@/types/landmarks';
 
@@ -33,6 +34,10 @@ export function PhotoPanel({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const { detect, isDetecting, error: detectionError } = usePoseDetection();
+
+  // Subscribe to alignment settings for "After" photo
+  const alignment = useEditorStore((state) => state.alignment);
+  const isAfterPhoto = label === 'After';
 
   // Update container size on resize
   useEffect(() => {
@@ -128,6 +133,15 @@ export function PhotoPanel({
                 src={photo.dataUrl}
                 alt={`${label} photo`}
                 className="w-full h-full object-contain"
+                style={
+                  isAfterPhoto
+                    ? {
+                        transform: `scale(${alignment.scale}) translate(${alignment.offsetX}px, ${alignment.offsetY}px)`,
+                        transition: 'transform 0.1s ease-out',
+                        transformOrigin: 'center center',
+                      }
+                    : undefined
+                }
               />
 
               {/* Landmark Overlay */}
@@ -138,6 +152,15 @@ export function PhotoPanel({
                   height={displaySize.height}
                   visible={showLandmarks}
                   className="absolute inset-0"
+                  style={
+                    isAfterPhoto
+                      ? {
+                          transform: `scale(${alignment.scale}) translate(${alignment.offsetX}px, ${alignment.offsetY}px)`,
+                          transition: 'transform 0.1s ease-out',
+                          transformOrigin: 'center center',
+                        }
+                      : undefined
+                  }
                 />
               )}
 

@@ -8,6 +8,7 @@ interface LandmarkOverlayProps {
   height: number;
   visible: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
@@ -87,6 +88,7 @@ export function LandmarkOverlay({
   height,
   visible,
   className = '',
+  style,
 }: LandmarkOverlayProps) {
   // Don't render if not visible or no landmarks
   if (!visible || !landmarks || landmarks.length === 0) {
@@ -101,6 +103,7 @@ export function LandmarkOverlay({
       viewBox={`0 0 ${width} ${height}`}
       style={{
         opacity: visible ? 1 : 0,
+        ...style,
       }}
     >
       {/* Draw connection lines first (behind landmarks) */}
