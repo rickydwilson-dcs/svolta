@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PoseProof
+
+**Proof of Progress** - A fitness photo alignment SaaS that helps coaches create professional before/after comparisons using AI pose detection.
+
+## Overview
+
+PoseProof enables fitness professionals and coaches to create perfectly aligned before/after comparison photos. Using AI-powered pose detection, the app automatically identifies body landmarks and provides real-time alignment guidance.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Styling:** Tailwind CSS 4 with Apple-style design tokens
+- **UI Components:** Radix UI primitives
+- **Animation:** Framer Motion
+- **State Management:** Zustand
+- **Canvas Rendering:** Fabric.js
+- **Pose Detection:** MediaPipe Tasks Vision
+- **Auth & Database:** Supabase
+- **Payments:** Stripe (integrated)
+- **Testing:** Vitest, Playwright
+
+## Project Structure
+
+```
+app/
+├── (app)/          # Authenticated app routes
+│   ├── editor/     # Main photo editor
+│   ├── settings/   # User settings
+│   └── upgrade/    # Subscription upgrade
+├── (auth)/         # Authentication routes
+│   ├── login/      # Login page
+│   ├── signup/     # Signup page
+│   └── callback/   # OAuth callback
+├── (marketing)/    # Public marketing pages
+└── api/            # API routes
+    ├── stripe/     # Stripe webhooks & checkout
+    └── usage/      # Usage tracking
+
+components/
+├── features/       # Feature-specific components
+│   └── editor/     # Editor components (Canvas, Controls, etc.)
+├── providers/      # React context providers
+└── ui/             # Reusable UI primitives
+
+hooks/              # Custom React hooks
+├── useAlignment.ts      # Alignment calculations
+├── useCanvasExport.ts   # Canvas export functionality
+├── useKeyboardShortcuts.ts
+├── usePoseDetection.ts  # MediaPipe integration
+└── useUsageLimit.ts     # Usage limit tracking
+
+lib/
+├── canvas/         # Canvas utilities & watermark
+├── mediapipe/      # Pose detection setup
+├── stripe/         # Stripe configuration
+├── supabase/       # Supabase clients
+└── utils/          # General utilities
+
+stores/             # Zustand state stores
+├── editor-store.ts # Editor state
+└── user-store.ts   # User & subscription state
+```
+
+## Current Status
+
+| Phase | Focus | Status |
+|-------|-------|--------|
+| 1 | Foundation (Next.js, Tailwind, Supabase, UI primitives) | ✅ Complete |
+| 2 | Core Editor (DropZone, MediaPipe, Canvas, Landmarks) | ✅ Complete |
+| 3 | Alignment System (Calculations, Controls, Preview) | ✅ Complete |
+| 4 | Auth & Payments (Login/Signup, User store, Stripe) | 🔄 In Progress |
+| 5 | Usage & Export (Tracking, Export modal, Watermark) | 🔄 In Progress |
+| 6 | Landing & Polish (Hero, Features, Animations, PWA) | ⏳ Pending |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or pnpm
+- Supabase account
+- Stripe account (for payments)
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Clone the repository
+git clone https://github.com/yourusername/poseproof.git
+cd poseproof
+
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.local.example .env.local
+
+# Update .env.local with your credentials
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Start development server
+npm run dev
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Run linting
+npm run lint
 
-## Learn More
+# Run tests
+npm test
 
-To learn more about Next.js, take a look at the following resources:
+# Build for production
+npm run build
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Key Features
 
-## Deploy on Vercel
+- **AI Pose Detection** - Automatic body landmark detection using MediaPipe
+- **Real-time Alignment** - Live alignment guides and feedback
+- **Client-side Processing** - Photos never leave your device
+- **Professional Export** - High-quality image exports with optional watermark
+- **Usage Tracking** - Free tier with 5 exports/month, Pro unlimited
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Privacy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+PoseProof prioritizes user privacy:
+- All photo processing happens client-side
+- Images are never uploaded to servers
+- No photos are stored in our database
+
+## License
+
+MIT
+
+---
+
+**Domain:** poseproof.com
+**Last Updated:** 2025-11-30

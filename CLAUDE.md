@@ -6,12 +6,11 @@
 
 - **Domain:** poseproof.com
 - **Tagline:** "Proof of Progress"
-- **Stack:** Next.js 14, Tailwind CSS, Supabase, MediaPipe, Fabric.js, Stripe
+- **Stack:** Next.js 16, Tailwind CSS 4, Supabase, MediaPipe, Fabric.js, Stripe
 
 ## Project Management
 
 - **Linear Project:** https://linear.app/rickydwilson/project/poseproof-832cc9c427e2
-- **Implementation Plan:** [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
 
 ---
 
@@ -171,8 +170,8 @@ Use `/commit.changes` to commit with proper workflow.
 ## Tech Stack Reference
 
 ### Frontend
-- **Framework:** Next.js 14 (App Router)
-- **Styling:** Tailwind CSS with Apple-style design tokens
+- **Framework:** Next.js 16 (App Router)
+- **Styling:** Tailwind CSS 4 with Apple-style design tokens
 - **UI:** Radix UI primitives
 - **Animation:** Framer Motion
 - **State:** Zustand
@@ -180,7 +179,7 @@ Use `/commit.changes` to commit with proper workflow.
 
 ### Backend
 - **Auth/DB:** Supabase (PostgreSQL)
-- **Payments:** Stripe (stubbed initially)
+- **Payments:** Stripe (integrated)
 - **Pose Detection:** MediaPipe (client-side)
 
 ### Testing
@@ -215,14 +214,22 @@ Use `/commit.changes` to commit with proper workflow.
 
 ## Phase Overview
 
-| Phase | Focus | Key Deliverables |
-|-------|-------|------------------|
-| 1 | Foundation | Next.js setup, Tailwind config, Supabase, UI primitives |
-| 2 | Core Editor | DropZone, MediaPipe, Canvas, Landmarks, State |
-| 3 | Alignment | Calculation logic, Controls UI, Real-time preview |
-| 4 | Auth & Payments | Login/Signup, User store, Stubbed Stripe, Upgrade page |
-| 5 | Usage & Export | Usage tracking, Export modal, Watermark, Settings |
-| 6 | Landing & Polish | Hero, Features, Pricing, Animations, PWA, Deploy |
+| Phase | Focus | Key Deliverables | Status |
+|-------|-------|------------------|--------|
+| 1 | Foundation | Next.js setup, Tailwind config, Supabase, UI primitives | ✅ Complete |
+| 2 | Core Editor | DropZone, MediaPipe, Canvas, Landmarks, State | ✅ Complete |
+| 3 | Alignment | Calculation logic, Controls UI, Real-time preview | ✅ Complete |
+| 4 | Auth & Payments | Login/Signup, User store, Stripe, Upgrade page | 🔄 In Progress |
+| 5 | Usage & Export | Usage tracking, Export modal, Watermark, Settings | 🔄 In Progress |
+| 6 | Landing & Polish | Hero, Features, Pricing, Animations, PWA, Deploy | ⏳ Pending |
+
+## Current Scope
+
+**Source Files:** 57 TypeScript/TSX files
+**Custom Hooks:** 5 (useAlignment, useCanvasExport, useKeyboardShortcuts, usePoseDetection, useUsageLimit)
+**State Stores:** 2 (editor-store, user-store)
+**UI Components:** 8 primitives (Button, Card, Input, Modal, Slider, Toggle, UpgradePrompt, etc.)
+**API Routes:** 4 (stripe/checkout, stripe/webhook, usage/*, auth callback)
 
 ---
 

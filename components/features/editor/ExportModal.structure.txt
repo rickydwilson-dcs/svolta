@@ -1,0 +1,98 @@
+ExportModal Component Structure
+===============================
+
+Component Tree:
+├─ Dialog.Root (Radix UI)
+│  └─ Dialog.Portal
+│     ├─ Dialog.Overlay (backdrop blur)
+│     └─ Dialog.Content (main modal)
+│        ├─ Dialog.Close (X button)
+│        ├─ Dialog.Title ("Export Image")
+│        ├─ Format Selection (buttons)
+│        │  ├─ 1:1 (free, selected by default)
+│        │  ├─ 4:5 (Pro only, locked)
+│        │  └─ 9:16 (Pro only, locked)
+│        ├─ Preview Area
+│        │  ├─ Before Photo + optional label
+│        │  ├─ Divider
+│        │  ├─ After Photo + optional label
+│        │  └─ Watermark (free users only)
+│        ├─ Options
+│        │  ├─ Show Labels checkbox (always available)
+│        │  ├─ Remove Watermark (Pro only, locked)
+│        │  └─ Add Logo (Pro only, locked)
+│        ├─ Usage Indicator
+│        │  └─ "Exports remaining: X of 5" or "Unlimited"
+│        ├─ Download Button (primary)
+│        └─ Upgrade Section (free users only)
+│           ├─ Divider
+│           ├─ Text prompt
+│           └─ Upgrade button
+│
+└─ UpgradePrompt Modal (nested, shown when limits hit)
+
+State Management:
+├─ Local State
+│  ├─ selectedFormat (ExportFormat)
+│  ├─ showLabels (boolean)
+│  ├─ isExporting (boolean)
+│  ├─ showUpgradePrompt (boolean)
+│  └─ upgradeTrigger ('limit' | 'watermark' | 'format' | 'logo')
+│
+├─ useEditorStore
+│  ├─ beforePhoto (Photo | null)
+│  └─ afterPhoto (Photo | null)
+│
+├─ useUserStore
+│  └─ isPro() (boolean)
+│
+└─ useUsageLimit
+   ├─ limit (number)
+   ├─ remaining (number)
+   └─ checkAndIncrement() (async)
+
+User Interactions:
+├─ Format Selection
+│  ├─ Free user clicks locked format → Show upgrade prompt
+│  └─ Pro user / free on 1:1 → Select format
+│
+├─ Options
+│  ├─ Show Labels → Toggle checkbox (always works)
+│  ├─ Remove Watermark → Pro only, show upgrade prompt
+│  └─ Add Logo → Pro only, show upgrade prompt
+│
+└─ Download
+   ├─ Check if photos loaded
+   ├─ Call checkAndIncrement()
+   ├─ If limit reached → Show upgrade prompt
+   ├─ If allowed → Export (TODO: implement canvas logic)
+   └─ Close modal on success
+
+Props:
+- isOpen: boolean
+- onClose: () => void
+
+Key Features:
+✓ Format selection (1:1 free, 4:5/9:16 Pro)
+✓ Live preview with side-by-side photos
+✓ Watermark for free users
+✓ Usage tracking integration
+✓ Upgrade prompts at conversion points
+✓ Apple-style design with smooth animations
+✓ Dark mode support
+✓ Full accessibility (keyboard nav, ARIA)
+✓ TypeScript type safety
+✓ ESLint compliant
+
+Files:
+- ExportModal.tsx (480 lines)
+- ExportModal.README.md (documentation)
+- ExportModal.structure.txt (this file)
+- index.ts (export added)
+
+Next Steps:
+1. Integrate into EditorContent.tsx
+2. Implement canvas export logic in handleDownload()
+3. Add logo upload UI for Pro users
+4. Add unit tests
+5. Add E2E tests with Playwright

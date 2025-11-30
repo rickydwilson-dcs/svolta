@@ -1,38 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-export default function SignupPage() {
-  const [fullName, setFullName] = useState('');
+export default function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/editor';
+  const errorParam = searchParams.get('error');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Handle error from callback
+  useEffect(() => {
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
+  }, [errorParam]);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const validatePassword = (password: string) => {
-    return password.length >= 8;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
-    // Validate full name
-    if (!fullName.trim()) {
-      setError('Please enter your full name');
-      return;
-    }
 
     // Validate email
     if (!validateEmail(email)) {
@@ -41,8 +42,8 @@ export default function SignupPage() {
     }
 
     // Validate password
-    if (!validatePassword(password)) {
-      setError('Password must be at least 8 characters long');
+    if (!password) {
+      setError('Please enter your password');
       return;
     }
 
@@ -50,28 +51,25 @@ export default function SignupPage() {
 
     try {
       const supabase = createClient();
-      const { error: authError } = await supabase.auth.signUp({
+      const { error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName.trim(),
-          },
-          emailRedirectTo: `${window.location.origin}/callback`,
-        },
       });
 
       if (authError) {
-        if (authError.message.includes('already registered')) {
-          setError('An account with this email already exists. Try signing in instead.');
+        if (authError.message.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please try again.');
+        } else if (authError.message.includes('Email not confirmed')) {
+          setError('Please check your email and confirm your account before signing in.');
         } else {
           setError(authError.message);
         }
         return;
       }
 
-      // Success - show confirmation message
-      setSuccess(true);
+      // Successful login - redirect
+      router.push(redirectTo);
+      router.refresh();
     } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
@@ -79,70 +77,14 @@ export default function SignupPage() {
     }
   };
 
-  if (success) {
-    return (
-      <div className="text-center">
-        <div className="mb-6">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-green-600 dark:text-green-400"
-            >
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>
-          </div>
-          <h1 className="mb-2 text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-            Check your email
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            We&apos;ve sent a confirmation link to{' '}
-            <span className="font-medium text-zinc-900 dark:text-white">{email}</span>
-          </p>
-        </div>
-
-        <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
-          Click the link in the email to confirm your account and get started with PoseProof.
-        </p>
-
-        <div className="space-y-3">
-          <Button
-            variant="secondary"
-            className="w-full"
-            onClick={() => setSuccess(false)}
-          >
-            Use a different email
-          </Button>
-          <div className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-            Already confirmed?{' '}
-            <Link
-              href="/login"
-              className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-            >
-              Sign in
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       <div className="mb-8 text-center">
         <h1 className="mb-2 text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
-          Create your account
+          Welcome back
         </h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Get started with PoseProof today
+          Sign in to your account to continue
         </p>
       </div>
 
@@ -155,16 +97,6 @@ export default function SignupPage() {
 
         <div className="space-y-4">
           <Input
-            label="Full Name"
-            type="text"
-            placeholder="John Doe"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            autoComplete="name"
-            disabled={isLoading}
-          />
-
-          <Input
             label="Email"
             type="email"
             placeholder="you@example.com"
@@ -174,14 +106,14 @@ export default function SignupPage() {
             disabled={isLoading}
           />
 
-          <div>
+          <div className="relative">
             <Input
               label="Password"
               type={showPassword ? 'text' : 'password'}
-              placeholder="Create a strong password"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
+              autoComplete="current-password"
               disabled={isLoading}
               rightIcon={
                 <button
@@ -224,10 +156,16 @@ export default function SignupPage() {
                 </button>
               }
             />
-            <p className="mt-1.5 text-xs text-zinc-500 dark:text-zinc-400">
-              Must be at least 8 characters
-            </p>
           </div>
+        </div>
+
+        <div className="flex items-center justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
+          >
+            Forgot password?
+          </Link>
         </div>
 
         <Button
@@ -236,27 +174,16 @@ export default function SignupPage() {
           loading={isLoading}
           disabled={isLoading}
         >
-          Create Account
+          Sign In
         </Button>
 
-        <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
-          By creating an account, you agree to our{' '}
-          <Link href="/terms" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
-            Terms of Service
-          </Link>{' '}
-          and{' '}
-          <Link href="/privacy" className="underline hover:text-zinc-700 dark:hover:text-zinc-300">
-            Privacy Policy
-          </Link>
-        </p>
-
         <div className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-          Already have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link
-            href="/login"
+            href="/signup"
             className="font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
-            Sign in
+            Sign up
           </Link>
         </div>
       </form>
