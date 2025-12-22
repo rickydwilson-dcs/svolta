@@ -4,7 +4,7 @@
  * Subscribes to editor store and provides debounced alignment actions
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useCallback, useRef } from 'react';
 import { useEditorStore } from '@/stores/editor-store';
 import { calculateAlignment, canCalculateAlignment } from '@/lib/canvas/alignment';
 import type { AlignmentSettings } from '@/types/editor';
@@ -40,24 +40,18 @@ export function useAlignment(): UseAlignmentReturn {
   const alignment = useEditorStore((state) => state.alignment);
   const updateAlignment = useEditorStore((state) => state.updateAlignment);
 
-  // Local state for debouncing
-  const [isAligned, setIsAligned] = useState(false);
-  const [canAlign, setCanAlign] = useState(false);
+  // Ref for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   /**
-   * Check if auto-alignment is possible
+   * Compute canAlign from current state (no setState in effect)
    */
-  useEffect(() => {
+  const canAlign = useMemo(() => {
     const bothPhotosExist = beforePhoto && afterPhoto;
-    const bothHaveLandmarks =
-      beforePhoto?.landmarks &&
-      afterPhoto?.landmarks;
+    const bothHaveLandmarks = beforePhoto?.landmarks && afterPhoto?.landmarks;
 
     if (!bothPhotosExist || !bothHaveLandmarks) {
-      setCanAlign(false);
-      setIsAligned(false);
-      return;
+      return false;
     }
 
     // Check if landmarks are valid for current anchor
@@ -70,16 +64,19 @@ export function useAlignment(): UseAlignmentReturn {
       alignment.anchor
     );
 
-    setCanAlign(canAlignBefore && canAlignAfter);
+    return canAlignBefore && canAlignAfter;
+  }, [beforePhoto, afterPhoto, alignment.anchor]);
 
-    // Check if currently aligned (non-default values)
-    const hasAlignment =
+  /**
+   * Compute isAligned from current state (no setState in effect)
+   */
+  const isAligned = useMemo(() => {
+    return (
       alignment.scale !== 1 ||
       alignment.offsetX !== 0 ||
-      alignment.offsetY !== 0;
-
-    setIsAligned(hasAlignment);
-  }, [beforePhoto, afterPhoto, alignment]);
+      alignment.offsetY !== 0
+    );
+  }, [alignment.scale, alignment.offsetX, alignment.offsetY]);
 
   /**
    * Auto-align photos based on landmarks
@@ -106,13 +103,12 @@ export function useAlignment(): UseAlignmentReturn {
       );
 
       // Update store with calculated values
+      // isAligned is now computed via useMemo, so no need to call setIsAligned
       updateAlignment({
         scale: result.scale,
         offsetX: result.offsetX,
         offsetY: result.offsetY,
       });
-
-      setIsAligned(true);
     }, DEBOUNCE_DELAY);
   }, [beforePhoto, afterPhoto, alignment.anchor, updateAlignment]);
 
@@ -125,13 +121,12 @@ export function useAlignment(): UseAlignmentReturn {
       clearTimeout(debounceTimerRef.current);
     }
 
+    // isAligned is now computed via useMemo, so no need to call setIsAligned
     updateAlignment({
       scale: 1,
       offsetX: 0,
       offsetY: 0,
     });
-
-    setIsAligned(false);
   }, [updateAlignment]);
 
   /**
