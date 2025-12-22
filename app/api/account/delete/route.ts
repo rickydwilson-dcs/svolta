@@ -3,11 +3,20 @@ import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { stripe } from '@/lib/stripe/server';
 
-// Create admin client for deletion operations (bypasses RLS)
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+/**
+ * Create admin client for deletion operations (bypasses RLS)
+ * Lazily initialized to avoid build-time errors when env vars aren't set
+ */
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) {
+    throw new Error('Supabase admin credentials not configured');
+  }
+
+  return createAdminClient(url, key);
+}
 
 /**
  * DELETE /api/account/delete
@@ -28,6 +37,7 @@ export async function DELETE() {
     }
 
     const userId = user.id;
+    const supabaseAdmin = getSupabaseAdmin();
 
     // Get user's Stripe customer ID before deletion
     const { data: profile } = await supabaseAdmin
