@@ -205,7 +205,7 @@ function ProcessingState() {
 function PhotoPreview({ photo, onRemove }: { photo: Photo; onRemove: (e: React.MouseEvent) => void }) {
   return (
     <div className="relative w-full h-full min-h-[400px] group">
-      {/* Image */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={photo.dataUrl}
         alt="Uploaded photo"

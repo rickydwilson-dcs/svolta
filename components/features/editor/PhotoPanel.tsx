@@ -129,6 +129,7 @@ export function PhotoPanel({
                 height: displaySize.height,
               }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={photo.dataUrl}
                 alt={`${label} photo`}

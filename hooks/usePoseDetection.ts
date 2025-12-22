@@ -9,7 +9,6 @@ import {
   initializePoseDetector,
   detectPoseFromDataUrl,
   isPoseDetectorReady,
-  closePoseDetector,
 } from '@/lib/mediapipe/pose-detector';
 import type { PoseResult, Landmark } from '@/types/landmarks';
 import { PoseDetectionError, PoseDetectionErrorType } from '@/types/landmarks';

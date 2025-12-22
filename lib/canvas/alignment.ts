@@ -93,13 +93,9 @@ function calculateNormalizedCenter(
  * 3. Shoulder to hip on same side (alternative for side poses)
  *
  * @param landmarks - Array of all pose landmarks (normalized 0-1)
- * @param anchor - Type of anchor point (used to determine measurement strategy)
  * @returns Normalized scale reference (ratio within image), or null if cannot calculate
  */
-function calculateNormalizedScaleReference(
-  landmarks: Landmark[],
-  _anchor: AnchorType
-): number | null {
+function calculateNormalizedScaleReference(landmarks: Landmark[]): number | null {
   const nose = landmarks[0];
   const leftHip = landmarks[23];
   const rightHip = landmarks[24];
@@ -208,8 +204,8 @@ export function calculateAlignment(
   }
 
   // Calculate normalized scale references for both photos
-  const scaleRef1 = calculateNormalizedScaleReference(landmarks1, anchor);
-  const scaleRef2 = calculateNormalizedScaleReference(landmarks2, anchor);
+  const scaleRef1 = calculateNormalizedScaleReference(landmarks1);
+  const scaleRef2 = calculateNormalizedScaleReference(landmarks2);
 
   let scale = 1;
   if (scaleRef1 && scaleRef2 && scaleRef2 > 0) {

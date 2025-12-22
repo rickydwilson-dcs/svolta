@@ -32,7 +32,6 @@ export async function GET() {
       .single();
 
     const isPro = subscription?.tier === 'pro' && subscription?.status === 'active';
-    const limit = isPro ? Infinity : FREE_EXPORT_LIMIT;
 
     // Fetch current month's usage
     const { data: usage, error: usageError } = await supabase

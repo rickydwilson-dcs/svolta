@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { stripe } from '@/lib/stripe/server';
+import { getStripe } from '@/lib/stripe/server';
 
 /**
  * Create admin client for deletion operations (bypasses RLS)
@@ -50,14 +50,14 @@ export async function DELETE() {
     if (profile?.stripe_customer_id) {
       try {
         // List all subscriptions for this customer
-        const subscriptions = await stripe.subscriptions.list({
+        const subscriptions = await getStripe().subscriptions.list({
           customer: profile.stripe_customer_id,
           status: 'active',
         });
 
         // Cancel each subscription
         for (const subscription of subscriptions.data) {
-          await stripe.subscriptions.cancel(subscription.id);
+          await getStripe().subscriptions.cancel(subscription.id);
         }
 
         // Optionally delete the Stripe customer

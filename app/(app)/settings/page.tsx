@@ -148,8 +148,9 @@ export default function SettingsPage() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      // Get public URL (unused until logo_url field is added to schema)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { data: { publicUrl: _publicUrl } } = supabase.storage
         .from('logos')
         .getPublicUrl(filePath);
 
@@ -158,7 +159,7 @@ export default function SettingsPage() {
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          // logo_url: publicUrl, // Uncomment when field is added to schema
+          // logo_url: _publicUrl, // Uncomment when field is added to schema
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -512,6 +513,7 @@ export default function SettingsPage() {
                     {logo ? (
                       <div className="flex flex-col items-center gap-4">
                         <div className="relative w-32 h-32 rounded-xl overflow-hidden bg-[var(--gray-100)] dark:bg-[var(--gray-800)] border border-[var(--border-default)]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={logo}
                             alt="Logo preview"

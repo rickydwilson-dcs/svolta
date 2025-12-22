@@ -443,7 +443,6 @@ function calculateExportAlignment(
 
   // Calculate offset to align anchors
   // The after image will be scaled around its center, then offset
-  const afterFit = calculateCoverFit(afterImgWidth, afterImgHeight, targetWidth, targetHeight);
   const afterCenterX = targetWidth / 2;
   const afterCenterY = targetHeight / 2;
 

@@ -293,6 +293,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                   <div className="flex h-full w-full">
                     {/* Before Photo */}
                     <div className="relative flex-1 flex items-center justify-center p-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={beforePhoto.dataUrl}
                         alt="Before"
@@ -310,6 +311,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
 
                     {/* After Photo */}
                     <div className="relative flex-1 flex items-center justify-center p-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={afterPhoto.dataUrl}
                         alt="After"

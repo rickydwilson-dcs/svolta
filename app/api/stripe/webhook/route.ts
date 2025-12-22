@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { constructWebhookEvent } from '@/lib/stripe/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-// Create admin client for webhook operations (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+let supabaseAdminInstance: SupabaseClient | null = null;
+
+/**
+ * Get Supabase admin client (lazy initialization)
+ * This prevents build errors when env vars aren't set during static analysis
+ */
+function getSupabaseAdmin(): SupabaseClient {
+  if (!supabaseAdminInstance) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!url || !key) {
+      throw new Error('Supabase admin credentials not configured');
+    }
+
+    supabaseAdminInstance = createClient(url, key);
+  }
+  return supabaseAdminInstance;
+}
 
 /**
  * POST /api/stripe/webhook
@@ -102,7 +116,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log('Checkout completed for user:', userId);
 
   // Upsert subscription record
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .upsert({
       user_id: userId,
@@ -129,7 +143,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   if (!userId) {
     // Try to find user by customer ID
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await getSupabaseAdmin()
       .from('profiles')
       .select('id')
       .eq('stripe_customer_id', subscription.customer as string)
@@ -174,7 +188,7 @@ async function updateSubscriptionStatus(userId: string, subscription: Stripe.Sub
     tier = 'team';
   }
 
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .upsert({
       user_id: userId,
@@ -204,7 +218,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
 
   // Find user by customer ID
-  const { data: profile } = await supabaseAdmin
+  const { data: profile } = await getSupabaseAdmin()
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', customerId)
@@ -218,7 +232,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log('Subscription deleted for user:', profile.id);
 
   // Update subscription to canceled/free
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .update({
       tier: 'free',
@@ -245,7 +259,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   console.log('Payment failed for subscription:', subscriptionId);
 
   // Find user by customer ID
-  const { data: profile } = await supabaseAdmin
+  const { data: profile } = await getSupabaseAdmin()
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', customerId)
@@ -257,7 +271,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   }
 
   // Update subscription status
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .update({
       status: 'past_due',
@@ -281,7 +295,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (!subscriptionId) return;
 
   // Find user by customer ID
-  const { data: profile } = await supabaseAdmin
+  const { data: profile } = await getSupabaseAdmin()
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', customerId)
@@ -290,7 +304,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (!profile) return;
 
   // Ensure subscription is active
-  const { error } = await supabaseAdmin
+  const { error } = await getSupabaseAdmin()
     .from('subscriptions')
     .update({
       status: 'active',

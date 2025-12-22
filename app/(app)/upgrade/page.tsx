@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { PLANS, formatPrice, calculateYearlySavings } from '@/lib/stripe/plans';
 import { useUserStore } from '@/stores/user-store';
 
@@ -62,11 +61,6 @@ export default function UpgradePage() {
   };
 
   const plans = Object.values(PLANS);
-
-  const billingOptions = [
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'yearly', label: `Yearly (-${yearlySavings}%)` },
-  ];
 
   return (
     <div className="min-h-dvh bg-canvas">
