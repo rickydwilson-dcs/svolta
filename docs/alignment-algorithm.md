@@ -1,5 +1,7 @@
 # Alignment Algorithm Documentation
 
+> **Note:** This document describes the **preview alignment** algorithm (CSS transforms). For the **export alignment** algorithm (canvas rendering with the four-phase approach), see [/docs/features/alignment-export.md](features/alignment-export.md) which is more comprehensive and up-to-date.
+
 ## Overview
 
 PoseProof uses MediaPipe Pose detection to automatically align "before" and "after" fitness photos. The alignment ensures that the subject's body position matches between both photos, making progress comparisons more accurate and professional.
@@ -18,13 +20,13 @@ There are two coordinate systems in play:
 
 MediaPipe Pose detection returns 33 landmarks. Key landmarks used for alignment:
 
-| Index | Landmark | Usage |
-|-------|----------|-------|
-| 0 | Nose | Head anchor, vertical reference |
-| 11 | Left Shoulder | Shoulder anchor, torso reference |
-| 12 | Right Shoulder | Shoulder anchor, torso reference |
-| 23 | Left Hip | Hip anchor, body height reference |
-| 24 | Right Hip | Hip anchor, body height reference |
+| Index | Landmark       | Usage                             |
+| ----- | -------------- | --------------------------------- |
+| 0     | Nose           | Head anchor, vertical reference   |
+| 11    | Left Shoulder  | Shoulder anchor, torso reference  |
+| 12    | Right Shoulder | Shoulder anchor, torso reference  |
+| 23    | Left Hip       | Hip anchor, body height reference |
+| 24    | Right Hip      | Hip anchor, body height reference |
 
 Each landmark has a `visibility` score (0-1). We use a threshold of **0.5** to determine if a landmark is reliable.
 
@@ -44,7 +46,13 @@ Users can select different anchor points for alignment:
 Since export uses cover-fit (image fills the target area, cropping as needed), we must transform normalized landmarks to pixel positions in the cropped view:
 
 ```typescript
-function transformLandmarkToExport(landmark, imgWidth, imgHeight, targetWidth, targetHeight) {
+function transformLandmarkToExport(
+  landmark,
+  imgWidth,
+  imgHeight,
+  targetWidth,
+  targetHeight,
+) {
   const fit = calculateCoverFit(imgWidth, imgHeight, targetWidth, targetHeight);
   return {
     x: fit.drawX + landmark.x * fit.drawWidth,
@@ -58,11 +66,22 @@ function transformLandmarkToExport(landmark, imgWidth, imgHeight, targetWidth, t
 Find the center point of the selected anchor landmarks in both images (in export pixel coordinates):
 
 ```typescript
-const beforeAnchor = getVisibleAnchorCenter(beforeLandmarks, indices, beforeImgWidth, beforeImgHeight);
-const afterAnchor = getVisibleAnchorCenter(afterLandmarks, indices, afterImgWidth, afterImgHeight);
+const beforeAnchor = getVisibleAnchorCenter(
+  beforeLandmarks,
+  indices,
+  beforeImgWidth,
+  beforeImgHeight,
+);
+const afterAnchor = getVisibleAnchorCenter(
+  afterLandmarks,
+  indices,
+  afterImgWidth,
+  afterImgHeight,
+);
 ```
 
 If primary anchor landmarks aren't visible, fall back to:
+
 1. Nose (always good for vertical alignment)
 2. Any visible shoulder
 
@@ -71,16 +90,19 @@ If primary anchor landmarks aren't visible, fall back to:
 Determine how much to scale the "after" image so body sizes match. Multiple strategies handle different pose types:
 
 **Strategy 1: Nose to Hip Center (Front Poses)**
+
 - Best accuracy for front-facing poses
 - Requires: nose + both hips visible in both images
 - Measures vertical distance from nose to hip center
 
 **Strategy 2: Nose to Single Hip (Side Poses)**
+
 - Fallback for side poses where one hip is occluded
 - Requires: nose + at least one hip visible in both images
 - Uses whichever hip is visible
 
 **Strategy 3: Shoulder to Hip Same Side (Side Poses)**
+
 - Alternative for side poses
 - Requires: shoulder + hip on same side visible in both images
 - Measures torso height
@@ -104,6 +126,7 @@ const offsetY = beforeY - scaledAfterY;
 ### Step 5: Apply Transform
 
 The "after" image is drawn with:
+
 1. Cover-fit to fill the target area
 2. Scale applied around center
 3. Pixel offset applied
@@ -119,8 +142,9 @@ ctx.drawImage(img, drawX, drawY, scaledWidth, scaledHeight);
 ### Preview (PhotoPanel.tsx)
 
 Uses CSS transforms with normalized values:
+
 ```typescript
-transform: `scale(${alignment.scale}) translate(${alignment.offsetX * 100}%, ${alignment.offsetY * 100}%)`
+transform: `scale(${alignment.scale}) translate(${alignment.offsetX * 100}%, ${alignment.offsetY * 100}%)`;
 ```
 
 Preview uses `object-contain` (no cropping).
@@ -128,6 +152,7 @@ Preview uses `object-contain` (no cropping).
 ### Export (export.ts)
 
 Uses canvas drawing with pixel values:
+
 - Cover-fit cropping applied
 - Alignment recalculated in export coordinates
 - Pixel-based offsets
@@ -177,6 +202,7 @@ Console logs are available during export:
 ```
 
 Use these logs to diagnose alignment issues:
+
 - Check if landmarks have sufficient visibility (≥0.5)
 - Verify which scale strategy is being used
 - Confirm reasonable scale and offset values

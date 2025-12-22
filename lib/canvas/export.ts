@@ -1,6 +1,35 @@
 /**
  * Canvas Export Functionality
  * Handles exporting the canvas with aligned photos to different formats
+ *
+ * ## ALIGNMENT ALGORITHM (Three-Phase Separated Concerns)
+ *
+ * ### Phase 1: Assess Scaling Required
+ * - Calculate bodyScale = beforeBodyHeight / afterBodyHeight
+ * - Clamp to 0.8-1.25 for natural results
+ *
+ * ### Phase 2: Assess Headroom Constraint
+ * - Calculate cover-fit dimensions for both images (before at 1x, after at bodyScale)
+ * - For each scaled image, calculate where head would be if aligned to top:
+ *   headPixelY = headY * scaledImageHeight
+ * - Find image with SMALLEST headPixelY (least headroom available)
+ * - Apply min/max bounds: 5% to 20% of target height
+ *
+ * ### Phase 3: Position Both Images
+ * - Position images so heads align at the constrained position
+ * - Smart clamp that prioritizes head visibility over filling bottom
+ *
+ * ## KEY INSIGHT
+ * Previous approach used minHeadY (normalized) which didn't account for
+ * different scaled heights. The new approach calculates actual pixel
+ * positions after scaling, ensuring both images can satisfy the constraint.
+ *
+ * ## MATH EXAMPLE
+ * - Before image: head at Y=0.10, cover-fit height=1200px → head at 120px
+ * - After image: head at Y=0.15, cover-fit height=1000px → head at 150px
+ * - constraintHeadPixelY = min(120, 150) = 120px
+ * - Clamped to bounds: max(54, min(216, 120)) = 120px (within 5-20% of 1080)
+ * - Both images positioned so heads are at 120px from top
  */
 
 import { addWatermark, type WatermarkOptions } from './watermark';
@@ -80,8 +109,29 @@ function calculateDimensions(
 }
 
 /**
- * Calculate how an image would be drawn to cover a target area
- * Returns the draw parameters for cover-fit behavior
+ * Get aspect ratio (width/height) for a given format
+ */
+function getAspectRatio(format: ExportFormat): number {
+  switch (format) {
+    case '1:1':
+      return 1.0;
+    case '4:5':
+      return 0.8;
+    case '9:16':
+      return 9 / 16; // 0.5625
+    default:
+      return 1.0;
+  }
+}
+
+/**
+ * Calculate how an image would be drawn to cover a target area (simple cover-fit)
+ * Returns the draw parameters for cover-fit behavior with center crop
+ *
+ * @param imgWidth - Original image width
+ * @param imgHeight - Original image height
+ * @param targetWidth - Target area width
+ * @param targetHeight - Target area height
  */
 function calculateCoverFit(
   imgWidth: number,
@@ -98,45 +148,257 @@ function calculateCoverFit(
   let drawY: number;
 
   if (imgAspect > targetAspect) {
-    // Image is wider - fit to height (crop sides)
+    // Image is WIDER than target - fit to height, crop sides
     drawHeight = targetHeight;
     drawWidth = targetHeight * imgAspect;
     drawX = (targetWidth - drawWidth) / 2;
     drawY = 0;
   } else {
-    // Image is taller - fit to width (crop top/bottom)
+    // Image is TALLER than target - fit to width, crop top/bottom
     drawWidth = targetWidth;
     drawHeight = targetWidth / imgAspect;
     drawX = 0;
-    drawY = (targetHeight - drawHeight) / 2;
+    drawY = (targetHeight - drawHeight) / 2; // center vertically
   }
 
   return { drawX, drawY, drawWidth, drawHeight };
 }
 
 /**
- * Draw a photo on the canvas with proper scaling and positioning
+ * Get normalized body height from landmarks (nose to hip center)
+ * Returns value in 0-1 range representing proportion of image height
+ */
+function getBodyHeight(landmarks: Landmark[] | undefined): number {
+  if (!landmarks || landmarks.length < 33) return 0.5; // default
+
+  const VISIBILITY_THRESHOLD = 0.5;
+  const nose = landmarks[0];
+  const leftHip = landmarks[23];
+  const rightHip = landmarks[24];
+
+  // Check if we have visible landmarks
+  const hasNose = (nose?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+  const hasLeftHip = (leftHip?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+  const hasRightHip = (rightHip?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+
+  if (!hasNose) return 0.5;
+
+  let hipY: number;
+  if (hasLeftHip && hasRightHip) {
+    hipY = (leftHip.y + rightHip.y) / 2;
+  } else if (hasLeftHip) {
+    hipY = leftHip.y;
+  } else if (hasRightHip) {
+    hipY = rightHip.y;
+  } else {
+    return 0.5; // no hip visible
+  }
+
+  return Math.abs(hipY - nose.y);
+}
+
+/**
+ * Clamp drawY to ensure head is visible while avoiding white space
+ * Priority: 1) Head visible, 2) No white space at top, 3) No white space at bottom
+ */
+function clampForHeadVisibility(
+  drawY: number,
+  drawHeight: number,
+  targetHeight: number,
+  headY: number
+): number {
+  const headPixelInImage = headY * drawHeight;
+  const headPixelOnCanvas = drawY + headPixelInImage;
+
+  // Ensure head is at least 5% from top (visible with padding)
+  const minHeadOnCanvas = targetHeight * 0.05;
+  if (headPixelOnCanvas < minHeadOnCanvas) {
+    drawY = minHeadOnCanvas - headPixelInImage;
+  }
+
+  // Ensure no white space at top (drawY <= 0)
+  drawY = Math.min(0, drawY);
+
+  // Note: We do NOT clamp for bottom white space here.
+  // The export function will crop to the shortest image's bottom,
+  // then trim width to maintain aspect ratio. This preserves head alignment.
+
+  return drawY;
+}
+
+/**
+ * Calculate aligned draw parameters for BOTH images together
+ *
+ * THREE-PHASE APPROACH (Separated Concerns):
+ *
+ * Phase 1: Assess scaling required
+ * - Calculate body scale to match body heights
+ *
+ * Phase 2: Assess headroom constraint
+ * - Calculate cover-fit dimensions at final scales
+ * - Determine where heads would be if images aligned to top
+ * - Find the image with LEAST headroom (smallest head pixel position)
+ * - Apply min/max bounds for target head position
+ *
+ * Phase 3: Position both images
+ * - Position so heads align at the constrained position
+ * - Smart clamp that prioritizes head visibility
+ */
+function calculateAlignedDrawParams(
+  beforeImg: { width: number; height: number },
+  afterImg: { width: number; height: number },
+  beforeLandmarks: Landmark[] | undefined,
+  afterLandmarks: Landmark[] | undefined,
+  targetWidth: number,
+  targetHeight: number
+): {
+  before: { drawX: number; drawY: number; drawWidth: number; drawHeight: number };
+  after: { drawX: number; drawY: number; drawWidth: number; drawHeight: number };
+} {
+  const VISIBILITY_THRESHOLD = 0.5;
+
+  // Get head Y positions (normalized 0-1, where 0 = top of image)
+  const beforeNose = beforeLandmarks?.[0];
+  const afterNose = afterLandmarks?.[0];
+  const beforeHeadY = (beforeNose?.visibility ?? 0) >= VISIBILITY_THRESHOLD ? beforeNose!.y : 0.1;
+  const afterHeadY = (afterNose?.visibility ?? 0) >= VISIBILITY_THRESHOLD ? afterNose!.y : 0.1;
+
+  // ========================================
+  // PHASE 1: Assess scaling required
+  // ========================================
+  const beforeBodyH = getBodyHeight(beforeLandmarks);
+  const afterBodyH = getBodyHeight(afterLandmarks);
+
+  // Calculate scale: make after body match before body height
+  // Use tighter clamp (0.8 - 1.25) for more natural results
+  let bodyScale = afterBodyH > 0 ? beforeBodyH / afterBodyH : 1;
+  bodyScale = Math.max(0.8, Math.min(1.25, bodyScale));
+
+  console.log('[Phase1] Body heights:', { beforeBodyH, afterBodyH, bodyScale });
+
+  // ========================================
+  // PHASE 2: Assess headroom constraint
+  // ========================================
+
+  // Calculate cover-fit dimensions at final scales
+  const beforeFit = calculateCoverFit(beforeImg.width, beforeImg.height, targetWidth, targetHeight);
+  const afterFit = calculateCoverFit(afterImg.width, afterImg.height, targetWidth, targetHeight);
+
+  // ========================================
+  // PHASE 1.5: Normalize overflow between images
+  // ========================================
+  // Ensure both images have similar flexibility for alignment
+  // This fixes the issue where a square image has no overflow when
+  // exported to square format, while a portrait image has plenty
+  const beforeOverflow = beforeFit.drawHeight / targetHeight;
+  const afterOverflow = afterFit.drawHeight / targetHeight;
+
+  // Target overflow is the max of both images, with a minimum of 15%
+  const targetOverflow = Math.max(beforeOverflow, afterOverflow, 1.15);
+
+  let beforeScale = 1;
+  let afterScale = 1;
+
+  if (beforeOverflow < targetOverflow) {
+    beforeScale = targetOverflow / beforeOverflow;
+  }
+  if (afterOverflow < targetOverflow) {
+    afterScale = targetOverflow / afterOverflow;
+  }
+
+  console.log('[Phase1.5] Overflow normalization:', {
+    beforeOverflow,
+    afterOverflow,
+    targetOverflow,
+    beforeScale,
+    afterScale
+  });
+
+  // Apply overflow normalization to before image
+  const beforeScaledWidth = beforeFit.drawWidth * beforeScale;
+  const beforeScaledHeight = beforeFit.drawHeight * beforeScale;
+
+  // Apply overflow normalization + body scale to after image
+  const afterScaledWidth = afterFit.drawWidth * afterScale * bodyScale;
+  const afterScaledHeight = afterFit.drawHeight * afterScale * bodyScale;
+
+  // Where would heads be if images are positioned with top at canvas top (drawY=0)?
+  const beforeHeadAtTop = beforeHeadY * beforeScaledHeight;
+  const afterHeadAtTop = afterHeadY * afterScaledHeight;
+
+  console.log('[Phase2] Head positions if aligned to top:', { beforeHeadAtTop, afterHeadAtTop });
+
+  // The image with SMALLER headAtTop has LESS headroom available
+  // Use this as our constraint - both heads will align here
+  const constraintHeadPixelY = Math.min(beforeHeadAtTop, afterHeadAtTop);
+
+  // Apply min/max bounds (5% to 20% of target height)
+  const minHeadY = targetHeight * 0.05;
+  const maxHeadY = targetHeight * 0.20;
+  const targetHeadPixelY = Math.max(minHeadY, Math.min(maxHeadY, constraintHeadPixelY));
+
+  console.log('[Phase2] Head constraint:', {
+    constraintHeadPixelY,
+    minHeadY,
+    maxHeadY,
+    targetHeadPixelY
+  });
+
+  // ========================================
+  // PHASE 3: Position both images
+  // ========================================
+
+  // Position images so their heads align at targetHeadPixelY
+  let beforeDrawY = targetHeadPixelY - beforeHeadAtTop;
+  let afterDrawY = targetHeadPixelY - afterHeadAtTop;
+
+  // Apply smart clamping that prioritizes head visibility
+  beforeDrawY = clampForHeadVisibility(beforeDrawY, beforeScaledHeight, targetHeight, beforeHeadY);
+  afterDrawY = clampForHeadVisibility(afterDrawY, afterScaledHeight, targetHeight, afterHeadY);
+
+  // Center horizontally
+  const beforeDrawX = (targetWidth - beforeScaledWidth) / 2;
+  const afterDrawX = (targetWidth - afterScaledWidth) / 2;
+
+  console.log('[Phase3] Final positions:', {
+    before: { drawX: beforeDrawX, drawY: beforeDrawY, drawWidth: beforeScaledWidth, drawHeight: beforeScaledHeight },
+    after: { drawX: afterDrawX, drawY: afterDrawY, drawWidth: afterScaledWidth, drawHeight: afterScaledHeight }
+  });
+
+  return {
+    before: {
+      drawX: beforeDrawX,
+      drawY: beforeDrawY,
+      drawWidth: beforeScaledWidth,
+      drawHeight: beforeScaledHeight,
+    },
+    after: {
+      drawX: afterDrawX,
+      drawY: afterDrawY,
+      drawWidth: afterScaledWidth,
+      drawHeight: afterScaledHeight,
+    },
+  };
+}
+
+/**
+ * Draw a photo on the canvas with specific draw parameters
  *
  * @param ctx - Canvas rendering context
  * @param img - Image element to draw
- * @param x - X position (left edge)
- * @param y - Y position (top edge)
- * @param width - Target width
- * @param height - Target height
+ * @param x - X offset for the target area (e.g., halfWidth for right side)
+ * @param y - Y offset for the target area
+ * @param params - Pre-calculated draw parameters
  */
-function drawPhoto(
+function drawPhotoWithParams(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
   x: number,
   y: number,
-  width: number,
-  height: number
+  params: { drawX: number; drawY: number; drawWidth: number; drawHeight: number }
 ): void {
   ctx.save();
-
-  const fit = calculateCoverFit(img.width, img.height, width, height);
-  ctx.drawImage(img, x + fit.drawX, y + fit.drawY, fit.drawWidth, fit.drawHeight);
-
+  ctx.drawImage(img, x + params.drawX, y + params.drawY, params.drawWidth, params.drawHeight);
   ctx.restore();
 }
 
@@ -184,333 +446,6 @@ function drawLabels(
 }
 
 /**
- * Transform a landmark from original image coordinates to cover-fit export coordinates
- *
- * @param landmark - Landmark with x, y in 0-1 range (original image)
- * @param imgWidth - Original image width
- * @param imgHeight - Original image height
- * @param targetWidth - Export target width
- * @param targetHeight - Export target height
- * @returns Landmark position in pixels within the target area
- */
-function transformLandmarkToExport(
-  landmark: { x: number; y: number },
-  imgWidth: number,
-  imgHeight: number,
-  targetWidth: number,
-  targetHeight: number
-): { x: number; y: number } {
-  const fit = calculateCoverFit(imgWidth, imgHeight, targetWidth, targetHeight);
-
-  // The landmark at (lm.x, lm.y) in original image
-  // appears at (fit.drawX + lm.x * fit.drawWidth, fit.drawY + lm.y * fit.drawHeight) in the drawn image
-  return {
-    x: fit.drawX + landmark.x * fit.drawWidth,
-    y: fit.drawY + landmark.y * fit.drawHeight,
-  };
-}
-
-/**
- * Calculate alignment for export based on where landmarks appear in cover-fit view
- *
- * This calculates scale and offset to align the after photo's anchor points
- * with the before photo's anchor points in the final export.
- */
-function calculateExportAlignment(
-  beforeLandmarks: Landmark[] | undefined,
-  afterLandmarks: Landmark[] | undefined,
-  beforeImgWidth: number,
-  beforeImgHeight: number,
-  afterImgWidth: number,
-  afterImgHeight: number,
-  targetWidth: number,
-  targetHeight: number,
-  anchor: 'head' | 'shoulders' | 'hips' | 'full'
-): { scale: number; offsetX: number; offsetY: number } {
-  // Default: no alignment
-  const defaultResult = { scale: 1, offsetX: 0, offsetY: 0 };
-
-  if (!beforeLandmarks || !afterLandmarks || beforeLandmarks.length < 33 || afterLandmarks.length < 33) {
-    console.log('[Alignment] No landmarks available');
-    return defaultResult;
-  }
-
-  const VISIBILITY_THRESHOLD = 0.5;
-
-  // Log visibility of key landmarks for debugging
-  console.log('[Alignment] Before landmarks visibility:', {
-    nose: beforeLandmarks[0]?.visibility?.toFixed(2),
-    leftShoulder: beforeLandmarks[11]?.visibility?.toFixed(2),
-    rightShoulder: beforeLandmarks[12]?.visibility?.toFixed(2),
-    leftHip: beforeLandmarks[23]?.visibility?.toFixed(2),
-    rightHip: beforeLandmarks[24]?.visibility?.toFixed(2),
-  });
-  console.log('[Alignment] After landmarks visibility:', {
-    nose: afterLandmarks[0]?.visibility?.toFixed(2),
-    leftShoulder: afterLandmarks[11]?.visibility?.toFixed(2),
-    rightShoulder: afterLandmarks[12]?.visibility?.toFixed(2),
-    leftHip: afterLandmarks[23]?.visibility?.toFixed(2),
-    rightHip: afterLandmarks[24]?.visibility?.toFixed(2),
-  });
-
-  // Anchor indices - include fallbacks for when primary anchors aren't visible
-  const anchorIndices: Record<string, number[]> = {
-    head: [0],
-    shoulders: [11, 12],
-    hips: [23, 24],
-    full: [0, 23, 24],
-  };
-
-  // For anchor position calculation, use any visible landmarks from the set
-  // But also fall back to other visible landmarks if the requested ones aren't available
-  const getVisibleAnchorCenter = (
-    landmarks: Landmark[],
-    primaryIndices: number[],
-    imgWidth: number,
-    imgHeight: number
-  ): { x: number; y: number } | null => {
-    // First, try primary indices
-    let x = 0, y = 0, count = 0;
-    for (const idx of primaryIndices) {
-      const lm = landmarks[idx];
-      if (lm && lm.visibility >= VISIBILITY_THRESHOLD) {
-        const pos = transformLandmarkToExport(lm, imgWidth, imgHeight, targetWidth, targetHeight);
-        x += pos.x;
-        y += pos.y;
-        count++;
-      }
-    }
-
-    if (count > 0) {
-      return { x: x / count, y: y / count };
-    }
-
-    // Fallback: try nose (always good for vertical alignment)
-    if (landmarks[0]?.visibility >= VISIBILITY_THRESHOLD) {
-      const pos = transformLandmarkToExport(landmarks[0], imgWidth, imgHeight, targetWidth, targetHeight);
-      return pos;
-    }
-
-    // Fallback: try any visible shoulder
-    for (const idx of [11, 12]) {
-      if (landmarks[idx]?.visibility >= VISIBILITY_THRESHOLD) {
-        const pos = transformLandmarkToExport(landmarks[idx], imgWidth, imgHeight, targetWidth, targetHeight);
-        return pos;
-      }
-    }
-
-    return null;
-  };
-
-  const indices = anchorIndices[anchor];
-
-  const beforeAnchor = getVisibleAnchorCenter(beforeLandmarks, indices, beforeImgWidth, beforeImgHeight);
-  const afterAnchor = getVisibleAnchorCenter(afterLandmarks, indices, afterImgWidth, afterImgHeight);
-
-  if (!beforeAnchor || !afterAnchor) {
-    console.log('[Alignment] Could not find visible anchor points');
-    return defaultResult;
-  }
-
-  const beforeX = beforeAnchor.x;
-  const beforeY = beforeAnchor.y;
-  const afterX = afterAnchor.x;
-  const afterY = afterAnchor.y;
-
-  console.log('[Alignment] Anchor positions:', { beforeX, beforeY, afterX, afterY });
-
-  // Calculate body height for scale reference
-  // Try multiple strategies to handle different poses (front, side, etc.)
-  let scale = 1;
-
-  const beforeNose = beforeLandmarks[0];
-  const afterNose = afterLandmarks[0];
-
-  // Strategy 1: Use nose to hip center (best for front poses)
-  const beforeLeftHip = beforeLandmarks[23];
-  const beforeRightHip = beforeLandmarks[24];
-  const afterLeftHip = afterLandmarks[23];
-  const afterRightHip = afterLandmarks[24];
-
-  const canUseBothHips =
-    beforeNose?.visibility >= VISIBILITY_THRESHOLD &&
-    beforeLeftHip?.visibility >= VISIBILITY_THRESHOLD &&
-    beforeRightHip?.visibility >= VISIBILITY_THRESHOLD &&
-    afterNose?.visibility >= VISIBILITY_THRESHOLD &&
-    afterLeftHip?.visibility >= VISIBILITY_THRESHOLD &&
-    afterRightHip?.visibility >= VISIBILITY_THRESHOLD;
-
-  // Strategy 2: Use nose to single visible hip (for side poses)
-  const canUseLeftHip =
-    beforeNose?.visibility >= VISIBILITY_THRESHOLD &&
-    beforeLeftHip?.visibility >= VISIBILITY_THRESHOLD &&
-    afterNose?.visibility >= VISIBILITY_THRESHOLD &&
-    afterLeftHip?.visibility >= VISIBILITY_THRESHOLD;
-
-  const canUseRightHip =
-    beforeNose?.visibility >= VISIBILITY_THRESHOLD &&
-    beforeRightHip?.visibility >= VISIBILITY_THRESHOLD &&
-    afterNose?.visibility >= VISIBILITY_THRESHOLD &&
-    afterRightHip?.visibility >= VISIBILITY_THRESHOLD;
-
-  // Strategy 3: Use shoulder to hip on same side (for side poses)
-  const beforeLeftShoulder = beforeLandmarks[11];
-  const beforeRightShoulder = beforeLandmarks[12];
-  const afterLeftShoulder = afterLandmarks[11];
-  const afterRightShoulder = afterLandmarks[12];
-
-  const canUseLeftSide =
-    beforeLeftShoulder?.visibility >= VISIBILITY_THRESHOLD &&
-    beforeLeftHip?.visibility >= VISIBILITY_THRESHOLD &&
-    afterLeftShoulder?.visibility >= VISIBILITY_THRESHOLD &&
-    afterLeftHip?.visibility >= VISIBILITY_THRESHOLD;
-
-  const canUseRightSide =
-    beforeRightShoulder?.visibility >= VISIBILITY_THRESHOLD &&
-    beforeRightHip?.visibility >= VISIBILITY_THRESHOLD &&
-    afterRightShoulder?.visibility >= VISIBILITY_THRESHOLD &&
-    afterRightHip?.visibility >= VISIBILITY_THRESHOLD;
-
-  if (canUseBothHips) {
-    console.log('[Alignment] Using strategy: nose to hip center (both hips visible)');
-    // Best case: both hips visible - use hip center
-    const beforeNosePos = transformLandmarkToExport(beforeNose, beforeImgWidth, beforeImgHeight, targetWidth, targetHeight);
-    const beforeHipY = (transformLandmarkToExport(beforeLeftHip, beforeImgWidth, beforeImgHeight, targetWidth, targetHeight).y +
-        transformLandmarkToExport(beforeRightHip, beforeImgWidth, beforeImgHeight, targetWidth, targetHeight).y) / 2;
-
-    const afterNosePos = transformLandmarkToExport(afterNose, afterImgWidth, afterImgHeight, targetWidth, targetHeight);
-    const afterHipY = (transformLandmarkToExport(afterLeftHip, afterImgWidth, afterImgHeight, targetWidth, targetHeight).y +
-        transformLandmarkToExport(afterRightHip, afterImgWidth, afterImgHeight, targetWidth, targetHeight).y) / 2;
-
-    const beforeBodyHeight = Math.abs(beforeHipY - beforeNosePos.y);
-    const afterBodyHeight = Math.abs(afterHipY - afterNosePos.y);
-
-    console.log('[Alignment] Body heights:', { beforeBodyHeight, afterBodyHeight });
-
-    if (afterBodyHeight > 0) {
-      scale = beforeBodyHeight / afterBodyHeight;
-    }
-  } else if (canUseLeftHip || canUseRightHip) {
-    console.log('[Alignment] Using strategy: nose to single hip', canUseLeftHip ? 'left' : 'right');
-    // Side pose fallback: use whichever hip is visible
-    const useLeftHip = canUseLeftHip;
-    const beforeHip = useLeftHip ? beforeLeftHip : beforeRightHip;
-    const afterHip = useLeftHip ? afterLeftHip : afterRightHip;
-
-    const beforeNosePos = transformLandmarkToExport(beforeNose, beforeImgWidth, beforeImgHeight, targetWidth, targetHeight);
-    const beforeHipPos = transformLandmarkToExport(beforeHip, beforeImgWidth, beforeImgHeight, targetWidth, targetHeight);
-
-    const afterNosePos = transformLandmarkToExport(afterNose, afterImgWidth, afterImgHeight, targetWidth, targetHeight);
-    const afterHipPos = transformLandmarkToExport(afterHip, afterImgWidth, afterImgHeight, targetWidth, targetHeight);
-
-    const beforeBodyHeight = Math.abs(beforeHipPos.y - beforeNosePos.y);
-    const afterBodyHeight = Math.abs(afterHipPos.y - afterNosePos.y);
-
-    console.log('[Alignment] Body heights:', { beforeBodyHeight, afterBodyHeight });
-
-    if (afterBodyHeight > 0) {
-      scale = beforeBodyHeight / afterBodyHeight;
-    }
-  } else if (canUseLeftSide || canUseRightSide) {
-    console.log('[Alignment] Using strategy: shoulder to hip on', canUseLeftSide ? 'left' : 'right', 'side');
-    // Alternative: use shoulder-to-hip on visible side
-    const useLeftSide = canUseLeftSide;
-    const beforeShoulder = useLeftSide ? beforeLeftShoulder : beforeRightShoulder;
-    const beforeHip = useLeftSide ? beforeLeftHip : beforeRightHip;
-    const afterShoulder = useLeftSide ? afterLeftShoulder : afterRightShoulder;
-    const afterHip = useLeftSide ? afterLeftHip : afterRightHip;
-
-    const beforeShoulderPos = transformLandmarkToExport(beforeShoulder, beforeImgWidth, beforeImgHeight, targetWidth, targetHeight);
-    const beforeHipPos = transformLandmarkToExport(beforeHip, beforeImgWidth, beforeImgHeight, targetWidth, targetHeight);
-
-    const afterShoulderPos = transformLandmarkToExport(afterShoulder, afterImgWidth, afterImgHeight, targetWidth, targetHeight);
-    const afterHipPos = transformLandmarkToExport(afterHip, afterImgWidth, afterImgHeight, targetWidth, targetHeight);
-
-    const beforeTorsoHeight = Math.abs(beforeHipPos.y - beforeShoulderPos.y);
-    const afterTorsoHeight = Math.abs(afterHipPos.y - afterShoulderPos.y);
-
-    console.log('[Alignment] Torso heights:', { beforeTorsoHeight, afterTorsoHeight });
-
-    if (afterTorsoHeight > 0) {
-      scale = beforeTorsoHeight / afterTorsoHeight;
-    }
-  } else {
-    console.log('[Alignment] No scale strategy matched - using scale=1');
-  }
-
-  // Clamp scale to reasonable range
-  scale = Math.max(0.5, Math.min(2, scale));
-
-  // Calculate offset to align anchors
-  // The after image will be scaled around its center, then offset
-  const afterCenterX = targetWidth / 2;
-  const afterCenterY = targetHeight / 2;
-
-  // After scaling, the anchor moves: scaledAnchor = center + (anchor - center) * scale
-  const scaledAfterX = afterCenterX + (afterX - afterCenterX) * scale;
-  const scaledAfterY = afterCenterY + (afterY - afterCenterY) * scale;
-
-  // Offset to move scaled anchor to before anchor position
-  const offsetX = beforeX - scaledAfterX;
-  const offsetY = beforeY - scaledAfterY;
-
-  console.log('[Alignment] Final result:', { scale: scale.toFixed(3), offsetX: offsetX.toFixed(1), offsetY: offsetY.toFixed(1) });
-
-  return { scale, offsetX, offsetY };
-}
-
-/**
- * Draw the after photo with alignment applied
- *
- * @param ctx - Canvas rendering context
- * @param img - After photo image element
- * @param x - Left edge of target area
- * @param y - Top edge of target area
- * @param width - Target width
- * @param height - Target height
- * @param scale - Scale factor
- * @param offsetX - Pixel offset X
- * @param offsetY - Pixel offset Y
- */
-function drawAlignedPhoto(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  scale: number,
-  offsetX: number,
-  offsetY: number
-): void {
-  ctx.save();
-
-  // Clip to target area
-  ctx.beginPath();
-  ctx.rect(x, y, width, height);
-  ctx.clip();
-
-  // Calculate base cover-fit
-  const fit = calculateCoverFit(img.width, img.height, width, height);
-
-  // Apply scale
-  const scaledWidth = fit.drawWidth * scale;
-  const scaledHeight = fit.drawHeight * scale;
-
-  // Center of target area
-  const centerX = x + width / 2;
-  const centerY = y + height / 2;
-
-  // Position: center the scaled image, then apply pixel offset
-  const drawX = centerX - scaledWidth / 2 + offsetX;
-  const drawY = centerY - scaledHeight / 2 + offsetY;
-
-  ctx.drawImage(img, drawX, drawY, scaledWidth, scaledHeight);
-
-  ctx.restore();
-}
-
-/**
  * Export canvas with aligned photos to different formats
  *
  * @param beforePhoto - Before photo data with landmarks
@@ -522,7 +457,7 @@ function drawAlignedPhoto(
 export async function exportCanvas(
   beforePhoto: { dataUrl: string; width: number; height: number; landmarks?: Landmark[] },
   afterPhoto: { dataUrl: string; width: number; height: number; landmarks?: Landmark[] },
-  anchor: 'head' | 'shoulders' | 'hips' | 'full',
+  _anchor: 'head' | 'shoulders' | 'hips' | 'full', // Currently unused - alignment uses head + body height
   options: ExportOptions
 ): Promise<ExportResult> {
   // Set default values
@@ -535,16 +470,59 @@ export async function exportCanvas(
     throw new Error('Quality must be between 0.8 and 1.0');
   }
 
-  // Calculate canvas dimensions
-  const { width, height, halfWidth } = calculateDimensions(
+  // Calculate initial target dimensions for alignment calculation
+  const { height: targetHeight, halfWidth: targetHalfWidth } = calculateDimensions(
     options.format,
     resolution
   );
 
-  // Create offscreen canvas at target resolution
+  // Load both images
+  const [beforeImg, afterImg] = await Promise.all([
+    loadImage(beforePhoto.dataUrl),
+    loadImage(afterPhoto.dataUrl),
+  ]);
+
+  // Calculate aligned draw parameters for both images
+  // This ensures:
+  // 1. Heads are at the same distance from top (using the one with least headroom)
+  // 2. Bodies are scaled to match heights
+  const alignParams = calculateAlignedDrawParams(
+    { width: beforeImg.width, height: beforeImg.height },
+    { width: afterImg.width, height: afterImg.height },
+    beforePhoto.landmarks,
+    afterPhoto.landmarks,
+    targetHalfWidth,
+    targetHeight
+  );
+
+  // Calculate where each image ends (bottom edge)
+  const beforeBottom = alignParams.before.drawY + alignParams.before.drawHeight;
+  const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
+
+  // Crop to the shortest image's bottom to avoid white space
+  // Also don't exceed the target height
+  const visibleHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
+
+  // Calculate width to maintain aspect ratio
+  const aspectRatio = getAspectRatio(options.format);
+  const finalHalfWidth = Math.round(visibleHeight * aspectRatio);
+  const finalWidth = finalHalfWidth * 2;
+  const finalHeight = visibleHeight;
+
+  console.log('[Export] Dynamic dimensions:', {
+    targetHeight,
+    beforeBottom,
+    afterBottom,
+    visibleHeight,
+    aspectRatio,
+    finalWidth,
+    finalHeight
+  });
+
+  // Create offscreen canvas at calculated dimensions
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = finalWidth;
+  canvas.height = finalHeight;
 
   const ctx = canvas.getContext('2d');
   if (!ctx) {
@@ -557,47 +535,49 @@ export async function exportCanvas(
 
   // Fill background with white
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, finalWidth, finalHeight);
 
-  // Load both images
-  const [beforeImg, afterImg] = await Promise.all([
-    loadImage(beforePhoto.dataUrl),
-    loadImage(afterPhoto.dataUrl),
-  ]);
+  // Calculate how much width we're trimming from each side
+  // The alignParams were calculated for targetHalfWidth, but we're now using finalHalfWidth
+  // Crop equally from both sides by shifting the draw position
+  const widthTrimPerSide = (targetHalfWidth - finalHalfWidth) / 2;
 
-  // Calculate alignment for export view
-  // This accounts for cover-fit cropping when determining where landmarks appear
-  const exportAlignment = calculateExportAlignment(
-    beforePhoto.landmarks,
-    afterPhoto.landmarks,
-    beforePhoto.width,
-    beforePhoto.height,
-    afterPhoto.width,
-    afterPhoto.height,
-    halfWidth,
-    height,
-    anchor
-  );
+  console.log('[Export] Width trim:', {
+    targetHalfWidth,
+    finalHalfWidth,
+    widthTrimPerSide
+  });
 
-  // Draw before photo on left half (no alignment - this is the reference)
-  drawPhoto(ctx, beforeImg, 0, 0, halfWidth, height);
+  // Create adjusted params with the trimmed X offset
+  // We shift left by widthTrimPerSide to crop equally from both sides
+  const beforeAdjustedParams = {
+    ...alignParams.before,
+    drawX: alignParams.before.drawX - widthTrimPerSide
+  };
+  const afterAdjustedParams = {
+    ...alignParams.after,
+    drawX: alignParams.after.drawX - widthTrimPerSide
+  };
 
-  // Draw after photo on right half with calculated alignment
-  drawAlignedPhoto(
-    ctx,
-    afterImg,
-    halfWidth,
-    0,
-    halfWidth,
-    height,
-    exportAlignment.scale,
-    exportAlignment.offsetX,
-    exportAlignment.offsetY
-  );
+  // Draw before photo on left half with clipping
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, finalHalfWidth, finalHeight);
+  ctx.clip();
+  drawPhotoWithParams(ctx, beforeImg, 0, 0, beforeAdjustedParams);
+  ctx.restore();
+
+  // Draw after photo on right half with clipping
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(finalHalfWidth, 0, finalHalfWidth, finalHeight);
+  ctx.clip();
+  drawPhotoWithParams(ctx, afterImg, finalHalfWidth, 0, afterAdjustedParams);
+  ctx.restore();
 
   // Add labels if requested
   if (includeLabels) {
-    drawLabels(ctx, width, height, halfWidth);
+    drawLabels(ctx, finalWidth, finalHeight, finalHalfWidth);
   }
 
   // Add watermark
@@ -608,7 +588,7 @@ export async function exportCanvas(
     opacity: 0.7,
   };
 
-  await addWatermark(ctx, width, height, watermarkOptions);
+  await addWatermark(ctx, finalWidth, finalHeight, watermarkOptions);
 
   // Convert to PNG blob
   const blob = await new Promise<Blob>((resolve, reject) => {
@@ -632,8 +612,8 @@ export async function exportCanvas(
   return {
     blob,
     filename,
-    width,
-    height,
+    width: finalWidth,
+    height: finalHeight,
   };
 }
 

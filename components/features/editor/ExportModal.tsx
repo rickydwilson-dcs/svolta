@@ -25,8 +25,8 @@ interface FormatOption {
 }
 
 const formatOptions: FormatOption[] = [
+  { ratio: '4:5', label: '4:5', isPro: false },
   { ratio: '1:1', label: '1:1', isPro: false },
-  { ratio: '4:5', label: '4:5', isPro: true },
   { ratio: '9:16', label: '9:16', isPro: true },
 ];
 
@@ -37,7 +37,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const { limit, remaining, checkAndIncrement } = useUsageLimit();
   const { isExporting, error: exportError, exportAndDownload, clearError } = useCanvasExport();
 
-  const [selectedFormat, setSelectedFormat] = React.useState<ExportFormat>('1:1');
+  const [selectedFormat, setSelectedFormat] = React.useState<ExportFormat>('4:5');
   const [showLabels, setShowLabels] = React.useState(false);
   const [showUpgradePrompt, setShowUpgradePrompt] = React.useState(false);
   const [upgradeTrigger, setUpgradeTrigger] = React.useState<'limit' | 'watermark' | 'format' | 'logo'>('limit');
