@@ -37,8 +37,7 @@ PoseProof is a fitness photo alignment SaaS that helps coaches create profession
 
 ### Standards
 
-- **[Git Workflow](./guides/git-workflow.md)** - Branching strategy (develop → staging → main)
-- **[Deployment](./standards/deployment.md)** - Vercel deployment process
+- **[Git Workflow & Deployment](./standards/git-workflow.md)** - Branching, auto-promotion, CI/CD, Vercel
 - **[Code Style](./standards/code-style.md)** - TypeScript, React, and Tailwind patterns
 - **[Design Tokens](./standards/design-tokens.md)** - CSS variables, colors, typography, spacing
 
