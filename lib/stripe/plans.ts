@@ -16,7 +16,7 @@ export interface Plan {
  *
  * To set up in Stripe:
  * 1. Create a "Pro" product in Stripe Dashboard
- * 2. Add monthly price (£9.99/month recurring)
+ * 2. Add monthly price (£7.99/month recurring)
  * 3. Add yearly price (£79/year recurring)
  * 4. Copy the price IDs (price_xxx) and update below
  * 5. Same for Team plan if needed
@@ -45,7 +45,7 @@ export const PLANS: Record<string, Plan> = {
     id: 'pro',
     name: 'Pro',
     description: 'For serious fitness coaches',
-    price: 9.99,
+    price: 7.99,
     priceYearly: 79,
     exportsPerMonth: Infinity,
     // Replace these with your actual Stripe price IDs

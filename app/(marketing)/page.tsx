@@ -211,7 +211,7 @@ export default function HomePage() {
             {/* Free Plan Card */}
             <div className="pricing-card">
               <h3 className="text-xl font-semibold text-text mb-1">Free</h3>
-              <div className="price-display mb-4">$0</div>
+              <div className="price-display mb-4">£0</div>
               <ul className="feature-list text-left mb-6">
                 <li>
                   <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,7 +243,7 @@ export default function HomePage() {
               <div className="pricing-card-pro-inner">
                 <h3 className="text-xl font-semibold text-text mb-1">Pro</h3>
                 <div className="flex items-baseline justify-center gap-1 mb-4">
-                  <span className="price-display">$9</span>
+                  <span className="price-display">£7.99</span>
                   <span className="price-period">/month</span>
                 </div>
                 <ul className="feature-list text-left mb-6">

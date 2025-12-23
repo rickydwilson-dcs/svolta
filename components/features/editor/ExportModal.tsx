@@ -494,7 +494,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                     }}
                     className="w-full"
                   >
-                    Upgrade to Pro — £9.99/mo
+                    Upgrade to Pro — £7.99/mo
                   </Button>
                 </div>
               </>

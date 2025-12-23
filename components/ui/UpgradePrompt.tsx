@@ -132,7 +132,7 @@ export function UpgradePrompt({ isOpen, onClose, trigger }: UpgradePromptProps) 
                 size="lg"
                 className="w-full text-lg font-semibold"
               >
-                Upgrade Now — £9.99/mo
+                Upgrade Now — £7.99/mo
               </Button>
             </Link>
 
@@ -146,7 +146,7 @@ export function UpgradePrompt({ isOpen, onClose, trigger }: UpgradePromptProps) 
               >
                 £79/year
               </Link>{' '}
-              (save 34%)
+              (save 18%)
             </p>
           </div>
         </Dialog.Content>

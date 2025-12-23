@@ -11,7 +11,7 @@
 PoseProof uses a freemium subscription model with Stripe for payment processing and Supabase for usage tracking. The system provides:
 
 - **Free Tier:** 5 exports per month with PoseProof watermark
-- **Pro Tier:** Unlimited exports, no watermark, custom branding (£9.99/month or £79/year)
+- **Pro Tier:** Unlimited exports, no watermark, custom branding (£7.99/month or £79/year)
 - **Usage Tracking:** Monthly export counting with automatic reset
 - **Webhook-Driven Sync:** Real-time subscription status updates via Stripe webhooks
 
@@ -29,7 +29,7 @@ PoseProof uses a freemium subscription model with Stripe for payment processing 
 
 | Feature            | Free               | Pro                          |
 | ------------------ | ------------------ | ---------------------------- |
-| **Price**          | £0                 | £9.99/month or £79/year      |
+| **Price**          | £0                 | £7.99/month or £79/year      |
 | **Exports/Month**  | 5                  | Unlimited                    |
 | **Watermark**      | PoseProof branding | No watermark                 |
 | **Custom Logo**    | ❌                 | ✅                           |
@@ -38,8 +38,8 @@ PoseProof uses a freemium subscription model with Stripe for payment processing 
 
 **Pricing Strategy:**
 
-- Monthly billing: £9.99/month (£119.88/year)
-- Annual billing: £79/year (34% savings)
+- Monthly billing: £7.99/month (£95.88/year)
+- Annual billing: £79/year (18% savings)
 - Promo codes: Enabled in checkout
 - Team tier: Planned (£29.99/month for 5 seats)
 
@@ -758,7 +758,7 @@ export const UpgradePrompt = ({ trigger }: { trigger: 'limit' | 'feature' }) => 
       <Modal open onClose={() => {}}>
         <h2>Export Limit Reached</h2>
         <p>You've used all 5 free exports this month.</p>
-        <Button onClick={handleUpgrade}>Upgrade to Pro - £9.99/month</Button>
+        <Button onClick={handleUpgrade}>Upgrade to Pro - £7.99/month</Button>
         <p className="text-sm">Resets on {nextMonthDate}</p>
       </Modal>
     );
