@@ -9,6 +9,7 @@
 - [Build & Development Issues](#build--development-issues)
 - [Pose Detection Issues](#pose-detection-issues)
 - [Export Quality Issues](#export-quality-issues)
+- [Visual Testing Issues](#visual-testing-issues)
 - [Stripe & Payments](#stripe--payments)
 - [Authentication & Sessions](#authentication--sessions)
 - [Canvas Rendering Issues](#canvas-rendering-issues)
@@ -454,6 +455,222 @@ console.log("Rendering watermark at:", { x, y, width, height });
      // Show error to user
    }
    ```
+
+---
+
+## Visual Testing Issues
+
+### Issue: Canvas Dependencies Missing
+
+**Symptom:**
+
+```
+Error: The module 'canvas' was compiled against a different Node.js version
+```
+
+or
+
+```
+Error: Cannot find module 'canvas'
+```
+
+**Cause:** Native canvas dependencies not installed or version mismatch
+
+**Solution:**
+
+1. Install native dependencies:
+
+   ```bash
+   # macOS
+   brew install pkg-config cairo pango libpng jpeg giflib librsvg
+
+   # Ubuntu/Debian
+   sudo apt-get install libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+   ```
+
+2. Rebuild native modules:
+
+   ```bash
+   rm -rf node_modules
+   npm install
+   ```
+
+3. If using Node version manager, rebuild for current version:
+   ```bash
+   npm rebuild canvas
+   ```
+
+---
+
+### Issue: Baseline Not Found
+
+**Symptom:**
+
+```
+Error: Baseline not found: tests/visual/baselines/1-1/fixture-1080.png
+```
+
+**Cause:** Baselines haven't been generated yet
+
+**Solution:**
+
+```bash
+# Generate test fixtures and baselines
+npm run test:visual:generate
+npm run test:visual
+```
+
+---
+
+### Issue: Visual Tests Failing After Algorithm Change
+
+**Symptom:** Tests fail with pixel mismatch errors after intentional algorithm changes
+
+**Solution:**
+
+1. Review diff images to verify changes are expected:
+
+   ```bash
+   # Open the visual report
+   npm run test:visual:report
+   ```
+
+2. Check `tests/visual/diffs/` for diff images showing what changed
+
+3. If changes are intentional, update baselines:
+
+   ```bash
+   npm run test:visual:generate
+   npm run test:visual
+   ```
+
+4. Commit updated baselines with your algorithm changes
+
+---
+
+### Issue: Head Alignment Validation Failing
+
+**Symptom:**
+
+```
+Alignment validation failed: Head delta 5px exceeds threshold of 2px
+```
+
+**Cause:** Heads not aligning within tolerance
+
+**Debugging:**
+
+1. Check the HTML report for metrics:
+
+   ```bash
+   npm run test:visual:report
+   ```
+
+2. Look at the specific fixture's metrics:
+   - Head delta (should be ≤2px)
+   - Headroom percentage (should be 5-20%)
+   - Body scale (should be 0.8-1.25)
+
+3. Review the diff image to see visual difference
+
+4. Check if fixture is an edge case that should skip validation:
+   ```typescript
+   // In alignment.visual.test.ts
+   const SKIP_ALIGNMENT_VALIDATION = [
+     "framing-head-cropped",
+     "framing-both-heads-cropped",
+     "lowvis-nose",
+     // Add your fixture if it's a valid edge case
+   ];
+   ```
+
+---
+
+### Issue: Test Report Not Opening
+
+**Symptom:** `npm run test:visual:report` does nothing
+
+**Solution:**
+
+1. Verify report exists:
+
+   ```bash
+   ls tests/visual/report.html
+   ```
+
+2. Open manually:
+
+   ```bash
+   # macOS
+   open tests/visual/report.html
+
+   # Linux
+   xdg-open tests/visual/report.html
+   ```
+
+3. Regenerate report by running tests:
+   ```bash
+   npm run test:visual
+   ```
+
+---
+
+### Issue: Fixture Generator Failing
+
+**Symptom:** `npm run test:visual:generate` errors
+
+**Causes & Solutions:**
+
+1. **Missing source images**
+   - Check `tests/visual/fixtures/sources/` has before/after images
+   - Verify `manifest.json` references correct paths
+
+2. **Canvas rendering issues**
+   - Ensure canvas dependencies installed (see above)
+   - Check image format supported (PNG, JPG, JPEG)
+
+3. **Landmark data issues**
+   - Verify `manifest.json` has valid landmark arrays
+   - Ensure landmarks are normalized (0-1 range)
+
+**Debugging:**
+
+```bash
+# Run generator with verbose output
+npm run test:visual:generate -- --verbose
+```
+
+---
+
+### Issue: Tests Pass Locally But Fail in CI
+
+**Symptom:** Visual tests pass on your machine but fail in GitHub Actions
+
+**Causes & Solutions:**
+
+1. **Font rendering differences**
+   - Different fonts installed on CI vs local
+   - Use higher pixel tolerance or exclude text areas
+
+2. **Canvas version mismatch**
+   - Pin canvas version in package.json
+   - Use lockfile (package-lock.json)
+
+3. **Image compression differences**
+   - Use PNG format for baselines (lossless)
+   - Avoid JPEG for baselines
+
+4. **Anti-aliasing differences**
+   - Increase pixel tolerance threshold
+   - Use whole-image mismatch percentage instead of per-pixel
+
+**CI-specific configuration:**
+
+```typescript
+// In alignment.visual.test.ts
+const PIXEL_TOLERANCE = process.env.CI ? 0.15 : 0.1;
+const ALLOWED_DIFF = process.env.CI ? 0.01 : 0.005;
+```
 
 ---
 

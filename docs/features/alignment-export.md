@@ -1184,3 +1184,53 @@ This algorithm is the **foundation of PoseProof's value proposition** and must b
 
 - [Pose Detection](./pose-detection.md) - MediaPipe integration and landmark reference
 - [Architecture Overview](../architecture/overview.md) - System design and data flow
+- [Testing Standards](../standards/testing.md) - Visual regression testing for alignment validation
+
+---
+
+## Testing the Alignment Algorithm
+
+The alignment algorithm is protected by a comprehensive visual regression testing suite. Any changes to the algorithm should pass all tests before merging.
+
+### Running Tests
+
+```bash
+# Run all alignment tests (unit + visual)
+npm run test:visual
+
+# Run only unit tests (faster feedback during development)
+npm run test:visual:unit
+
+# Open HTML report to review results
+npm run test:visual:report
+```
+
+### Test Coverage
+
+**Unit Tests** (`tests/visual/alignment.unit.test.ts`):
+
+- ~30 test cases covering all 4 phases of the algorithm
+- Body scale calculation and clamping
+- Overflow normalization
+- Headroom constraints
+- Image positioning
+- Edge cases (low visibility, cropped heads, aspect ratios)
+
+**Visual Regression Tests** (`tests/visual/alignment.visual.test.ts`):
+
+- 24+ fixtures × 3 formats = 72+ pixel-level comparisons
+- Pass criteria: ≥99.5% pixel match, ≤2px head delta
+- Categories: Standard, Aspect, Extreme, Headroom, Low Visibility, Framing
+
+### Updating After Algorithm Changes
+
+1. Make algorithm changes
+2. Run `npm run test:visual:unit` to verify logic
+3. Run `npm run test:visual` to see visual impact
+4. Review diff images in `tests/visual/diffs/`
+5. If changes are intentional, regenerate baselines:
+   ```bash
+   npm run test:visual:generate
+   npm run test:visual
+   ```
+6. Commit updated baselines with algorithm changes

@@ -1,6 +1,6 @@
 # Git Workflow & Deployment
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Last Updated:** 2025-12-23
 **Scope:** PoseProof branching strategy, CI/CD, and deployment
 
@@ -8,29 +8,25 @@
 
 ## Overview
 
-PoseProof uses a multi-stage deployment pipeline with **automatic promotion**. Push to `develop` and the CI handles promotion to `staging` and `main` automatically when all tests pass.
+PoseProof uses a multi-stage deployment pipeline with **manual promotion** and **Husky-enforced quality gates**. You control when changes promote between branches, with automated checks ensuring quality at each stage.
 
 ## Branch Structure
 
 ```
 main (production) ← poseproof.com
-  ↑ auto-promoted when staging CI passes
+  ↑ manual merge (Husky blocks until staging E2E passes)
 staging (preview) ← staging.poseproof.com
-  ↑ auto-promoted when develop CI passes
+  ↑ manual merge (after develop CI passes)
 develop (development) ← preview URLs
 ```
 
-## Automatic Promotion
+## Workflow Summary
 
-**All promotions happen automatically** when CI passes:
-
-| Push to   | CI Checks                    | Auto-promotes to | Deploys to             |
-| --------- | ---------------------------- | ---------------- | ---------------------- |
-| `develop` | Quality + Unit + Smoke Tests | `staging`        | Auto-generated preview |
-| `staging` | Quality + Unit + E2E Tests   | `main`           | staging.poseproof.com  |
-| `main`    | Quality + Unit + E2E Tests   | (production)     | poseproof.com          |
-
-**You only need to push to `develop`.** The CI workflow handles the rest.
+| Step                    | Command                                                 | What Happens                                      |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------- |
+| 1. Push to develop      | `git push origin develop`                               | CI runs (quality, unit, smoke, visual tests)      |
+| 2. Promote to staging   | `git checkout staging && git merge develop && git push` | E2E tests run                                     |
+| 3. Deploy to production | `./scripts/deploy-to-production.sh`                     | Husky verifies staging E2E passed, merges to main |
 
 ---
 
@@ -50,26 +46,39 @@ git add .
 git commit -m "feat: add new feature"
 ```
 
-### 3. Push to develop
+### 3. Push to Develop
 
 ```bash
 # Pre-push hooks run automatically (lint, type-check, build)
 git push origin develop
 ```
 
-### 4. Monitor Automatic Promotion
+### 4. Monitor CI
 
 ```bash
 gh run watch
 ```
 
-After pushing to `develop`:
+### 5. Promote to Staging (After CI Passes)
 
-1. **CI runs**: Quality checks, unit tests, smoke tests
-2. **Auto-promote**: If all pass, `develop` merges into `staging`
-3. **Staging CI runs**: Quality checks, unit tests, E2E tests
-4. **Auto-promote**: If all pass, `staging` merges into `main`
-5. **Production deploys**: Vercel deploys `main` to poseproof.com
+```bash
+git checkout staging
+git merge develop
+git push origin staging
+# E2E tests run automatically
+```
+
+### 6. Deploy to Production (After E2E Passes)
+
+```bash
+# Option A: Use the deploy script
+./scripts/deploy-to-production.sh
+
+# Option B: Manual merge (Husky checks staging E2E first)
+git checkout main
+git merge staging
+git push origin main  # Blocked if staging E2E hasn't passed
+```
 
 ---
 
@@ -83,7 +92,16 @@ npm run type-check    # TypeScript
 npm run build         # Production build
 ```
 
-If any check fails, the push is blocked.
+### Additional Check for Main Branch
+
+When pushing to `main`, Husky also verifies:
+
+```bash
+# Checks that staging E2E tests have passed
+gh run list --branch staging --workflow ci.yml --limit 1 --json conclusion
+```
+
+If staging E2E hasn't passed, the push to main is **blocked**.
 
 ### Bypassing Hooks (Emergency Only)
 
@@ -95,11 +113,29 @@ git push --no-verify  # Only use in emergencies
 
 ## Quality Gates
 
-| Branch  | Local (Pre-push)        | CI Checks                    | Auto-promotes to |
-| ------- | ----------------------- | ---------------------------- | ---------------- |
-| develop | lint, type-check, build | Quality + Unit + Smoke Tests | staging          |
-| staging | lint, type-check, build | Quality + Unit + E2E Tests   | main             |
-| main    | lint, type-check, build | Quality + Unit + E2E Tests   | (production)     |
+| Branch  | Local (Pre-push)                    | CI Checks                       | Required for Next Stage     |
+| ------- | ----------------------------------- | ------------------------------- | --------------------------- |
+| develop | lint, type-check, build             | Quality + Unit + Smoke + Visual | Must pass for staging merge |
+| staging | lint, type-check, build             | Quality + Unit + E2E            | Must pass for main merge    |
+| main    | lint, type-check, build + E2E check | Quality + Unit + E2E            | Deploys to production       |
+
+---
+
+## Deploy Script
+
+The `scripts/deploy-to-production.sh` script provides a convenient way to deploy:
+
+```bash
+./scripts/deploy-to-production.sh
+```
+
+It will:
+
+1. Show commits since last deployment
+2. Verify staging E2E tests passed
+3. Prompt for confirmation
+4. Merge staging → main
+5. Vercel auto-deploys to production
 
 ---
 
@@ -168,34 +204,13 @@ Set in Vercel Dashboard → Settings → Environment Variables:
 
 ## Post-Deployment Verification
 
-After automatic promotion to production:
+After deploying to production:
 
 - [ ] Site loads successfully
 - [ ] Authentication working
 - [ ] Core editor functionality works
 - [ ] Stripe checkout loads
 - [ ] Monitor for 30 minutes post-deploy
-
----
-
-## Manual Promotion (If Needed)
-
-In rare cases where auto-promotion fails:
-
-```bash
-# Promote develop to staging manually
-git checkout staging && git pull origin staging
-git merge develop
-git push origin staging
-
-# Promote staging to main manually
-git checkout main && git pull origin main
-git merge staging
-git push origin main
-
-# Return to develop
-git checkout develop
-```
 
 ---
 
@@ -229,24 +244,30 @@ npm run type-check    # TypeScript validation
 
 # Testing
 npm test              # Unit tests
+npm run test:visual   # Visual regression tests
 npm run test:e2e      # Full E2E tests
 npm run test:e2e:smoke # Smoke E2E tests
 
 # Monitor CI
 gh run watch          # Watch current CI run
 gh run list           # List recent runs
+gh run list --branch staging  # Check staging CI status
+
+# Deployment
+./scripts/deploy-to-production.sh  # Deploy to production
 ```
 
 ---
 
 ## What NOT to Do
 
-| Anti-Pattern             | Why It's Wrong      | Correct Approach       |
-| ------------------------ | ------------------- | ---------------------- |
-| Skip pre-push hooks      | May break CI        | Let hooks run          |
-| Force push to any branch | Loses history       | Never force push       |
-| Push directly to main    | Bypasses tests      | Always push to develop |
-| Deploy on Friday evening | No support coverage | Deploy early in day    |
+| Anti-Pattern                     | Why It's Wrong            | Correct Approach             |
+| -------------------------------- | ------------------------- | ---------------------------- |
+| Skip pre-push hooks              | May break CI              | Let hooks run                |
+| Force push to any branch         | Loses history             | Never force push             |
+| Push directly to main            | Bypasses E2E verification | Merge from staging           |
+| Deploy on Friday evening         | No support coverage       | Deploy early in day          |
+| Push to main without staging E2E | Quality issues            | Wait for staging E2E to pass |
 
 ---
 
@@ -255,6 +276,7 @@ gh run list           # List recent runs
 1. **Never force push** to any branch
 2. **Always pull** before starting work
 3. **Let pre-push hooks run** - they catch issues before CI
-4. **Push to develop only** - auto-promotion handles the rest
+4. **Push to develop first** - then promote to staging → main
 5. **Write meaningful commit messages**
-6. **Monitor CI** - check that auto-promotion succeeds
+6. **Wait for E2E** - don't push to main until staging E2E passes
+7. **Use the deploy script** - it handles verification automatically

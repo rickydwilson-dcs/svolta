@@ -40,6 +40,7 @@ PoseProof is a fitness photo alignment SaaS that helps coaches create profession
 - **[Git Workflow & Deployment](./standards/git-workflow.md)** - Branching, auto-promotion, CI/CD, Vercel
 - **[Code Style](./standards/code-style.md)** - TypeScript, React, and Tailwind patterns
 - **[Design Tokens](./standards/design-tokens.md)** - CSS variables, colors, typography, spacing
+- **[Testing Standards](./standards/testing.md)** - Unit, visual regression, and E2E testing
 
 ## Tech Stack Summary
 
@@ -72,10 +73,11 @@ PoseProof is a fitness photo alignment SaaS that helps coaches create profession
 
 ### Testing
 
-| Tool           | Purpose                      |
-| -------------- | ---------------------------- |
-| **Vitest**     | Unit and integration testing |
-| **Playwright** | End-to-end testing           |
+| Tool           | Purpose                                        |
+| -------------- | ---------------------------------------------- |
+| **Vitest**     | Unit, integration, and visual regression tests |
+| **Pixelmatch** | Pixel-level image comparison                   |
+| **Playwright** | End-to-end testing                             |
 
 ## Getting Started
 
@@ -122,6 +124,8 @@ npm run start            # Start production server
 
 # Testing
 npm run test             # Run Vitest unit tests
+npm run test:visual      # Run visual regression tests
+npm run test:visual:unit # Run alignment unit tests only
 npm run test:e2e         # Run Playwright E2E tests
 npm run test:watch       # Watch mode for tests
 
@@ -176,9 +180,16 @@ poseproof/
 │   ├── architecture/        # Architecture documentation
 │   └── workflow/            # Development workflow guides
 │
-└── tests/                   # Test files
-    ├── unit/               # Unit tests
-    └── e2e/                # End-to-end tests
+├── tests/                   # Test files
+│   ├── visual/             # Visual regression tests
+│   │   ├── alignment.unit.test.ts   # Algorithm unit tests
+│   │   ├── alignment.visual.test.ts # Pixel comparison tests
+│   │   ├── baselines/      # Golden reference images
+│   │   ├── fixtures/       # Test input images
+│   │   └── lib/            # Test utilities
+│   └── setup.ts            # Vitest setup
+│
+└── e2e/                     # End-to-end tests
 ```
 
 ## Key Features

@@ -1,1 +1,22 @@
+#!/bin/sh
+
+# Run local quality checks
 npm run lint && npm run type-check && npm run build
+
+# Block push to main unless staging E2E passed
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ "$BRANCH" = "main" ]; then
+  echo "🔍 Checking staging E2E status before allowing push to main..."
+
+  # Get latest staging workflow run status
+  STATUS=$(gh run list --branch staging --workflow ci.yml --limit 1 --json conclusion -q '.[0].conclusion')
+
+  if [ "$STATUS" != "success" ]; then
+    echo "❌ Cannot push to main: staging E2E tests have not passed"
+    echo "   Latest staging CI status: $STATUS"
+    echo "   Run: gh run list --branch staging"
+    exit 1
+  fi
+
+  echo "✅ Staging E2E passed, proceeding with push to main"
+fi
