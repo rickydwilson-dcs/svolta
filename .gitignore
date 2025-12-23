@@ -46,3 +46,7 @@ next-env.d.ts
 
 # Claude Code settings (contains API keys)
 .claude/settings.json
+
+# Visual regression test outputs
+tests/visual/diffs/*.png
+tests/visual/report.html
