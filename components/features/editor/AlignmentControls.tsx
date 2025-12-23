@@ -6,6 +6,7 @@ import { useEditorStore } from '@/stores/editor-store';
 import { Button } from '@/components/ui/Button';
 import { Slider } from '@/components/ui/Slider';
 import { Toggle } from '@/components/ui/Toggle';
+import { Modal } from '@/components/ui/Modal';
 import { cn } from '@/lib/utils';
 import type { AlignmentSettings } from '@/types/editor';
 
@@ -16,6 +17,7 @@ export interface AlignmentControlsProps {
 
 const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProps>(
   ({ className, onAutoAlign }, ref) => {
+    const [showHelpModal, setShowHelpModal] = React.useState(false);
     const {
       alignment,
       showLandmarks,
@@ -113,9 +115,37 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
       >
         {/* Anchor Selection */}
         <div className="space-y-3">
-          <label className="text-sm font-medium text-[var(--text-primary)]">
-            Align by:
-          </label>
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-[var(--text-primary)]">
+              Align by
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowHelpModal(true)}
+              className={cn(
+                'w-5 h-5 rounded-full flex items-center justify-center',
+                'text-[var(--text-secondary)] hover:text-[var(--text-primary)]',
+                'hover:bg-[var(--gray-100)] dark:hover:bg-[var(--gray-800)]',
+                'transition-all duration-200'
+              )}
+              aria-label="Learn about alignment options"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+              </svg>
+            </button>
+          </div>
           <ToggleGroup.Root
             type="single"
             value={alignment.anchor}
@@ -123,10 +153,10 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
             className="flex flex-wrap gap-2"
           >
             {[
+              { value: 'full', label: 'Full Body' },
               { value: 'head', label: 'Head' },
               { value: 'shoulders', label: 'Shoulders' },
               { value: 'hips', label: 'Hips' },
-              { value: 'full', label: 'Full Body' },
             ].map((option) => (
               <ToggleGroup.Item
                 key={option.value}
@@ -421,6 +451,53 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
             }
           }
         `}</style>
+
+        {/* Help Modal */}
+        <Modal
+          open={showHelpModal}
+          onOpenChange={setShowHelpModal}
+          title="Align By"
+        >
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--text-secondary)]">
+              Choose which body part to use as the anchor point when aligning your before and after photos.
+            </p>
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <div className="w-20 shrink-0">
+                  <span className="text-sm font-medium text-[var(--brand-primary)]">Full Body</span>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Best for overall transformations. Aligns head to hips for the most accurate full-body comparison. <span className="text-[var(--text-primary)] font-medium">(Recommended)</span>
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-20 shrink-0">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">Head</span>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Best for face-focused comparisons and headshots.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-20 shrink-0">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">Shoulders</span>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Best for upper body and posture changes.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <div className="w-20 shrink-0">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">Hips</span>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)]">
+                  Best for lower body focus and waist/hip changes.
+                </p>
+              </div>
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }

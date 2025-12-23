@@ -30,7 +30,7 @@ export interface AlignmentSettings {
  * Default alignment settings
  */
 export const DEFAULT_ALIGNMENT: AlignmentSettings = {
-  anchor: 'shoulders',
+  anchor: 'full',
   scale: 1,
   offsetX: 0,
   offsetY: 0,

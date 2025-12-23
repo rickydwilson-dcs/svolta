@@ -37,7 +37,7 @@ interface EditorState {
 }
 
 const initialAlignment: AlignmentSettings = {
-  anchor: 'shoulders',
+  anchor: 'full',
   scale: 1,
   offsetX: 0,
   offsetY: 0,

@@ -20,18 +20,19 @@ export default function EditorContent() {
     afterPhoto,
     alignment,
     showLandmarks,
+    showGrid,
     setBeforePhoto,
     setAfterPhoto,
     setBeforeLandmarks,
     setAfterLandmarks,
     toggleLandmarks,
+    toggleGrid,
     reset,
   } = useEditorStore();
 
   const { isExporting, exportAndDownload } = useCanvasExport();
   const [showExportSheet, setShowExportSheet] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
-  const [alignmentAnchor, setAlignmentAnchor] = useState('head');
+  const [alignmentAnchor, setAlignmentAnchor] = useState('full');
   const [exportFormat, setExportFormat] = useState<'1:1' | '4:5' | '9:16'>('1:1');
 
   const handleExport = async () => {
@@ -54,10 +55,10 @@ export default function EditorContent() {
   const hasBothPhotos = beforePhoto && afterPhoto;
 
   const alignmentOptions = [
+    { value: 'full', label: 'Full Body' },
     { value: 'head', label: 'Head' },
     { value: 'shoulders', label: 'Shoulders' },
     { value: 'hips', label: 'Hips' },
-    { value: 'full', label: 'Full Body' },
   ];
 
   return (
@@ -148,7 +149,7 @@ export default function EditorContent() {
 
       {/* Main Editor Area */}
       <main className="flex-1 pt-14 pb-24 overflow-hidden">
-        <div className={cn('h-full grid grid-cols-2 relative', showGrid && 'grid-overlay dark:grid-overlay-dark')}>
+        <div className="h-full grid grid-cols-2 relative">
           {/* Split Divider */}
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2 z-10">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-surface border border-border flex items-center justify-center shadow-sm">
@@ -159,7 +160,7 @@ export default function EditorContent() {
           </div>
 
           {/* Before Photo Panel */}
-          <div className="relative h-full p-3 sm:p-6">
+          <div className={cn('relative h-full p-3 sm:p-6', showGrid && 'grid-overlay')}>
             <PhotoPanel
               label="Before"
               photo={beforePhoto}
@@ -170,14 +171,14 @@ export default function EditorContent() {
             />
             {/* Before Label */}
             {beforePhoto && (
-              <div className="absolute top-6 left-6 sm:top-9 sm:left-9">
+              <div className="absolute top-6 left-6 sm:top-9 sm:left-9 z-10">
                 <span className="photo-label photo-label-before">Before</span>
               </div>
             )}
           </div>
 
           {/* After Photo Panel */}
-          <div className="relative h-full p-3 sm:p-6">
+          <div className={cn('relative h-full p-3 sm:p-6', showGrid && 'grid-overlay')}>
             <PhotoPanel
               label="After"
               photo={afterPhoto}
@@ -188,7 +189,7 @@ export default function EditorContent() {
             />
             {/* After Label */}
             {afterPhoto && (
-              <div className="absolute top-6 left-6 sm:top-9 sm:left-9">
+              <div className="absolute top-6 left-6 sm:top-9 sm:left-9 z-10">
                 <span className="photo-label photo-label-after">After</span>
               </div>
             )}
@@ -221,7 +222,7 @@ export default function EditorContent() {
             <div className="flex items-center justify-between gap-3">
               {/* Grid Toggle */}
               <button
-                onClick={() => setShowGrid(!showGrid)}
+                onClick={toggleGrid}
                 className={cn(
                   'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all',
                   showGrid
