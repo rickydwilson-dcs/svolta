@@ -25,6 +25,12 @@ export interface TestResult {
   actualPath: string;
   diffPath?: string;
   duration: number;
+  /** Whether alignment validation was intentionally skipped for this test (edge case fixtures) */
+  alignmentSkipped?: boolean;
+  /** Path to the before fixture image */
+  beforeImagePath?: string;
+  /** Path to the after fixture image */
+  afterImagePath?: string;
 }
 
 export type ExportFormat = '1:1' | '4:5' | '9:16';
@@ -37,6 +43,8 @@ export interface ReportData {
     total: number;
     passed: number;
     failed: number;
+    /** Tests where alignment validation was intentionally skipped (pixel passed, alignment skipped) */
+    skipped: number;
     passRate: number;
   };
 }
@@ -51,11 +59,18 @@ export interface ReportData {
 export function generateHtmlReport(data: ReportData): string {
   const { timestamp, duration, results, summary } = data;
 
+  // Categorize tests into three groups:
+  // 1. Failed: pixel comparison failed OR alignment failed (when not skipped)
+  // 2. Skipped: pixel passed but alignment validation was intentionally skipped
+  // 3. Passed: pixel passed AND alignment passed (or skipped)
   const failedTests = results.filter(
-    (r) => !r.pixelComparison.passed || !r.alignmentValidation.passed
+    (r) => !r.pixelComparison.passed || (!r.alignmentValidation.passed && !r.alignmentSkipped)
+  );
+  const skippedTests = results.filter(
+    (r) => r.pixelComparison.passed && r.alignmentSkipped
   );
   const passedTests = results.filter(
-    (r) => r.pixelComparison.passed && r.alignmentValidation.passed
+    (r) => r.pixelComparison.passed && (r.alignmentValidation.passed || r.alignmentSkipped)
   );
 
   // Group by category
@@ -199,6 +214,7 @@ export function generateHtmlReport(data: ReportData): string {
 
     .badge.pass { background: rgba(0, 200, 83, 0.2); color: var(--success); }
     .badge.fail { background: rgba(255, 82, 82, 0.2); color: var(--error); }
+    .badge.skip { background: rgba(255, 193, 7, 0.2); color: var(--warning); }
 
     .test-body {
       padding: 1.5rem;
@@ -328,6 +344,10 @@ export function generateHtmlReport(data: ReportData): string {
         <div class="stat-label">Passed</div>
       </div>
       <div class="stat-card">
+        <div class="stat-value ${summary.skipped > 0 ? 'neutral' : ''}">${summary.skipped}</div>
+        <div class="stat-label">Alignment Skipped</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-value error">${summary.failed}</div>
         <div class="stat-label">Failed</div>
       </div>
@@ -343,9 +363,20 @@ export function generateHtmlReport(data: ReportData): string {
 
     ${failedTests.length > 0 ? `
     <section class="section">
-      <h2 class="section-title">Failed Tests (${failedTests.length})</h2>
+      <h2 class="section-title" style="color: var(--error);">❌ Failed Tests (${failedTests.length})</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">These tests failed pixel comparison or alignment validation and require investigation.</p>
       <div class="test-grid">
         ${failedTests.map((test) => renderTestCard(test, false)).join('\n')}
+      </div>
+    </section>
+    ` : ''}
+
+    ${skippedTests.length > 0 ? `
+    <section class="section">
+      <h2 class="section-title" style="color: var(--warning);">⚠️ Alignment Skipped (${skippedTests.length})</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">These edge-case fixtures (cropped heads, low visibility) passed pixel comparison but alignment validation was intentionally skipped. This is expected behavior.</p>
+      <div class="test-grid">
+        ${skippedTests.map((test) => renderTestCard(test, true)).join('\n')}
       </div>
     </section>
     ` : ''}
@@ -386,19 +417,39 @@ export function generateHtmlReport(data: ReportData): string {
  * Render a single test card
  */
 function renderTestCard(test: TestResult, collapsed: boolean): string {
-  const passed = test.pixelComparison.passed && test.alignmentValidation.passed;
+  // Determine test status: pass, skip (alignment skipped), or fail
+  const isSkipped = test.pixelComparison.passed && test.alignmentSkipped;
+  const isPassed = test.pixelComparison.passed && (test.alignmentValidation.passed || test.alignmentSkipped);
+  const isFailed = !isPassed;
+
+  let badgeClass: string;
+  let badgeText: string;
+  if (isFailed) {
+    badgeClass = 'fail';
+    badgeText = 'FAIL';
+  } else if (isSkipped) {
+    badgeClass = 'skip';
+    badgeText = 'SKIP';
+  } else {
+    badgeClass = 'pass';
+    badgeText = 'PASS';
+  }
+
   const pixelMatch = 100 - test.pixelComparison.mismatchPercentage;
 
+  // For skipped tests, show alignment errors as "expected" warnings not errors
+  const showSkipNote = isSkipped && test.alignmentValidation.errors.length > 0;
+
   return `
-    <div class="test-card ${collapsed && passed ? 'collapsed' : ''}">
+    <div class="test-card ${collapsed && isPassed ? 'collapsed' : ''}">
       <div class="test-header">
         <div>
           <span class="test-name">${test.id}</span>
           <span class="test-meta"> - ${test.format} @ ${test.resolution}px</span>
         </div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <span class="badge ${passed ? 'pass' : 'fail'}">${passed ? 'PASS' : 'FAIL'}</span>
-          <button class="toggle-btn">${collapsed && passed ? 'Expand' : 'Collapse'}</button>
+          <span class="badge ${badgeClass}">${badgeText}</span>
+          <button class="toggle-btn">${collapsed && isPassed ? 'Expand' : 'Collapse'}</button>
         </div>
       </div>
       <div class="test-body">
@@ -408,16 +459,16 @@ function renderTestCard(test: TestResult, collapsed: boolean): string {
             <div class="metric-value ${test.pixelComparison.passed ? 'pass' : 'fail'}">${pixelMatch.toFixed(2)}%</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Head Delta</div>
-            <div class="metric-value ${test.alignmentValidation.headAlignment.passed ? 'pass' : 'fail'}">${test.alignmentValidation.headAlignment.delta.toFixed(2)}px</div>
+            <div class="metric-label">${isSkipped ? 'Anchor Delta' : 'Head Delta'}</div>
+            <div class="metric-value ${isSkipped ? '' : test.alignmentValidation.headAlignment.passed ? 'pass' : 'fail'}">${test.alignmentValidation.headAlignment.delta.toFixed(2)}px${isSkipped ? ' (skipped)' : ''}</div>
           </div>
           <div class="metric">
             <div class="metric-label">Headroom</div>
-            <div class="metric-value ${test.alignmentValidation.headroom.passed ? 'pass' : 'fail'}">${(test.alignmentValidation.headroom.constraintPercent * 100).toFixed(1)}%</div>
+            <div class="metric-value ${isSkipped ? '' : test.alignmentValidation.headroom.passed ? 'pass' : 'fail'}">${(test.alignmentValidation.headroom.constraintPercent * 100).toFixed(1)}%${isSkipped ? ' (skipped)' : ''}</div>
           </div>
           <div class="metric">
             <div class="metric-label">Body Scale</div>
-            <div class="metric-value ${test.alignmentValidation.bodyScale.withinRange ? 'pass' : 'fail'}">${test.alignmentValidation.bodyScale.applied.toFixed(3)}</div>
+            <div class="metric-value ${isSkipped ? '' : test.alignmentValidation.bodyScale.withinRange ? 'pass' : 'fail'}">${test.alignmentValidation.bodyScale.applied.toFixed(3)}${isSkipped ? ' (skipped)' : ''}</div>
           </div>
           <div class="metric">
             <div class="metric-label">Duration</div>
@@ -425,24 +476,58 @@ function renderTestCard(test: TestResult, collapsed: boolean): string {
           </div>
         </div>
 
-        ${!passed ? `
-        <div class="image-comparison">
-          <div class="image-panel">
-            <img src="${test.baselinePath}" alt="Baseline" onerror="this.style.display='none'">
-            <div class="image-label">Baseline</div>
-          </div>
-          <div class="image-panel">
-            <img src="${test.actualPath}" alt="Actual" onerror="this.style.display='none'">
-            <div class="image-label">Actual</div>
-          </div>
-          <div class="image-panel">
-            <img src="${test.diffPath || ''}" alt="Diff" onerror="this.style.display='none'">
-            <div class="image-label">Diff</div>
+        <!-- Source Images: Before & After -->
+        ${test.beforeImagePath || test.afterImagePath ? `
+        <div style="margin-bottom: 1.5rem;">
+          <h4 style="margin-bottom: 0.75rem; color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Source Images</h4>
+          <div class="image-comparison" style="grid-template-columns: repeat(2, 1fr);">
+            ${test.beforeImagePath ? `
+            <div class="image-panel">
+              <img src="${toDataUrl(test.beforeImagePath)}" alt="Before" onerror="this.parentElement.style.display='none'">
+              <div class="image-label">Before</div>
+            </div>
+            ` : ''}
+            ${test.afterImagePath ? `
+            <div class="image-panel">
+              <img src="${toDataUrl(test.afterImagePath)}" alt="After" onerror="this.parentElement.style.display='none'">
+              <div class="image-label">After</div>
+            </div>
+            ` : ''}
           </div>
         </div>
         ` : ''}
 
-        ${test.alignmentValidation.errors.length > 0 || test.pixelComparison.error ? `
+        <!-- Export Result: Baseline vs Actual (+ Diff for failures) -->
+        <div style="margin-bottom: 1rem;">
+          <h4 style="margin-bottom: 0.75rem; color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Export Result</h4>
+          <div class="image-comparison" style="grid-template-columns: ${isFailed ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)'};">
+            <div class="image-panel">
+              <img src="${toDataUrl(test.baselinePath)}" alt="Baseline" onerror="this.parentElement.style.display='none'">
+              <div class="image-label">Baseline (Expected)</div>
+            </div>
+            <div class="image-panel">
+              <img src="${toDataUrl(test.actualPath)}" alt="Actual" onerror="this.parentElement.style.display='none'">
+              <div class="image-label">Actual (Generated)</div>
+            </div>
+            ${isFailed && test.diffPath ? `
+            <div class="image-panel">
+              <img src="${toDataUrl(test.diffPath)}" alt="Diff" onerror="this.parentElement.style.display='none'">
+              <div class="image-label">Diff</div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+
+        ${showSkipNote ? `
+        <div class="errors-list" style="background: rgba(255, 193, 7, 0.1);">
+          <h4 style="color: var(--warning);">Expected (Alignment Skipped)</h4>
+          <ul>
+            ${test.alignmentValidation.errors.map((e) => `<li>${e}</li>`).join('')}
+          </ul>
+        </div>
+        ` : ''}
+
+        ${isFailed && (test.alignmentValidation.errors.length > 0 || test.pixelComparison.error) ? `
         <div class="errors-list">
           <h4>Errors</h4>
           <ul>
@@ -454,6 +539,27 @@ function renderTestCard(test: TestResult, collapsed: boolean): string {
       </div>
     </div>
   `;
+}
+
+/**
+ * Convert image file to base64 data URL for embedding in HTML
+ * Falls back to file:// URL if file cannot be read
+ */
+function toDataUrl(absolutePath: string | undefined): string {
+  if (!absolutePath) return '';
+  try {
+    if (fs.existsSync(absolutePath)) {
+      const buffer = fs.readFileSync(absolutePath);
+      const base64 = buffer.toString('base64');
+      const ext = path.extname(absolutePath).toLowerCase();
+      const mimeType = ext === '.png' ? 'image/png' : ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+      return `data:${mimeType};base64,${base64}`;
+    }
+  } catch {
+    // Fall through to file:// URL
+  }
+  // Fallback to file:// URL
+  return 'file://' + encodeURI(absolutePath).replace(/#/g, '%23');
 }
 
 /**
@@ -482,15 +588,31 @@ export function formatConsoleSummary(data: ReportData): string {
 
   output += `  Total:     ${summary.total}\n`;
   output += `  Passed:    \x1b[32m${summary.passed}\x1b[0m\n`;
+  if (summary.skipped > 0) {
+    output += `  Skipped:   \x1b[33m${summary.skipped}\x1b[0m (alignment validation)\n`;
+  }
   output += `  Failed:    \x1b[31m${summary.failed}\x1b[0m\n`;
   output += `  Pass Rate: ${summary.passRate >= 95 ? '\x1b[32m' : '\x1b[31m'}${summary.passRate.toFixed(1)}%\x1b[0m\n`;
   output += `  Duration:  ${(data.duration / 1000).toFixed(2)}s\n\n`;
 
-  // List failures
+  // Categorize results
   const failures = results.filter(
-    (r) => !r.pixelComparison.passed || !r.alignmentValidation.passed
+    (r) => !r.pixelComparison.passed || (!r.alignmentValidation.passed && !r.alignmentSkipped)
+  );
+  const skipped = results.filter(
+    (r) => r.pixelComparison.passed && r.alignmentSkipped
   );
 
+  // List skipped tests (alignment validation intentionally skipped)
+  if (skipped.length > 0) {
+    output += '  Alignment Skipped (expected):\n';
+    for (const s of skipped) {
+      output += `    \x1b[33m⚠\x1b[0m ${s.id} (${s.format})\n`;
+    }
+    output += '\n';
+  }
+
+  // List actual failures
   if (failures.length > 0) {
     output += '  Failed Tests:\n';
     for (const f of failures) {

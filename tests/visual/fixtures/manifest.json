@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "generatedAt": "2025-12-23T19:35:17.036Z",
+  "generatedAt": "2025-12-23T20:13:02.132Z",
   "fixtures": [
     {
       "id": "standard-001",
@@ -8600,7 +8600,7 @@
             "x": 0.5,
             "y": 0.15,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.3
           },
           {
             "x": 0.5,
@@ -9157,13 +9157,13 @@
             "x": 0.42,
             "y": 0.6,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.3
           },
           {
             "x": 0.58,
             "y": 0.6,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.3
           },
           {
             "x": 0.5,
@@ -9438,7 +9438,7 @@
             "x": 0.5,
             "y": 0.15,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.3
           },
           {
             "x": 0.5,
@@ -9576,13 +9576,13 @@
             "x": 0.42,
             "y": 0.6,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.3
           },
           {
             "x": 0.58,
             "y": 0.6,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.3
           },
           {
             "x": 0.5,
@@ -9857,7 +9857,7 @@
             "x": 0.5,
             "y": 0.15,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.5
           },
           {
             "x": 0.5,
@@ -9995,13 +9995,13 @@
             "x": 0.42,
             "y": 0.6,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.5
           },
           {
             "x": 0.58,
             "y": 0.6,
             "z": 0,
-            "visibility": 0.95
+            "visibility": 0.5
           },
           {
             "x": 0.5,

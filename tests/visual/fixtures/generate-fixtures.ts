@@ -507,6 +507,11 @@ function generateTestFixtures(): { fixtures: TestFixture[]; figures: Map<string,
       rightHip: { x: 0.58, y: 0.60 },
       visibility: 0.95,
     });
+    // Apply same visibility modifications to after landmarks
+    // so both images have identical visibility for proper testing
+    afterLandmarks[0].visibility = config.noseVis;
+    afterLandmarks[23].visibility = config.hipVis;
+    afterLandmarks[24].visibility = config.hipVis;
 
     const beforeFig: TestFigure = {
       id: `${config.id}-before`,

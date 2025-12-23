@@ -145,23 +145,98 @@ function calculateCoverFit(
 }
 
 /**
+ * Get shoulder center Y position from landmarks
+ * Returns normalized Y (0-1) or null if shoulders not visible
+ */
+function getShoulderCenterY(
+  landmarks: Landmark[] | undefined,
+  visibilityThreshold: number = 0.5
+): number | null {
+  if (!landmarks || landmarks.length < 33) return null;
+
+  const leftShoulder = landmarks[11];
+  const rightShoulder = landmarks[12];
+
+  const hasLeft = (leftShoulder?.visibility ?? 0) >= visibilityThreshold;
+  const hasRight = (rightShoulder?.visibility ?? 0) >= visibilityThreshold;
+
+  if (hasLeft && hasRight) {
+    return (leftShoulder.y + rightShoulder.y) / 2;
+  } else if (hasLeft) {
+    return leftShoulder.y;
+  } else if (hasRight) {
+    return rightShoulder.y;
+  }
+  return null;
+}
+
+/**
+ * Get hip center Y position from landmarks
+ * Returns normalized Y (0-1) or null if hips not visible
+ */
+function getHipCenterY(
+  landmarks: Landmark[] | undefined,
+  visibilityThreshold: number = 0.5
+): number | null {
+  if (!landmarks || landmarks.length < 33) return null;
+
+  const leftHip = landmarks[23];
+  const rightHip = landmarks[24];
+
+  const hasLeft = (leftHip?.visibility ?? 0) >= visibilityThreshold;
+  const hasRight = (rightHip?.visibility ?? 0) >= visibilityThreshold;
+
+  if (hasLeft && hasRight) {
+    return (leftHip.y + rightHip.y) / 2;
+  } else if (hasLeft) {
+    return leftHip.y;
+  } else if (hasRight) {
+    return rightHip.y;
+  }
+  return null;
+}
+
+/**
+ * Get shoulder-to-hip height from landmarks
+ * Used as fallback when nose is not visible (cropped head)
+ */
+function getShoulderToHipHeight(
+  landmarks: Landmark[] | undefined,
+  visibilityThreshold: number = 0.5
+): number {
+  const shoulderY = getShoulderCenterY(landmarks, visibilityThreshold);
+  const hipY = getHipCenterY(landmarks, visibilityThreshold);
+
+  if (shoulderY !== null && hipY !== null) {
+    return Math.abs(hipY - shoulderY);
+  }
+  return 0.35; // default shoulder-to-hip ratio
+}
+
+/**
  * Get normalized body height from landmarks (nose to hip center)
  * Returns value in 0-1 range representing proportion of image height
+ * Falls back to shoulder-to-hip if nose is not visible or head is cropped (Y < 0.02)
  */
 function getBodyHeight(landmarks: Landmark[] | undefined): number {
   if (!landmarks || landmarks.length < 33) return 0.5; // default
 
   const VISIBILITY_THRESHOLD = 0.5;
+  const HEAD_CROPPED_THRESHOLD = 0.02;
   const nose = landmarks[0];
   const leftHip = landmarks[23];
   const rightHip = landmarks[24];
 
   // Check if we have visible landmarks
   const hasNose = (nose?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+  const noseIsCropped = nose && nose.y < HEAD_CROPPED_THRESHOLD;
   const hasLeftHip = (leftHip?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
   const hasRightHip = (rightHip?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
 
-  if (!hasNose) return 0.5;
+  // If nose not visible OR head is cropped (Y < 0.02), use shoulder-to-hip as fallback
+  if (!hasNose || noseIsCropped) {
+    return getShoulderToHipHeight(landmarks, VISIBILITY_THRESHOLD);
+  }
 
   let hipY: number;
   if (hasLeftHip && hasRightHip) {
@@ -234,14 +309,48 @@ function calculateAlignedDrawParams(
 ): {
   before: { drawX: number; drawY: number; drawWidth: number; drawHeight: number };
   after: { drawX: number; drawY: number; drawWidth: number; drawHeight: number };
+  useShoulderAlignment?: boolean;
+  cropTopOffset?: number;
 } {
   const VISIBILITY_THRESHOLD = 0.5;
+  const HEAD_CROPPED_THRESHOLD = 0.02; // Head is considered cropped if Y < 2%
 
   // Get head Y positions (normalized 0-1, where 0 = top of image)
   const beforeNose = beforeLandmarks?.[0];
   const afterNose = afterLandmarks?.[0];
-  const beforeHeadY = (beforeNose?.visibility ?? 0) >= VISIBILITY_THRESHOLD ? beforeNose!.y : 0.1;
-  const afterHeadY = (afterNose?.visibility ?? 0) >= VISIBILITY_THRESHOLD ? afterNose!.y : 0.1;
+  const beforeNoseVisible = (beforeNose?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+  const afterNoseVisible = (afterNose?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+
+  // Detect if head is cropped (Y < 0.02 or not visible)
+  const beforeHeadCropped = !beforeNoseVisible || (beforeNose && beforeNose.y < HEAD_CROPPED_THRESHOLD);
+  const afterHeadCropped = !afterNoseVisible || (afterNose && afterNose.y < HEAD_CROPPED_THRESHOLD);
+  const useShoulderAlignment = beforeHeadCropped || afterHeadCropped;
+
+  // Get anchor Y position - use shoulders if either head is cropped
+  let beforeAnchorY: number;
+  let afterAnchorY: number;
+
+  if (useShoulderAlignment) {
+    // Use shoulder center as alignment anchor
+    const beforeShoulderY = getShoulderCenterY(beforeLandmarks, VISIBILITY_THRESHOLD);
+    const afterShoulderY = getShoulderCenterY(afterLandmarks, VISIBILITY_THRESHOLD);
+    beforeAnchorY = beforeShoulderY ?? 0.25; // default shoulder position
+    afterAnchorY = afterShoulderY ?? 0.25;
+    console.log('[Alignment] Using SHOULDER alignment (head cropped):', {
+      beforeHeadCropped,
+      afterHeadCropped,
+      beforeAnchorY,
+      afterAnchorY
+    });
+  } else {
+    // Use head (nose) as alignment anchor
+    beforeAnchorY = beforeNose!.y;
+    afterAnchorY = afterNose!.y;
+  }
+
+  // Legacy variable names for compatibility with rest of function
+  const beforeHeadY = beforeAnchorY;
+  const afterHeadY = afterAnchorY;
 
   // ========================================
   // PHASE 1: Assess scaling required
@@ -328,13 +437,54 @@ function calculateAlignedDrawParams(
   // PHASE 3: Position both images
   // ========================================
 
-  // Position images so their heads align at targetHeadPixelY
+  // Position images so their anchor points (heads or shoulders) align at targetHeadPixelY
   let beforeDrawY = targetHeadPixelY - beforeHeadAtTop;
   let afterDrawY = targetHeadPixelY - afterHeadAtTop;
 
-  // Apply smart clamping that prioritizes head visibility
-  beforeDrawY = clampForHeadVisibility(beforeDrawY, beforeScaledHeight, targetHeight, beforeHeadY);
-  afterDrawY = clampForHeadVisibility(afterDrawY, afterScaledHeight, targetHeight, afterHeadY);
+  // Calculate crop top offset for matching top edges when using shoulder alignment
+  // When one head is cropped and the other isn't, we need to crop from the top
+  // so both images have matching top edges
+  let cropTopOffset = 0;
+  if (useShoulderAlignment) {
+    // Find where each image's top edge is relative to canvas top
+    // If drawY is negative, that's how much of the image extends above canvas
+    const beforeTopCrop = Math.abs(Math.min(0, beforeDrawY));
+    const afterTopCrop = Math.abs(Math.min(0, afterDrawY));
+
+    // Calculate how much top crop each image has naturally
+    // The image with MORE negative drawY has more content cropped at top
+    const maxTopCrop = Math.max(beforeTopCrop, afterTopCrop);
+
+    // Apply consistent top crop to both by shifting both down by the same amount
+    // This ensures both images show the same amount from the top
+    if (beforeTopCrop < maxTopCrop) {
+      // Before image has less crop - shift it down to match
+      const adjustment = maxTopCrop - beforeTopCrop;
+      beforeDrawY -= adjustment;
+    }
+    if (afterTopCrop < maxTopCrop) {
+      // After image has less crop - shift it down to match
+      const adjustment = maxTopCrop - afterTopCrop;
+      afterDrawY -= adjustment;
+    }
+
+    // Record the crop offset for reporting
+    cropTopOffset = maxTopCrop;
+
+    console.log('[Phase3] Shoulder alignment crop adjustment:', {
+      beforeTopCrop,
+      afterTopCrop,
+      maxTopCrop,
+      cropTopOffset
+    });
+  }
+
+  // Apply smart clamping that prioritizes anchor visibility (skip if using shoulder alignment
+  // as we've already manually adjusted positions)
+  if (!useShoulderAlignment) {
+    beforeDrawY = clampForHeadVisibility(beforeDrawY, beforeScaledHeight, targetHeight, beforeHeadY);
+    afterDrawY = clampForHeadVisibility(afterDrawY, afterScaledHeight, targetHeight, afterHeadY);
+  }
 
   // Center horizontally
   const beforeDrawX = (targetWidth - beforeScaledWidth) / 2;
@@ -342,7 +492,9 @@ function calculateAlignedDrawParams(
 
   console.log('[Phase3] Final positions:', {
     before: { drawX: beforeDrawX, drawY: beforeDrawY, drawWidth: beforeScaledWidth, drawHeight: beforeScaledHeight },
-    after: { drawX: afterDrawX, drawY: afterDrawY, drawWidth: afterScaledWidth, drawHeight: afterScaledHeight }
+    after: { drawX: afterDrawX, drawY: afterDrawY, drawWidth: afterScaledWidth, drawHeight: afterScaledHeight },
+    useShoulderAlignment,
+    cropTopOffset
   });
 
   return {
@@ -358,6 +510,8 @@ function calculateAlignedDrawParams(
       drawWidth: afterScaledWidth,
       drawHeight: afterScaledHeight,
     },
+    useShoulderAlignment,
+    cropTopOffset,
   };
 }
 

@@ -400,4 +400,240 @@ describe('calculateAlignedDrawParams', () => {
       expect(afterOverflow).toBeGreaterThanOrEqual(1.14);
     });
   });
+
+  describe('Shoulder Alignment (Cropped Heads)', () => {
+    /**
+     * Helper to create landmarks with a cropped head (nose Y < 0.02 or low visibility)
+     */
+    function createCroppedHeadLandmarks(opts: {
+      noseY?: number;
+      noseVisibility?: number;
+      shoulderY: number;
+      hipY: number;
+    }): Landmark[] {
+      const landmarks: Landmark[] = Array.from({ length: 33 }, () => ({
+        x: 0.5,
+        y: 0.5,
+        z: 0,
+        visibility: 0.1,
+      }));
+
+      // Nose - either above frame (Y < 0.02) or low visibility
+      landmarks[0] = {
+        x: 0.5,
+        y: opts.noseY ?? -0.05, // Above frame by default
+        z: 0,
+        visibility: opts.noseVisibility ?? 0.3, // Low visibility
+      };
+
+      // Shoulders - visible
+      landmarks[11] = { x: 0.4, y: opts.shoulderY, z: 0, visibility: 0.95 };
+      landmarks[12] = { x: 0.6, y: opts.shoulderY, z: 0, visibility: 0.95 };
+
+      // Hips - visible
+      landmarks[23] = { x: 0.42, y: opts.hipY, z: 0, visibility: 0.95 };
+      landmarks[24] = { x: 0.58, y: opts.hipY, z: 0, visibility: 0.95 };
+
+      return landmarks;
+    }
+
+    it('should detect cropped head and return useShoulderAlignment flag', () => {
+      const croppedLandmarks = createCroppedHeadLandmarks({
+        noseY: 0.01, // Below threshold (0.02)
+        noseVisibility: 0.9,
+        shoulderY: 0.15,
+        hipY: 0.50,
+      });
+      const normalLandmarks = createLandmarks({
+        noseY: 0.10,
+        shoulderY: 0.20,
+        hipY: 0.50,
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        croppedLandmarks,
+        normalLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      expect(result.useShoulderAlignment).toBe(true);
+    });
+
+    it('should detect cropped head by low visibility and return useShoulderAlignment flag', () => {
+      const croppedLandmarks = createCroppedHeadLandmarks({
+        noseY: 0.10, // Normal Y position
+        noseVisibility: 0.3, // But low visibility
+        shoulderY: 0.20,
+        hipY: 0.55,
+      });
+      const normalLandmarks = createLandmarks({
+        noseY: 0.10,
+        shoulderY: 0.20,
+        hipY: 0.50,
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        croppedLandmarks,
+        normalLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      expect(result.useShoulderAlignment).toBe(true);
+    });
+
+    it('should NOT use shoulder alignment when both heads are visible', () => {
+      const landmarks1 = createLandmarks({
+        noseY: 0.10,
+        shoulderY: 0.20,
+        hipY: 0.50,
+      });
+      const landmarks2 = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        landmarks1,
+        landmarks2,
+        targetWidth,
+        targetHeight
+      );
+
+      expect(result.useShoulderAlignment).toBeFalsy();
+    });
+
+    it('should align shoulders when one head is cropped', () => {
+      // Use same shoulder Y and hip Y to ensure same body height calculation
+      // For cropped head: shoulder-to-hip = 0.50 - 0.15 = 0.35
+      // For normal head: nose-to-hip = 0.50 - 0.08 = 0.42 (different!)
+      // So we use same hip position but adjust to get similar body scale
+      const croppedLandmarks = createCroppedHeadLandmarks({
+        noseY: 0.01,
+        noseVisibility: 0.9,
+        shoulderY: 0.15, // Shoulder at 15%
+        hipY: 0.50,      // Hip at 50%, shoulder-to-hip = 0.35
+      });
+      const normalLandmarks = createLandmarks({
+        noseY: 0.08,
+        shoulderY: 0.15, // Same shoulder position
+        hipY: 0.43,      // Adjusted so nose-to-hip = 0.35 (same as shoulder-to-hip)
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        croppedLandmarks,
+        normalLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // When useShoulderAlignment is true, verify it was detected
+      expect(result.useShoulderAlignment).toBe(true);
+
+      // Calculate shoulder positions on canvas using the shoulder Y that was used for alignment
+      const beforeShoulderY = result.before.drawY + 0.15 * result.before.drawHeight;
+      const afterShoulderY = result.after.drawY + 0.15 * result.after.drawHeight;
+
+      // Shoulders should be aligned - with same body height, scale ratio should be ~1.0
+      // and shoulders should be close together
+      const shoulderDelta = Math.abs(beforeShoulderY - afterShoulderY);
+      expect(shoulderDelta).toBeLessThan(5); // 5px tolerance when body heights match
+    });
+
+    it('should use shoulder-to-hip height for body scale when nose not visible', () => {
+      const croppedLandmarks = createCroppedHeadLandmarks({
+        noseVisibility: 0.2, // Low visibility
+        shoulderY: 0.15,
+        hipY: 0.50, // Shoulder-to-hip = 0.35
+      });
+      const normalLandmarks = createLandmarks({
+        noseY: 0.10,
+        shoulderY: 0.20,
+        hipY: 0.55, // Nose-to-hip = 0.45
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        croppedLandmarks,
+        normalLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Should produce valid output (body scale calculation should work)
+      expect(result.before.drawHeight).toBeGreaterThan(0);
+      expect(result.after.drawHeight).toBeGreaterThan(0);
+      // Scale ratio should be reasonable (not 1:1 due to different body heights)
+      const scaleRatio = result.after.drawHeight / result.before.drawHeight;
+      expect(scaleRatio).toBeGreaterThanOrEqual(0.75);
+      expect(scaleRatio).toBeLessThanOrEqual(1.30);
+    });
+
+    it('should handle both heads cropped', () => {
+      const croppedLandmarks1 = createCroppedHeadLandmarks({
+        noseY: 0.01,
+        noseVisibility: 0.3,
+        shoulderY: 0.10,
+        hipY: 0.45,
+      });
+      const croppedLandmarks2 = createCroppedHeadLandmarks({
+        noseY: -0.02,
+        noseVisibility: 0.2,
+        shoulderY: 0.12,
+        hipY: 0.50,
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        croppedLandmarks1,
+        croppedLandmarks2,
+        targetWidth,
+        targetHeight
+      );
+
+      expect(result.useShoulderAlignment).toBe(true);
+      expect(result.before.drawHeight).toBeGreaterThan(0);
+      expect(result.after.drawHeight).toBeGreaterThan(0);
+    });
+
+    it('should return cropTopOffset when using shoulder alignment', () => {
+      const croppedLandmarks = createCroppedHeadLandmarks({
+        noseY: 0.01,
+        noseVisibility: 0.9,
+        shoulderY: 0.15,
+        hipY: 0.50,
+      });
+      const normalLandmarks = createLandmarks({
+        noseY: 0.10,
+        shoulderY: 0.20,
+        hipY: 0.50,
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        croppedLandmarks,
+        normalLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      expect(result.useShoulderAlignment).toBe(true);
+      // cropTopOffset should be defined when shoulder alignment is used
+      expect(result.cropTopOffset).toBeDefined();
+      expect(typeof result.cropTopOffset).toBe('number');
+    });
+  });
 });

@@ -21,6 +21,10 @@ export interface DrawParams {
 export interface AlignmentParams {
   before: DrawParams;
   after: DrawParams;
+  /** Whether shoulder-based alignment was used (for cropped heads) */
+  useShoulderAlignment?: boolean;
+  /** How much was cropped from top to match images (in pixels) */
+  cropTopOffset?: number;
 }
 
 export interface ValidationConstraints {
@@ -95,6 +99,28 @@ function getHeadY(landmarks: Landmark[] | undefined): number {
 }
 
 /**
+ * Get shoulder center Y position from landmarks
+ * Returns normalized Y position (0-1)
+ */
+function getShoulderY(landmarks: Landmark[] | undefined): number {
+  if (!landmarks || landmarks.length < 33) return 0.25; // default shoulder position
+  const leftShoulder = landmarks[11];
+  const rightShoulder = landmarks[12];
+
+  const hasLeft = (leftShoulder?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+  const hasRight = (rightShoulder?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+
+  if (hasLeft && hasRight) {
+    return (leftShoulder.y + rightShoulder.y) / 2;
+  } else if (hasLeft) {
+    return leftShoulder.y;
+  } else if (hasRight) {
+    return rightShoulder.y;
+  }
+  return 0.25;
+}
+
+/**
  * Get body height from landmarks (nose to hip center)
  * Returns normalized height (0-1)
  */
@@ -143,45 +169,67 @@ export function validateAlignment(
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Get normalized head positions
-  const beforeHeadYNorm = getHeadY(beforeLandmarks);
-  const afterHeadYNorm = getHeadY(afterLandmarks);
+  // Determine if we're validating shoulder alignment (for cropped heads)
+  const useShoulderAlignment = alignParams.useShoulderAlignment ?? false;
 
-  // Calculate actual head positions on canvas (in pixels)
-  const beforeHeadY = alignParams.before.drawY + beforeHeadYNorm * alignParams.before.drawHeight;
-  const afterHeadY = alignParams.after.drawY + afterHeadYNorm * alignParams.after.drawHeight;
+  // Get normalized anchor positions (head or shoulder depending on mode)
+  let beforeAnchorYNorm: number;
+  let afterAnchorYNorm: number;
 
-  // Head alignment validation
+  if (useShoulderAlignment) {
+    // Use shoulder positions for validation
+    beforeAnchorYNorm = getShoulderY(beforeLandmarks);
+    afterAnchorYNorm = getShoulderY(afterLandmarks);
+  } else {
+    // Use head positions for validation
+    beforeAnchorYNorm = getHeadY(beforeLandmarks);
+    afterAnchorYNorm = getHeadY(afterLandmarks);
+  }
+
+  // Calculate actual anchor positions on canvas (in pixels)
+  const beforeHeadY = alignParams.before.drawY + beforeAnchorYNorm * alignParams.before.drawHeight;
+  const afterHeadY = alignParams.after.drawY + afterAnchorYNorm * alignParams.after.drawHeight;
+
+  // Alignment validation (head or shoulder depending on mode)
   const headDelta = Math.abs(beforeHeadY - afterHeadY);
   const headAlignmentPassed = headDelta <= opts.maxHeadAlignmentDelta;
 
   if (!headAlignmentPassed) {
+    const anchorType = useShoulderAlignment ? 'Shoulder' : 'Head';
     errors.push(
-      `Head alignment delta ${headDelta.toFixed(2)}px exceeds maximum ${opts.maxHeadAlignmentDelta}px`
+      `${anchorType} alignment delta ${headDelta.toFixed(2)}px exceeds maximum ${opts.maxHeadAlignmentDelta}px`
     );
   }
 
   // Headroom validation (percentage from top)
+  // For shoulder alignment, this represents shoulder position instead of head position
   const beforeHeadroomPercent = beforeHeadY / targetHeight;
   const afterHeadroomPercent = afterHeadY / targetHeight;
   const constraintHeadroomPercent = Math.min(beforeHeadroomPercent, afterHeadroomPercent);
 
   let headroomPassed = true;
 
-  // Check minimum headroom (heads shouldn't be too close to top)
-  if (constraintHeadroomPercent < opts.minHeadroom - 0.01) {
+  // For shoulder alignment, adjust expected position range
+  // Shoulders are typically at ~15-35% from top vs heads at 5-20%
+  const minPositionPercent = useShoulderAlignment ? 0.10 : opts.minHeadroom;
+  const maxPositionPercent = useShoulderAlignment ? 0.40 : opts.maxHeadroom;
+
+  // Check minimum position (anchor shouldn't be too close to top)
+  if (constraintHeadroomPercent < minPositionPercent - 0.01) {
     // 1% tolerance
+    const anchorType = useShoulderAlignment ? 'Shoulder' : 'Head';
     errors.push(
-      `Headroom ${(constraintHeadroomPercent * 100).toFixed(1)}% is below minimum ${(opts.minHeadroom * 100).toFixed(0)}%`
+      `${anchorType} position ${(constraintHeadroomPercent * 100).toFixed(1)}% is below minimum ${(minPositionPercent * 100).toFixed(0)}%`
     );
     headroomPassed = false;
   }
 
-  // Check maximum headroom (heads shouldn't be too far from top)
-  if (constraintHeadroomPercent > opts.maxHeadroom + 0.01) {
+  // Check maximum position (anchor shouldn't be too far from top)
+  if (constraintHeadroomPercent > maxPositionPercent + 0.01) {
     // 1% tolerance
+    const anchorType = useShoulderAlignment ? 'Shoulder' : 'Head';
     warnings.push(
-      `Headroom ${(constraintHeadroomPercent * 100).toFixed(1)}% exceeds expected maximum ${(opts.maxHeadroom * 100).toFixed(0)}%`
+      `${anchorType} position ${(constraintHeadroomPercent * 100).toFixed(1)}% exceeds expected maximum ${(maxPositionPercent * 100).toFixed(0)}%`
     );
     // This is a warning, not an error - algorithm may push down for visibility
   }

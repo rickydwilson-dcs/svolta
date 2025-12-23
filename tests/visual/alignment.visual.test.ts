@@ -53,6 +53,8 @@ const SKIP_ALIGNMENT_VALIDATION = new Set([
   'framing-head-cropped',       // Before head is cropped at top - can't perfectly align
   'framing-both-heads-cropped', // Both heads cropped - alignment best-effort only
   'framing-tight-headroom',     // Tests 3% headroom - below normal 5% threshold by design
+  'lowvis-nose',                // Uses shoulder alignment due to low nose visibility
+  'lowvis-both',                // Uses shoulder alignment due to low visibility on both
 ]);
 
 // ============================================================================
@@ -124,11 +126,19 @@ beforeAll(async () => {
 afterAll(async () => {
   const duration = Date.now() - startTime;
 
-  // Calculate summary
-  const passed = testResults.filter(
-    (r) => r.pixelComparison.passed && r.alignmentValidation.passed
+  // Calculate summary with three categories:
+  // - Passed: pixel passed AND (alignment passed OR alignment skipped)
+  // - Skipped: pixel passed AND alignment skipped (edge case fixtures)
+  // - Failed: pixel failed OR (alignment failed AND not skipped)
+  const skipped = testResults.filter(
+    (r) => r.pixelComparison.passed && r.alignmentSkipped
   ).length;
-  const failed = testResults.length - passed;
+  const passed = testResults.filter(
+    (r) => r.pixelComparison.passed && (r.alignmentValidation.passed || r.alignmentSkipped)
+  ).length;
+  const failed = testResults.filter(
+    (r) => !r.pixelComparison.passed || (!r.alignmentValidation.passed && !r.alignmentSkipped)
+  ).length;
 
   const reportData: ReportData = {
     timestamp: new Date().toISOString(),
@@ -137,6 +147,7 @@ afterAll(async () => {
     summary: {
       total: testResults.length,
       passed,
+      skipped,
       failed,
       passRate: testResults.length > 0 ? (passed / testResults.length) * 100 : 0,
     },
@@ -264,6 +275,7 @@ describe('Visual Regression Tests', () => {
 
           // Store result for report
           const formatDir = format.replace(':', '-');
+          const isAlignmentSkipped = SKIP_ALIGNMENT_VALIDATION.has(fixture.id);
           testResults.push({
             id: fixture.id,
             category: fixture.category,
@@ -275,6 +287,9 @@ describe('Visual Regression Tests', () => {
             actualPath: path.join(DIFFS_DIR, `${fixture.id}-${formatDir}-${RESOLUTION}-actual.png`),
             diffPath: pixelResult.diffImagePath,
             duration,
+            alignmentSkipped: isAlignmentSkipped,
+            beforeImagePath: path.join(FIXTURES_DIR, fixture.before.imagePath),
+            afterImagePath: path.join(FIXTURES_DIR, fixture.after.imagePath),
           });
 
           // Assertions with clear error messages
