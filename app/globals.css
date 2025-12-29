@@ -590,8 +590,14 @@ input[type="range"].accent-purple::-moz-range-thumb {
    Marketing Header (Scroll-aware)
    =================================== */
 
-.header-transparent {
-  background: transparent;
+.header-gradient {
+  background: linear-gradient(
+    90deg,
+    #F58529 0%,
+    #DD2A7B 35%,
+    #8134AF 65%,
+    #515BD4 100%
+  );
 }
 
 .header-scrolled {
