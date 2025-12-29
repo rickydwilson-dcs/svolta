@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
+import { MarketingHeader } from '@/components/layout/MarketingHeader';
 
 export default function MarketingLayout({
   children,
@@ -8,31 +9,8 @@ export default function MarketingLayout({
 }) {
   return (
     <div className="min-h-dvh bg-canvas flex flex-col">
-      {/* Header */}
-      <header className="floating-header fixed top-0 left-0 right-0 z-50 safe-top">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <SvoltaLogo size={32} mode="dark" showWordmark wordmarkStyle="gradient" />
-          </Link>
-
-          {/* Navigation */}
-          <nav className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/editor"
-              className="btn-pill btn-primary h-10 px-5 text-sm"
-            >
-              Try Free
-            </Link>
-          </nav>
-        </div>
-      </header>
+      {/* Scroll-aware Header */}
+      <MarketingHeader />
 
       {/* Main Content - full width, pages control their own sections */}
       <main className="flex-1 pt-14">
