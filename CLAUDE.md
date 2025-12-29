@@ -232,12 +232,12 @@ Use `/commit.changes` to commit with proper workflow.
 
 ## Current Scope
 
-**Source Files:** 75 TypeScript/TSX files
+**Source Files:** 63 TypeScript/TSX files
 **Custom Hooks:** 5 (useAlignment, useCanvasExport, useKeyboardShortcuts, usePoseDetection, useUsageLimit)
 **State Stores:** 2 (editor-store, user-store)
-**UI Components:** 9 primitives (Button, Card, Input, Modal, Slider, Toggle, UpgradePrompt, BottomSheet, SegmentedControl)
-**API Routes:** 6 (stripe/checkout, stripe/webhook, usage/\*, auth callback)
-**Test Files:** 9 test files
+**UI Components:** 11 primitives (Button, Card, Input, Modal, Slider, Toggle, UpgradePrompt, BottomSheet, SegmentedControl, MagicLinkForm, OAuthButtons)
+**API Routes:** 7 (stripe/checkout, stripe/webhook, stripe/portal, usage/\*, account/delete, auth callback)
+**Test Files:** 4 test files
 **Visual Test Fixtures:** 66 fixtures across 9 categories
 **Documentation:** See `docs/` folder for technical documentation
 
@@ -287,4 +287,4 @@ Use `/commit.changes` to commit with proper workflow.
 
 ---
 
-**Last Updated:** 2025-12-26
+**Last Updated:** 2025-12-29

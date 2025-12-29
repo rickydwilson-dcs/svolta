@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- OAuth and Magic Link authentication (replacing email/password)
 - Visual regression test suite with 66 comprehensive fixtures
   - Resolution variations (QVGA to 24MP, mismatched before/after)
   - Aspect ratio extremes (21:9, 9:16, 3:1, 3:2, 2:3, 4:3)
@@ -16,12 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shoulder alignment fallback for cropped head scenarios
 - HTML report improvements for visual regression tests
 - Framing variation test fixtures (cropped heads, tight headroom, off-center)
+- MagicLinkForm and OAuthButtons UI components
 
 ### Changed
 
 - CI workflow now uses manual promotion (develop → staging → main) with Husky gates
 - Improved alignment UX with enhanced grid overlay
 - Updated pricing to £7.99/month and £79/year
+- Increased visual test timeout for 66 fixtures
 
 ### Fixed
 
@@ -30,8 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
-- 75 TypeScript/TSX source files (up from 57)
-- 6 custom React hooks (up from 5)
+- 63 TypeScript/TSX source files
+- 5 custom React hooks
+- 11 UI components (up from 9)
+- 7 API routes (up from 6)
 - 66 visual test fixtures across 9 categories
 - Comprehensive 4-phase alignment algorithm with dynamic crop
 
