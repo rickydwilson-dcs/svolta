@@ -170,7 +170,7 @@ function calculatePosition(
 /**
  * Add watermark to a canvas based on user tier and preferences
  *
- * Free users: Get "Svolta" text watermark
+ * Free users: Get "svolta" text watermark
  * Pro users with custom logo: Get their custom logo
  * Pro users without logo: No watermark (clean export)
  *
@@ -215,7 +215,7 @@ export async function addWatermark(
       console.warn('Failed to load custom logo, falling back to text watermark:', error);
 
       // Fallback to text watermark if logo fails to load
-      drawTextWatermark(ctx, 'Svolta', x, y, {
+      drawTextWatermark(ctx, 'svolta', x, y, {
         ...options,
         opacity: options.opacity ?? DEFAULT_OPACITY,
       });
@@ -224,7 +224,7 @@ export async function addWatermark(
   }
 
   // Free users get text watermark
-  drawTextWatermark(ctx, 'Svolta', x, y, {
+  drawTextWatermark(ctx, 'svolta', x, y, {
     ...options,
     opacity: options.opacity ?? DEFAULT_OPACITY,
   });
@@ -294,5 +294,5 @@ export function getWatermarkPreview(options: WatermarkOptions): string {
     return `Custom logo watermark at ${options.position ?? DEFAULT_POSITION}`;
   }
 
-  return `"Svolta" text watermark at ${options.position ?? DEFAULT_POSITION}`;
+  return `"svolta" text watermark at ${options.position ?? DEFAULT_POSITION}`;
 }

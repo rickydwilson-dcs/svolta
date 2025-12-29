@@ -84,7 +84,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-text mb-3">
-              Why coaches love Svolta
+              Why coaches love svolta
             </h2>
             <p className="text-text-secondary">
               Professional results in seconds, not hours. No design skills needed.
@@ -204,7 +204,7 @@ export default function HomePage() {
             Start free, upgrade when ready
           </h2>
           <p className="text-text-secondary mb-8">
-            Try Svolta with 5 free exports. Upgrade to Pro for unlimited exports and no watermarks.
+            Try svolta with 5 free exports. Upgrade to Pro for unlimited exports and no watermarks.
           </p>
 
           <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">

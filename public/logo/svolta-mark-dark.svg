@@ -1,0 +1,21 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Spine (vertical center line) -->
+  <line x1="50" y1="22" x2="50" y2="78" stroke="#C9A0DC" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Shoulder bar (horizontal) -->
+  <line x1="25" y1="38" x2="75" y2="38" stroke="#C9A0DC" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Hip bar (horizontal) -->
+  <line x1="30" y1="72" x2="70" y2="72" stroke="#C9A0DC" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Head node (top center, largest) -->
+  <circle cx="50" cy="15" r="8.5" fill="#F58529"/>
+
+  <!-- Shoulder nodes -->
+  <circle cx="25" cy="38" r="5.2" fill="#DD2A7B"/>
+  <circle cx="75" cy="38" r="5.2" fill="#DD2A7B"/>
+
+  <!-- Hip nodes -->
+  <circle cx="30" cy="72" r="5.2" fill="#515BD4"/>
+  <circle cx="70" cy="72" r="5.2" fill="#515BD4"/>
+</svg>

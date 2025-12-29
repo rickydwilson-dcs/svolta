@@ -334,8 +334,8 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
 
                 {/* Watermark (Free users only) */}
                 {!isPro && hasPhotos && (
-                  <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/90 dark:bg-black/90 text-[var(--text-primary)] text-sm font-semibold rounded-lg backdrop-blur-sm">
-                    Svolta
+                  <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/90 dark:bg-black/90 text-[var(--text-primary)] text-sm font-light tracking-tight rounded-lg backdrop-blur-sm">
+                    svolta
                   </div>
                 )}
               </div>

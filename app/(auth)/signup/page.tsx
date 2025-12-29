@@ -13,7 +13,7 @@ export default function SignupPage() {
           Create your account
         </h1>
         <p className="text-sm text-text-secondary">
-          Get started with Svolta today
+          Get started with svolta today
         </p>
       </div>
 

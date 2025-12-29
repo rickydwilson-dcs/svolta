@@ -31,12 +31,12 @@ export const PLANS: Record<string, Plan> = {
   free: {
     id: 'free',
     name: 'Free',
-    description: 'Perfect for trying out Svolta',
+    description: 'Perfect for trying out svolta',
     price: 0,
     exportsPerMonth: 5,
     features: [
       '5 exports per month',
-      'Svolta watermark',
+      'svolta watermark',
       'Square (1:1) format only',
       'Basic pose detection',
     ],

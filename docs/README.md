@@ -1,7 +1,7 @@
 # Svolta Documentation Hub
 
 **Version:** 1.0.0
-**Last Updated:** 2025-12-22
+**Last Updated:** 2025-12-29
 **Project:** Svolta - Fitness Photo Alignment SaaS
 
 ## Overview
@@ -223,9 +223,9 @@ svolta/
 | 1 - Foundation       | ✅ Complete    | Next.js, Tailwind, Supabase, UI primitives   |
 | 2 - Core Editor      | ✅ Complete    | DropZone, MediaPipe, Canvas, Landmarks       |
 | 3 - Alignment        | ✅ Complete    | Calculation logic, Controls UI, Preview      |
-| 4 - Auth & Payments  | 🔄 In Progress | Login/Signup, User store, Stripe integration |
-| 5 - Usage & Export   | 🔄 In Progress | Usage tracking, Export modal, Watermark      |
-| 6 - Landing & Polish | ⏳ Pending     | Hero, Features, Pricing, PWA, Deploy         |
+| 4 - Auth & Payments  | ✅ Complete    | Login/Signup, User store, Stripe integration |
+| 5 - Usage & Export   | ✅ Complete    | Usage tracking, Export modal, Watermark      |
+| 6 - Landing & Polish | 🔄 In Progress | Hero, Features, Pricing, PWA, Deploy         |
 
 ## Documentation Roadmap
 
@@ -271,4 +271,4 @@ svolta/
 
 ---
 
-**Note:** This documentation is living and continuously updated as the project evolves. Last major update: 2025-12-22.
+**Note:** This documentation is living and continuously updated as the project evolves. Last major update: 2025-12-29.

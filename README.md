@@ -68,9 +68,9 @@ stores/             # Zustand state stores
 | 1     | Foundation (Next.js, Tailwind, Supabase, UI primitives) | ✅ Complete    |
 | 2     | Core Editor (DropZone, MediaPipe, Canvas, Landmarks)    | ✅ Complete    |
 | 3     | Alignment System (Calculations, Controls, Preview)      | ✅ Complete    |
-| 4     | Auth & Payments (Login/Signup, User store, Stripe)      | 🔄 In Progress |
-| 5     | Usage & Export (Tracking, Export modal, Watermark)      | 🔄 In Progress |
-| 6     | Landing & Polish (Hero, Features, Animations, PWA)      | ⏳ Pending     |
+| 4     | Auth & Payments (Login/Signup, User store, Stripe)      | ✅ Complete    |
+| 5     | Usage & Export (Tracking, Export modal, Watermark)      | ✅ Complete    |
+| 6     | Landing & Polish (Hero, Features, Animations, PWA)      | 🔄 In Progress |
 
 ## Getting Started
 
@@ -139,15 +139,15 @@ MIT
 
 | Metric               | Count             |
 | -------------------- | ----------------- |
-| Source Files         | 75 TypeScript/TSX |
+| Source Files         | 63 TypeScript/TSX |
 | Custom Hooks         | 5                 |
 | State Stores         | 2                 |
-| UI Components        | 9                 |
-| API Routes           | 6                 |
-| Test Files           | 9                 |
+| UI Components        | 11                |
+| API Routes           | 7                 |
+| Test Files           | 4                 |
 | Visual Test Fixtures | 66                |
 
 ---
 
 **Domain:** www.svolta.app
-**Last Updated:** 2025-12-26
+**Last Updated:** 2025-12-29

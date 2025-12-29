@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useEditorStore } from '@/stores/editor-store';
 import { PhotoPanel } from '@/components/features/editor';
 import { Button, BottomSheet, SegmentedControl } from '@/components/ui';
+import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
 import { cn } from '@/lib/utils';
 import { useCanvasExport } from '@/hooks/useCanvasExport';
 
@@ -67,11 +68,9 @@ export default function EditorContent() {
       <header className="floating-header fixed top-0 left-0 right-0 z-40 safe-top">
         <div className="h-14 px-4 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-instagram-gradient rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg font-bold">S</span>
-            </div>
-            <span className="text-lg font-semibold text-text hidden sm:inline">Svolta</span>
+          <Link href="/" className="flex items-center">
+            <SvoltaLogo size={32} mode="dark" showWordmark wordmarkStyle="gradient" className="hidden sm:flex" />
+            <SvoltaLogo size={32} mode="dark" className="sm:hidden" />
           </Link>
 
           {/* Center Actions */}

@@ -14,7 +14,7 @@ export interface UpgradePromptProps {
 
 const triggerMessages: Record<UpgradePromptProps['trigger'], string> = {
   limit: "You've used all 5 free exports this month",
-  watermark: 'Remove the Svolta watermark',
+  watermark: 'Remove the svolta watermark',
   format: 'Unlock all export formats',
   logo: 'Add your own logo to exports',
 };

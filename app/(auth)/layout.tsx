@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
 
 export default function AuthLayout({
   children,
@@ -10,11 +11,8 @@ export default function AuthLayout({
       {/* Minimal Header */}
       <header className="w-full py-6">
         <div className="mx-auto max-w-md px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-instagram-gradient rounded-lg flex items-center justify-center">
-              <span className="text-white text-lg font-bold">S</span>
-            </div>
-            <span className="text-lg font-semibold text-text">Svolta</span>
+          <Link href="/" className="flex items-center">
+            <SvoltaLogo size={32} mode="dark" showWordmark wordmarkStyle="gradient" />
           </Link>
         </div>
       </header>

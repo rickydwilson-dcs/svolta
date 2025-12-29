@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * Example E2E test template for Svolta
+ * Example E2E test template for svolta
  *
  * Test file naming conventions:
  * - E2E tests: *.spec.ts (in e2e/ directory)
@@ -16,7 +16,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Homepage', () => {
   test('should load the homepage', async ({ page }) => {
     await page.goto('/')
-    await expect(page).toHaveTitle(/Svolta/)
+    await expect(page).toHaveTitle(/svolta/)
   })
 
   test('@smoke should have main navigation', async ({ page }) => {
