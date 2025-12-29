@@ -258,8 +258,8 @@ describe('Visual Regression Tests', () => {
   // Run tests for each format
   for (const format of FORMATS) {
     describe(`Format ${format}`, () => {
-      // Increase timeout for processing all fixtures (24 fixtures × ~500ms each)
-      it('runs all fixture tests', { timeout: 60000 }, async () => {
+      // Increase timeout for processing all fixtures (66 fixtures × ~500ms each)
+      it('runs all fixture tests', { timeout: 120000 }, async () => {
         if (!manifest?.fixtures) {
           throw new Error('Fixtures not loaded. Run: npm run test:visual:generate');
         }
