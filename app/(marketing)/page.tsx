@@ -10,7 +10,7 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 mb-6 animate-fade-in">
             <span className="status-dot w-4 h-4" />
             <span className="text-sm font-medium text-text-secondary">
-              10,000+ coaches trust us
+              Trusted by professional coaches
             </span>
           </div>
 
@@ -72,7 +72,7 @@ export default function HomePage() {
                 ))}
               </div>
               <span className="text-sm text-text-secondary">
-                <span className="font-semibold text-text">4.9</span> from 500+ reviews
+                <span className="font-semibold text-text">4.9</span> rating
               </span>
             </div>
           </div>
@@ -288,7 +288,7 @@ export default function HomePage() {
             Ready to show your clients&apos; progress?
           </h2>
           <p className="text-text-secondary mb-8">
-            Join 10,000+ fitness coaches creating professional before/after comparisons.
+            Join fitness coaches creating professional before/after comparisons.
           </p>
           <Link
             href="/editor"

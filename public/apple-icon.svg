@@ -3,7 +3,7 @@
   <rect width="180" height="180" rx="40" fill="url(#gradient)"/>
 
   <!-- Logo mark (scaled and centered for apple touch icon) -->
-  <g transform="translate(40, 27) scale(1)">
+  <g transform="translate(15, 15) scale(1.5)">
     <!-- Spine (vertical center line) -->
     <line x1="50" y1="22" x2="50" y2="78" stroke="white" stroke-width="3" stroke-linecap="round"/>
 

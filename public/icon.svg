@@ -3,7 +3,7 @@
   <rect width="512" height="512" rx="96" fill="url(#gradient)"/>
 
   <!-- Logo mark (scaled and centered) -->
-  <g transform="translate(106, 76) scale(3)">
+  <g transform="translate(56, 56) scale(4)">
     <!-- Spine (vertical center line) -->
     <line x1="50" y1="22" x2="50" y2="78" stroke="white" stroke-width="3" stroke-linecap="round"/>
 
