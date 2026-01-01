@@ -16,6 +16,7 @@ import { useBackgroundRemoval } from '@/hooks/useBackgroundRemoval';
 import type { ExportFormat as LibExportFormat } from '@/lib/canvas/export';
 import type { AnimationStyle } from '@/lib/canvas/export-gif';
 import type { Photo } from '@/types/editor';
+import { AlignedPreview } from './AlignedPreview';
 
 export interface ExportModalProps {
   isOpen: boolean;
@@ -502,19 +503,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
               </>
             )}
 
-            {/* Background Settings (shown if background is removed) */}
-            {hasBackgroundRemoved && (
-              <div className="mb-6">
-                <BackgroundSettings
-                  hasRemovedBackground={hasBackgroundRemoved}
-                  onUpgradeClick={() => {
-                    setUpgradeTrigger('background');
-                    setShowUpgradePrompt(true);
-                  }}
-                />
-              </div>
-            )}
-
             {/* Format Selection */}
             <div className="mb-6">
               <label className="mb-3 block text-sm font-medium text-[var(--text-secondary)]">
@@ -579,84 +567,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                     </button>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Preview Area */}
-            <div className="mb-6">
-              <label className="mb-3 block text-sm font-medium text-[var(--text-secondary)]">
-                Preview
-              </label>
-              <div
-                className={cn(
-                  'relative rounded-2xl overflow-hidden',
-                  'bg-[var(--gray-50)] dark:bg-[var(--gray-900)]',
-                  'border-2 border-[var(--gray-200)] dark:border-[var(--gray-700)]',
-                  'aspect-square'
-                )}
-              >
-                {hasPhotos && beforePhoto && afterPhoto ? (
-                  <>
-                    {exportType === 'gif' && isPro ? (
-                      <GifPreview
-                        beforeImageUrl={beforePhoto.dataUrl}
-                        afterImageUrl={afterPhoto.dataUrl}
-                        animationStyle={animationStyle}
-                        duration={duration}
-                        showLabels={showLabels}
-                        className="absolute inset-0"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex">
-                        {/* Before Photo */}
-                        <div className="relative flex-1 flex items-center justify-center overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={beforePhoto.dataUrl}
-                            alt="Before"
-                            className="w-full h-full object-cover"
-                          />
-                          {showLabels && (
-                            <div className="absolute top-2 left-2 px-3 py-1 bg-black/60 text-white text-sm font-medium rounded-lg">
-                              Before
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Divider */}
-                        <div className="w-px bg-[var(--gray-300)] dark:bg-[var(--gray-600)]" />
-
-                        {/* After Photo */}
-                        <div className="relative flex-1 flex items-center justify-center overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={afterPhoto.dataUrl}
-                            alt="After"
-                            className="w-full h-full object-cover"
-                          />
-                          {showLabels && (
-                            <div className="absolute top-2 left-2 px-3 py-1 bg-black/60 text-white text-sm font-medium rounded-lg">
-                              After
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Watermark (Free users only) */}
-                    {!isPro && (
-                      <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/90 dark:bg-black/90 text-[var(--text-primary)] text-sm font-light tracking-tight rounded-lg backdrop-blur-sm">
-                        svolta
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-[var(--text-secondary)]">
-                      Load photos to see preview
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -728,6 +638,19 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                     </>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Background Settings (shown if background is removed) */}
+            {hasBackgroundRemoved && (
+              <div className="mb-6">
+                <BackgroundSettings
+                  hasRemovedBackground={hasBackgroundRemoved}
+                  onUpgradeClick={() => {
+                    setUpgradeTrigger('background');
+                    setShowUpgradePrompt(true);
+                  }}
+                />
               </div>
             )}
 
@@ -842,6 +765,57 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                   )}
                 </span>
               </button>
+            </div>
+
+            {/* Preview Area */}
+            <div className="mb-6">
+              <label className="mb-3 block text-sm font-medium text-[var(--text-secondary)]">
+                Preview
+              </label>
+              <div
+                className={cn(
+                  'relative rounded-2xl overflow-hidden',
+                  'bg-[var(--gray-50)] dark:bg-[var(--gray-900)]',
+                  'border-2 border-[var(--gray-200)] dark:border-[var(--gray-700)]',
+                  'aspect-square'
+                )}
+              >
+                {hasPhotos && beforePhoto && afterPhoto ? (
+                  <>
+                    {exportType === 'gif' && isPro ? (
+                      <GifPreview
+                        beforeImageUrl={beforePhoto.dataUrl}
+                        afterImageUrl={afterPhoto.dataUrl}
+                        animationStyle={animationStyle}
+                        duration={duration}
+                        showLabels={showLabels}
+                        className="absolute inset-0"
+                      />
+                    ) : (
+                      <AlignedPreview
+                        beforePhoto={beforePhoto}
+                        afterPhoto={afterPhoto}
+                        format={selectedFormat}
+                        showLabels={showLabels}
+                        className="absolute inset-0"
+                      />
+                    )}
+
+                    {/* Watermark (Free users only) */}
+                    {!isPro && (
+                      <div className="absolute bottom-4 right-4 px-4 py-2 bg-white/90 dark:bg-black/90 text-[var(--text-primary)] text-sm font-light tracking-tight rounded-lg backdrop-blur-sm">
+                        svolta
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-[var(--text-secondary)]">
+                      Load photos to see preview
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* GIF Export Progress (shown during GIF export) */}

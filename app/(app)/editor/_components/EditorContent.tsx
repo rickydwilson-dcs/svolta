@@ -10,7 +10,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useEditorStore } from '@/stores/editor-store';
 import { PhotoPanel, ExportModal } from '@/components/features/editor';
-import { Button, SegmentedControl } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
 import { cn } from '@/lib/utils';
 
@@ -30,17 +30,9 @@ export default function EditorContent() {
   } = useEditorStore();
 
   const [showExportModal, setShowExportModal] = useState(false);
-  const [alignmentAnchor, setAlignmentAnchor] = useState('full');
 
   const hasPhotos = beforePhoto || afterPhoto;
   const hasBothPhotos = beforePhoto && afterPhoto;
-
-  const alignmentOptions = [
-    { value: 'full', label: 'Full Body' },
-    { value: 'head', label: 'Head' },
-    { value: 'shoulders', label: 'Shoulders' },
-    { value: 'hips', label: 'Hips' },
-  ];
 
   return (
     <div className="flex flex-col h-dvh bg-canvas">
@@ -168,21 +160,6 @@ export default function EditorContent() {
           <div className="drag-handle" />
 
           <div className="px-4 pb-6 space-y-4">
-            {/* Alignment Anchor Selector */}
-            {hasBothPhotos && beforePhoto?.landmarks && afterPhoto?.landmarks && (
-              <div>
-                <label className="block text-xs font-medium text-text-secondary mb-2 uppercase tracking-wider">
-                  Align By
-                </label>
-                <SegmentedControl
-                  options={alignmentOptions}
-                  value={alignmentAnchor}
-                  onValueChange={setAlignmentAnchor}
-                  size="sm"
-                />
-              </div>
-            )}
-
             {/* Quick Actions */}
             <div className="flex items-center justify-between gap-3">
               {/* Grid Toggle */}

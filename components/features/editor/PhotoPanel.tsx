@@ -11,7 +11,6 @@ import { DropZone } from './DropZone';
 import { LandmarkOverlay } from './LandmarkOverlay';
 import { usePoseDetection } from '@/hooks/usePoseDetection';
 import { useBackgroundRemoval } from '@/hooks/useBackgroundRemoval';
-import { useEditorStore } from '@/stores/editor-store';
 import type { Photo } from '@/types/editor';
 import type { Landmark } from '@/types/landmarks';
 
@@ -42,9 +41,6 @@ export function PhotoPanel({
     error: bgRemovalError,
   } = useBackgroundRemoval();
 
-  // Subscribe to alignment settings for "After" photo
-  const alignment = useEditorStore((state) => state.alignment);
-  const isAfterPhoto = label === 'After';
 
   // Update container size on resize
   useEffect(() => {
@@ -198,18 +194,6 @@ export function PhotoPanel({
                 src={photo.dataUrl}
                 alt={`${label} photo`}
                 className="w-full h-full object-contain relative z-10"
-                style={
-                  isAfterPhoto
-                    ? {
-                        // Apply scale first (around center), then translate
-                        // The translate values are in normalized coordinates, convert to pixels
-                        // Since translate happens in scaled space, we need to account for scale
-                        transform: `scale(${alignment.scale}) translate(${alignment.offsetX * 100}%, ${alignment.offsetY * 100}%)`,
-                        transition: 'transform 0.1s ease-out',
-                        transformOrigin: 'center center',
-                      }
-                    : undefined
-                }
               />
 
               {/* Landmark Overlay */}
@@ -220,16 +204,6 @@ export function PhotoPanel({
                   height={displaySize.height}
                   visible={showLandmarks}
                   className="absolute inset-0 z-20"
-                  style={
-                    isAfterPhoto
-                      ? {
-                          // Match the image transform
-                          transform: `scale(${alignment.scale}) translate(${alignment.offsetX * 100}%, ${alignment.offsetY * 100}%)`,
-                          transition: 'transform 0.1s ease-out',
-                          transformOrigin: 'center center',
-                        }
-                      : undefined
-                  }
                 />
               )}
 
