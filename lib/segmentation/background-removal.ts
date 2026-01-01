@@ -1,13 +1,12 @@
 /**
- * Background Removal using MediaPipe Selfie Segmentation
+ * Background Removal using @imgly/background-removal
  * Client-side processing for privacy-first photo editing
+ *
+ * This library provides smooth edge quality with proper alpha matting,
+ * unlike binary segmentation masks.
  */
 
-import {
-  ImageSegmenter,
-  FilesetResolver,
-} from '@mediapipe/tasks-vision';
-
+import { removeBackground as imglyRemoveBackground, preload, type Config } from '@imgly/background-removal';
 import { drawBackground, type BackgroundSettings } from './backgrounds';
 
 export interface SegmentationResult {
@@ -24,7 +23,7 @@ export interface SegmentationResult {
 export interface SegmentationOptions {
   /** Progress callback for long operations */
   onProgress?: (progress: number) => void;
-  /** Confidence threshold (0-1) - minimum confidence to consider pixel as person */
+  /** Confidence threshold (0-1) - not used by imgly but kept for API compatibility */
   threshold?: number;
   /** Maximum allowed image dimension (width or height) - default 4096px */
   maxDimension?: number;
@@ -35,120 +34,35 @@ const DEFAULT_MAX_DIMENSION = 4096;
 /** Maximum total pixels for segmentation (prevents memory exhaustion) */
 const MAX_TOTAL_PIXELS = 16_777_216; // 4096 * 4096 = 16 megapixels
 
-// Singleton instance
-let imageSegmenter: ImageSegmenter | null = null;
-let initializationPromise: Promise<ImageSegmenter> | null = null;
+// Track if model has been preloaded
+let isPreloaded = false;
+let preloadPromise: Promise<void> | null = null;
 
 /**
- * Initialize the ImageSegmenter singleton with selfie segmentation model
+ * Preload the background removal model
+ * This can be called early to speed up first-time usage
  */
-async function initializeSegmenter(): Promise<ImageSegmenter> {
-  // Return existing instance if available
-  if (imageSegmenter) {
-    return imageSegmenter;
+export async function preloadModel(): Promise<void> {
+  if (isPreloaded) return;
+
+  if (preloadPromise) {
+    return preloadPromise;
   }
 
-  // Return pending initialization if in progress
-  if (initializationPromise) {
-    return initializationPromise;
-  }
+  const config: Config = {
+    debug: false,
+    model: 'isnet', // Best quality model
+    output: {
+      format: 'image/png',
+      quality: 1.0,
+    },
+  };
 
-  // Start new initialization
-  initializationPromise = (async () => {
-    try {
-      // Load the vision tasks WASM files
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-      );
+  preloadPromise = preload(config).then(() => {
+    isPreloaded = true;
+  });
 
-      // Create the image segmenter with selfie segmentation model
-      imageSegmenter = await ImageSegmenter.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath:
-            'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite',
-          delegate: 'GPU', // Use GPU acceleration for better performance
-        },
-        runningMode: 'IMAGE',
-        outputCategoryMask: true,
-        outputConfidenceMasks: false,
-      });
-
-      return imageSegmenter;
-    } catch (error) {
-      // Reset state on failure
-      imageSegmenter = null;
-      initializationPromise = null;
-
-      throw new Error(
-        `Failed to initialize background removal: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
-    }
-  })();
-
-  return initializationPromise;
-}
-
-/**
- * Convert segmentation mask to ImageData
- * Creates a binary mask where person pixels are white (255) and background is black (0)
- *
- * Note: MediaPipe selfie_segmenter is a BINARY model (not multi-class).
- * The category mask output uses:
- * - 0 = person/foreground (the subject we want to KEEP)
- * - 255 = background (what we want to REMOVE)
- *
- * This is the inverse of what you might expect from the multi-class segmenter.
- */
-function maskToImageData(
-  mask: Uint8Array,
-  width: number,
-  height: number,
-  _threshold: number = 0.5 // threshold not used for category mask
-): ImageData {
-  const imageData = new ImageData(width, height);
-  const pixels = imageData.data;
-
-  for (let i = 0; i < mask.length; i++) {
-    // Selfie segmenter: 0 = person (foreground), 255 = background
-    // So isPerson is true when mask value IS 0
-    const isPerson = mask[i] === 0;
-    const pixelIndex = i * 4;
-
-    // Set RGBA values
-    pixels[pixelIndex] = isPerson ? 255 : 0; // R
-    pixels[pixelIndex + 1] = isPerson ? 255 : 0; // G
-    pixels[pixelIndex + 2] = isPerson ? 255 : 0; // B
-    pixels[pixelIndex + 3] = 255; // A (fully opaque)
-  }
-
-  return imageData;
-}
-
-/**
- * Apply segmentation mask to image to create transparent background
- */
-function applyMaskToImage(
-  imageData: ImageData,
-  mask: ImageData
-): ImageData {
-  const result = new ImageData(imageData.width, imageData.height);
-  const srcPixels = imageData.data;
-  const maskPixels = mask.data;
-  const dstPixels = result.data;
-
-  for (let i = 0; i < srcPixels.length; i += 4) {
-    const maskValue = maskPixels[i]; // R channel of mask (0 or 255)
-
-    // Copy RGB values
-    dstPixels[i] = srcPixels[i]; // R
-    dstPixels[i + 1] = srcPixels[i + 1]; // G
-    dstPixels[i + 2] = srcPixels[i + 2]; // B
-
-    // Set alpha based on mask
-    dstPixels[i + 3] = maskValue; // Person = 255 (opaque), Background = 0 (transparent)
-  }
-
-  return result;
+  return preloadPromise;
 }
 
 /**
@@ -166,24 +80,56 @@ function loadImage(dataUrl: string): Promise<HTMLImageElement> {
 }
 
 /**
- * Convert ImageData to data URL
+ * Convert Blob to data URL
  */
-function imageDataToDataUrl(
-  imageData: ImageData,
-  format: string = 'image/png',
-  quality: number = 1.0
-): string {
-  const canvas = document.createElement('canvas');
-  canvas.width = imageData.width;
-  canvas.height = imageData.height;
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(new Error('Failed to convert blob to data URL'));
+    reader.readAsDataURL(blob);
+  });
+}
 
-  const ctx = canvas.getContext('2d', { willReadFrequently: false });
+/**
+ * Extract alpha channel as a mask ImageData from a transparent PNG
+ * White (255) = person (opaque), Black (0) = background (transparent)
+ */
+async function extractMaskFromTransparentImage(
+  transparentDataUrl: string,
+  width: number,
+  height: number
+): Promise<ImageData> {
+  const img = await loadImage(transparentDataUrl);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) {
     throw new Error('Failed to get canvas context');
   }
 
-  ctx.putImageData(imageData, 0, 0);
-  return canvas.toDataURL(format, quality);
+  ctx.drawImage(img, 0, 0, width, height);
+  const imageData = ctx.getImageData(0, 0, width, height);
+
+  // Create mask from alpha channel
+  const mask = new ImageData(width, height);
+  const srcPixels = imageData.data;
+  const maskPixels = mask.data;
+
+  for (let i = 0; i < srcPixels.length; i += 4) {
+    const alpha = srcPixels[i + 3]; // Alpha channel
+
+    // Set RGB to alpha value (white = person, black = background)
+    maskPixels[i] = alpha;     // R
+    maskPixels[i + 1] = alpha; // G
+    maskPixels[i + 2] = alpha; // B
+    maskPixels[i + 3] = 255;   // A (fully opaque mask)
+  }
+
+  return mask;
 }
 
 /**
@@ -194,17 +140,13 @@ export async function removeBackground(
   imageDataUrl: string,
   options: SegmentationOptions = {}
 ): Promise<SegmentationResult> {
-  const { onProgress, threshold = 0.5, maxDimension = DEFAULT_MAX_DIMENSION } = options;
+  const { onProgress, maxDimension = DEFAULT_MAX_DIMENSION } = options;
 
   try {
     // Report progress
-    onProgress?.(0.1);
+    onProgress?.(0.05);
 
-    // Initialize segmenter
-    const segmenter = await initializeSegmenter();
-    onProgress?.(0.2);
-
-    // Load image
+    // Load image to get dimensions
     const img = await loadImage(imageDataUrl);
     const { width, height } = img;
 
@@ -222,46 +164,42 @@ export async function removeBackground(
       );
     }
 
-    onProgress?.(0.3);
+    onProgress?.(0.1);
 
-    // Create canvas to get image data
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
+    // Configure imgly background removal
+    const config: Config = {
+      debug: false,
+      model: 'isnet', // Best quality model with smooth edges
+      output: {
+        format: 'image/png',
+        quality: 1.0,
+      },
+      progress: (key, current, total) => {
+        // Map imgly progress to our 0.1-0.9 range
+        if (total > 0) {
+          const imglyProgress = current / total;
+          onProgress?.(0.1 + imglyProgress * 0.8);
+        }
+      },
+    };
 
-    const ctx = canvas.getContext('2d', { willReadFrequently: false });
-    if (!ctx) {
-      throw new Error('Failed to get canvas context');
-    }
+    // Convert data URL to blob for imgly
+    const response = await fetch(imageDataUrl);
+    const imageBlob = await response.blob();
 
-    // Use high quality image smoothing
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
+    onProgress?.(0.15);
 
-    // Draw image to canvas
-    ctx.drawImage(img, 0, 0, width, height);
-    const imageData = ctx.getImageData(0, 0, width, height);
-    onProgress?.(0.4);
+    // Run background removal with imgly
+    const resultBlob = await imglyRemoveBackground(imageBlob, config);
 
-    // Perform segmentation
-    const result = segmenter.segment(img);
-    onProgress?.(0.6);
+    onProgress?.(0.9);
 
-    if (!result.categoryMask) {
-      throw new Error('Segmentation failed: no mask generated');
-    }
+    // Convert result blob to data URL
+    const processedDataUrl = await blobToDataUrl(resultBlob);
 
-    // Convert mask to ImageData
-    const maskArray = result.categoryMask.getAsUint8Array();
-    const mask = maskToImageData(maskArray, width, height, threshold);
-    onProgress?.(0.7);
+    // Extract mask from the transparent result
+    const mask = await extractMaskFromTransparentImage(processedDataUrl, width, height);
 
-    // Apply mask to create transparent background
-    const processedImageData = applyMaskToImage(imageData, mask);
-    onProgress?.(0.8);
-
-    // Convert to data URL
-    const processedDataUrl = imageDataToDataUrl(processedImageData);
     onProgress?.(1.0);
 
     return {
@@ -312,7 +250,7 @@ export async function applyBackground(
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = width;
     tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: false });
+    const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
     if (!tempCtx) {
       throw new Error('Failed to get temp canvas context');
     }
@@ -320,25 +258,36 @@ export async function applyBackground(
     tempCtx.drawImage(img, 0, 0, width, height);
     const imageData = tempCtx.getImageData(0, 0, width, height);
 
-    // Apply mask to create composite
+    // Apply mask to create composite with smooth alpha blending
     const compositeData = new ImageData(width, height);
     const srcPixels = imageData.data;
     const maskPixels = mask.data;
     const dstPixels = compositeData.data;
 
     for (let i = 0; i < srcPixels.length; i += 4) {
-      const maskValue = maskPixels[i]; // R channel of mask (0 or 255)
-      const alpha = maskValue / 255;
+      // Use the mask value directly as alpha (supports smooth edges)
+      const maskValue = maskPixels[i]; // R channel of mask (0-255)
 
       // Copy RGB values from original
-      dstPixels[i] = srcPixels[i]; // R
+      dstPixels[i] = srcPixels[i];         // R
       dstPixels[i + 1] = srcPixels[i + 1]; // G
       dstPixels[i + 2] = srcPixels[i + 2]; // B
-      dstPixels[i + 3] = Math.round(alpha * 255); // A
+      dstPixels[i + 3] = maskValue;        // A (smooth alpha from mask)
     }
 
-    // Draw the person on top of the background
-    ctx.putImageData(compositeData, 0, 0);
+    // Draw the person on top of the background using composite operation
+    // This properly blends the semi-transparent edges
+    const compositeCanvas = document.createElement('canvas');
+    compositeCanvas.width = width;
+    compositeCanvas.height = height;
+    const compositeCtx = compositeCanvas.getContext('2d', { willReadFrequently: false });
+    if (!compositeCtx) {
+      throw new Error('Failed to get composite canvas context');
+    }
+    compositeCtx.putImageData(compositeData, 0, 0);
+
+    // Draw composite onto background
+    ctx.drawImage(compositeCanvas, 0, 0);
 
     // Return as data URL
     return canvas.toDataURL('image/png', 1.0);
@@ -350,19 +299,17 @@ export async function applyBackground(
 }
 
 /**
- * Check if the segmenter is ready
+ * Check if the model is ready (preloaded)
  */
 export function isSegmenterReady(): boolean {
-  return imageSegmenter !== null;
+  return isPreloaded;
 }
 
 /**
- * Close and clean up the segmenter
+ * Close and clean up resources
+ * Note: imgly library handles its own cleanup, but we reset our state
  */
 export function closeSegmenter(): void {
-  if (imageSegmenter) {
-    imageSegmenter.close();
-    imageSegmenter = null;
-    initializationPromise = null;
-  }
+  isPreloaded = false;
+  preloadPromise = null;
 }

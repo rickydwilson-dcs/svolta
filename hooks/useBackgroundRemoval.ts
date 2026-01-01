@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * React hook for background removal and replacement using MediaPipe
+ * React hook for background removal and replacement using @imgly/background-removal
  * Provides progress tracking, cancellation, and efficient mask reuse
  */
 
