@@ -9,7 +9,7 @@ import Link from 'next/link';
 export interface UpgradePromptProps {
   isOpen: boolean;
   onClose: () => void;
-  trigger: 'limit' | 'watermark' | 'format' | 'logo';
+  trigger: 'limit' | 'watermark' | 'format' | 'logo' | 'gif' | 'background';
 }
 
 const triggerMessages: Record<UpgradePromptProps['trigger'], string> = {
@@ -17,6 +17,8 @@ const triggerMessages: Record<UpgradePromptProps['trigger'], string> = {
   watermark: 'Remove the svolta watermark',
   format: 'Unlock all export formats',
   logo: 'Add your own logo to exports',
+  gif: 'Create animated before/after GIFs',
+  background: 'Remove & replace backgrounds',
 };
 
 const proFeatures = [
@@ -24,6 +26,8 @@ const proFeatures = [
   'No watermark',
   'Your logo on exports',
   'All export formats',
+  'Animated GIF exports',
+  'Background removal & replacement',
 ];
 
 export function UpgradePrompt({ isOpen, onClose, trigger }: UpgradePromptProps) {

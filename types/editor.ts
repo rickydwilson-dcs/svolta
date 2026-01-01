@@ -14,6 +14,14 @@ export interface Photo {
   width: number;
   height: number;
   landmarks: Landmark[] | null;
+
+  // Background removal fields
+  /** Whether background has been removed from this photo */
+  hasBackgroundRemoved?: boolean;
+  /** Original data URL before background removal (for reverting or re-applying) */
+  originalDataUrl?: string;
+  /** Segmentation mask for fast background changes (ImageData is not serializable, store in memory) */
+  segmentationMask?: ImageData | null;
 }
 
 /**

@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import type { Photo, AlignmentSettings } from '@/types/editor';
 import type { Landmark } from '@/types/landmarks';
+import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
 
 interface EditorState {
   // Photos
@@ -18,6 +19,9 @@ interface EditorState {
   showGrid: boolean;
   linkedZoom: boolean;
 
+  // Background removal settings for export
+  backgroundSettings: BackgroundSettings;
+
   // Status
   isDetecting: boolean;
   error: string | null;
@@ -28,6 +32,7 @@ interface EditorState {
   setBeforeLandmarks: (landmarks: Landmark[] | null) => void;
   setAfterLandmarks: (landmarks: Landmark[] | null) => void;
   updateAlignment: (settings: Partial<AlignmentSettings>) => void;
+  setBackgroundSettings: (settings: BackgroundSettings) => void;
   toggleLandmarks: () => void;
   toggleGrid: () => void;
   toggleLinkedZoom: () => void;
@@ -43,6 +48,10 @@ const initialAlignment: AlignmentSettings = {
   offsetY: 0,
 };
 
+const defaultBackgroundSettings: BackgroundSettings = {
+  type: 'original', // Don't modify background by default
+};
+
 export const useEditorStore = create<EditorState>((set) => ({
   // Initial state
   beforePhoto: null,
@@ -51,6 +60,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   showLandmarks: true,
   showGrid: false,
   linkedZoom: true,
+  backgroundSettings: defaultBackgroundSettings,
   isDetecting: false,
   error: null,
 
@@ -78,6 +88,9 @@ export const useEditorStore = create<EditorState>((set) => ({
       alignment: { ...state.alignment, ...settings },
     })),
 
+  setBackgroundSettings: (settings) =>
+    set({ backgroundSettings: settings }),
+
   toggleLandmarks: () =>
     set((state) => ({ showLandmarks: !state.showLandmarks })),
 
@@ -99,6 +112,7 @@ export const useEditorStore = create<EditorState>((set) => ({
       showLandmarks: true,
       showGrid: false,
       linkedZoom: true,
+      backgroundSettings: defaultBackgroundSettings,
       isDetecting: false,
       error: null,
     }),

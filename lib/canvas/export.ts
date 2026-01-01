@@ -14,6 +14,7 @@
 
 import { addWatermark, type WatermarkOptions } from './watermark';
 import type { Landmark } from '@/types/landmarks';
+import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
 
 export type ExportFormat = '1:1' | '4:5' | '9:16';
 export type ExportResolution = 1080 | 1440 | 2160;
@@ -27,6 +28,7 @@ export interface ExportOptions {
     customLogoUrl?: string;
   };
   quality?: number; // 0.8-1.0, default 0.92
+  backgroundSettings?: BackgroundSettings; // Optional background replacement settings
 }
 
 export interface ExportResult {

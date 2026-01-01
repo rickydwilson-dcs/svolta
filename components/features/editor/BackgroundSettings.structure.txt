@@ -1,0 +1,163 @@
+BackgroundSettings Component Structure
+========================================
+
+Component Hierarchy:
+--------------------
+BackgroundSettings (main component)
+├── Header Section
+│   ├── Title: "Background"
+│   └── Pro Badge (Lock Icon) - for free users
+│
+├── Type Selector (SegmentedControl)
+│   ├── Original
+│   ├── Transparent
+│   ├── Solid
+│   └── Gradient
+│
+├── Solid Color Options (when type === 'solid')
+│   ├── Preset Colors Grid (5 columns)
+│   │   ├── Pure White
+│   │   ├── Black
+│   │   ├── Light Gray
+│   │   ├── Medium Gray
+│   │   ├── Dark Gray
+│   │   ├── Charcoal
+│   │   ├── Navy Blue
+│   │   ├── Sky Blue
+│   │   ├── Forest Green
+│   │   └── Crimson
+│   │
+│   └── Custom Color Picker
+│       ├── Color Preview Swatch
+│       └── Hidden HTML5 Color Input
+│
+├── Gradient Options (when type === 'gradient')
+│   └── Gradient Cards Grid (2 columns)
+│       ├── Clean Studio (linear)
+│       ├── Gym Vibes (radial)
+│       ├── Sunset Glow (linear)
+│       ├── Ocean Breeze (linear)
+│       ├── Forest Calm (radial)
+│       ├── Energy Burst (radial)
+│       ├── Midnight Purple (linear)
+│       ├── Coral Reef (linear)
+│       ├── Arctic Frost (radial)
+│       ├── Volcanic Fire (linear)
+│       ├── Deep Space (radial)
+│       └── Rose Gold (linear)
+│
+├── Info Message (when type === 'transparent')
+│   └── "Export will use a transparent background (PNG format recommended)."
+│
+├── Info Message (when type === 'original')
+│   └── "Original background will be preserved in the export."
+│
+└── Disabled State (when !hasRemovedBackground)
+    └── "Background Options Unavailable" message
+        └── "Remove the background from your photos first..."
+
+Props Interface:
+----------------
+interface BackgroundSettingsProps {
+  disabled?: boolean;           
+  hasRemovedBackground: boolean; 
+  onUpgradeClick?: () => void;  
+  className?: string;
+}
+
+State Management:
+-----------------
+Reads:
+  - backgroundSettings (from useEditorStore)
+  - isPro (from useUserStore)
+
+Writes:
+  - setBackgroundSettings (to useEditorStore)
+
+Internal State:
+  - customColor: string (for color picker)
+
+Event Handlers:
+---------------
+1. handleTypeChange(value: string)
+   - Changes background type (original/transparent/solid/gradient)
+   - Shows upgrade prompt for free users
+   - Sets default values for solid/gradient types
+
+2. handleColorSelect(color: string)
+   - Updates solid background color
+   - Shows upgrade prompt for free users
+
+3. handleGradientSelect(presetId: string)
+   - Updates gradient background
+   - Shows upgrade prompt for free users
+
+4. handleCustomColorChange(e: ChangeEvent<HTMLInputElement>)
+   - Updates custom color from HTML5 color picker
+
+Styling Features:
+-----------------
+- Apple-style design with rounded corners (rounded-xl, rounded-2xl)
+- Smooth transitions with var(--ease-apple) timing
+- Hover effects with scale transforms
+- Selected state indicators (checkmarks with brand color)
+- Pro badge with lock icon
+- Gradient previews rendered directly in CSS
+- Color swatches with aspect-square ratio
+- Responsive grid layouts
+
+Visual Elements:
+----------------
+Icons:
+  - 🔒 Lock icon (Pro badge)
+  - ✓ Checkmark (selected states)
+  - ℹ️ Info emoji (disabled state)
+
+Colors:
+  - var(--text-primary)
+  - var(--text-secondary)
+  - var(--brand-primary)
+  - var(--gray-50) through var(--gray-900)
+  - Gradient colors from GRADIENT_PRESETS
+  - Solid colors from SOLID_COLOR_PRESETS
+
+Interaction Flow:
+-----------------
+1. Component mounts
+   └─> Checks hasRemovedBackground prop
+       ├─> If false: Show disabled state message
+       └─> If true: Show background options
+
+2. User selects background type
+   └─> Check if Pro user
+       ├─> If Pro: Update backgroundSettings in store
+       └─> If Free: Call onUpgradeClick()
+
+3. User selects color/gradient
+   └─> Check if Pro user
+       ├─> If Pro: Update backgroundSettings in store
+       └─> If Free: Call onUpgradeClick()
+
+4. Background settings updated
+   └─> Store updates via setBackgroundSettings()
+       └─> ExportModal reads updated settings during export
+
+Dependencies:
+-------------
+External:
+  - react
+  - @radix-ui/react-toggle-group (via SegmentedControl)
+
+Internal:
+  - @/lib/utils (cn)
+  - @/stores/editor-store (useEditorStore)
+  - @/stores/user-store (useUserStore)
+  - @/components/ui/SegmentedControl
+  - @/lib/segmentation/backgrounds (types, presets, utils)
+
+File Size:
+----------
+- BackgroundSettings.tsx: 354 lines (11KB)
+- BackgroundSettings.example.tsx: 130 lines (3.6KB)
+
+Total: 484 lines of code
