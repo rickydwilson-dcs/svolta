@@ -40,14 +40,6 @@ const animationStyleOptions = [
   { value: 'toggle', label: '⇄', title: 'Toggle' },
 ];
 
-// Color presets for background
-const colorPresets = [
-  { id: 'black', color: '#18181b', label: 'Black' },
-  { id: 'white', color: '#ffffff', label: 'White' },
-  { id: 'gray', color: '#71717a', label: 'Gray' },
-  { id: 'brand', color: '#f97316', label: 'Brand' },
-];
-
 // Image presets for background (placeholder IDs)
 const imagePresets = [
   { id: 'gym', thumbnail: '/backgrounds/gym.jpg', label: 'Gym' },
@@ -287,25 +279,11 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
       case 'transparent':
         return 'None';
       case 'color':
-        return colorPresets.find(p => p.color === background.colorValue)?.label || 'Custom';
+        return background.colorValue ? background.colorValue.toUpperCase() : 'Custom';
       case 'image':
         return imagePresets.find(p => p.id === background.imageId)?.label || 'Custom';
       default:
         return 'Original';
-    }
-  };
-
-  // Aspect ratio CSS for preview
-  const getPreviewAspectRatio = () => {
-    switch (aspectRatio) {
-      case '4:5':
-        return 'aspect-[4/5]';
-      case '1:1':
-        return 'aspect-square';
-      case '9:16':
-        return 'aspect-[9/16]';
-      default:
-        return 'aspect-[4/5]';
     }
   };
 
@@ -376,25 +354,38 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
               </div>
             )}
 
+            {/* Processing Overlay */}
+            {isRemovingBackground && (
+              <div className="mx-4 mt-4 p-4 rounded-xl bg-[var(--gray-100)] border border-[var(--border-default)]">
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-[var(--brand-pink)] border-t-transparent" />
+                  <div>
+                    <p className="text-sm font-medium text-[var(--text-primary)]">Removing backgrounds...</p>
+                    <p className="text-xs text-[var(--text-secondary)]">This may take a few seconds</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Preview Area */}
             <div className="p-4">
               <div
                 className={cn(
                   'relative rounded-xl overflow-hidden mx-auto',
                   'bg-[var(--gray-100)]',
-                  getPreviewAspectRatio(),
-                  'max-h-[300px]'
+                  'w-full min-h-[280px]'
                 )}
               >
                 {hasPhotos && beforePhoto && afterPhoto ? (
                   <>
                     {exportType === 'gif' && isPro ? (
                       <GifPreview
-                        beforeImageUrl={beforePhoto.dataUrl}
-                        afterImageUrl={afterPhoto.dataUrl}
+                        beforePhoto={beforePhoto}
+                        afterPhoto={afterPhoto}
                         animationStyle={animationStyle}
                         duration={duration}
                         showLabels={addLabels}
+                        format={aspectRatio}
                         className="absolute inset-0"
                       />
                     ) : (
@@ -653,33 +644,25 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                                   ))}
                                 </div>
 
-                                {/* Color Presets (conditional) */}
+                                {/* Color Picker (conditional) */}
                                 {background.type === 'color' && (
-                                  <div className="flex gap-2">
-                                    {colorPresets.map((preset) => (
-                                      <button
-                                        key={preset.id}
-                                        onClick={() => handleColorSelect(preset.color)}
-                                        title={preset.label}
-                                        className={cn(
-                                          'w-10 h-10 rounded-xl transition-all duration-150',
-                                          background.colorValue === preset.color
-                                            ? 'ring-2 ring-[var(--brand-pink)] ring-offset-2 ring-offset-[var(--surface-primary)] scale-110'
-                                            : 'hover:scale-105',
-                                          preset.color === '#ffffff' && 'border border-[var(--border-default)]'
-                                        )}
-                                        style={{ backgroundColor: preset.color }}
+                                  <div className="flex items-center gap-3">
+                                    <label className="relative flex-shrink-0">
+                                      <div
+                                        className="w-12 h-12 rounded-xl cursor-pointer border-2 border-[var(--border-default)] hover:border-[var(--brand-pink)] transition-colors"
+                                        style={{ backgroundColor: background.colorValue || '#ffffff' }}
                                       />
-                                    ))}
-                                    {/* Custom color picker */}
-                                    <label className="relative w-10 h-10 rounded-xl bg-[var(--gray-100)] border-2 border-dashed border-[var(--gray-300)] hover:border-[var(--gray-400)] cursor-pointer transition-colors flex items-center justify-center">
-                                      <span className="text-[var(--text-secondary)] text-lg">+</span>
                                       <input
                                         type="color"
+                                        value={background.colorValue || '#ffffff'}
                                         className="absolute inset-0 opacity-0 cursor-pointer"
                                         onChange={(e) => handleColorSelect(e.target.value)}
                                       />
                                     </label>
+                                    <div className="flex-1">
+                                      <p className="text-sm text-[var(--text-primary)]">Pick a color</p>
+                                      <p className="text-xs text-[var(--text-tertiary)] uppercase">{background.colorValue || '#ffffff'}</p>
+                                    </div>
                                   </div>
                                 )}
 
