@@ -19,6 +19,8 @@ export default function EditorContent() {
     afterPhoto,
     setBeforePhoto,
     setAfterPhoto,
+    setBeforeLandmarks,
+    setAfterLandmarks,
     reset,
   } = useEditorStore();
 
@@ -115,6 +117,7 @@ export default function EditorContent() {
               label="Before"
               photo={beforePhoto}
               onPhotoChange={setBeforePhoto}
+              onLandmarksDetected={setBeforeLandmarks}
               className="h-full"
             />
             {/* Before Label */}
@@ -131,6 +134,7 @@ export default function EditorContent() {
               label="After"
               photo={afterPhoto}
               onPhotoChange={setAfterPhoto}
+              onLandmarksDetected={setAfterLandmarks}
               className="h-full"
             />
             {/* After Label */}

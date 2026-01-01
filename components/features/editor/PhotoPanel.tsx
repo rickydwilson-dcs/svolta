@@ -28,7 +28,7 @@ export function PhotoPanel({
   photo,
   onPhotoChange,
   onLandmarksDetected,
-  showLandmarks = false,
+  showLandmarks = true,
   className,
 }: PhotoPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,10 +66,22 @@ export function PhotoPanel({
   // Detect landmarks when photo changes
   const handlePhotoLoad = useCallback(
     async (newPhoto: Photo) => {
+      // First set the photo without landmarks
       onPhotoChange(newPhoto);
 
       // Run pose detection
       const landmarks = await detect(newPhoto.dataUrl);
+
+      // Update photo with detected landmarks
+      if (landmarks) {
+        const photoWithLandmarks: Photo = {
+          ...newPhoto,
+          landmarks,
+        };
+        onPhotoChange(photoWithLandmarks);
+      }
+
+      // Also notify via callback for store updates
       onLandmarksDetected?.(landmarks);
     },
     [detect, onPhotoChange, onLandmarksDetected]
