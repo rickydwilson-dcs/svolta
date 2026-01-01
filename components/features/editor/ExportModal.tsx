@@ -64,7 +64,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   } = useGifExport();
   const {
     processImage: removeBackground,
-    isProcessing: isRemovingBackground,
     error: bgRemovalError,
   } = useBackgroundRemoval();
 
@@ -88,6 +87,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const [showUpgradePrompt, setShowUpgradePrompt] = React.useState(false);
   const [upgradeTrigger, setUpgradeTrigger] = React.useState<'limit' | 'watermark' | 'format' | 'logo' | 'gif' | 'background'>('limit');
   const [localError, setLocalError] = React.useState<string | null>(null);
+  const [isRemovingBackgrounds, setIsRemovingBackgrounds] = React.useState(false);
 
   const hasPhotos = Boolean(beforePhoto && afterPhoto);
   const hasBackgroundRemoved = beforePhoto?.hasBackgroundRemoved || afterPhoto?.hasBackgroundRemoved;
@@ -173,34 +173,40 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const handleRemoveBackgrounds = async () => {
     if (!hasPhotos || !beforePhoto || !afterPhoto) return;
 
-    // Remove background from "before" photo if not already done
-    if (!beforePhoto.hasBackgroundRemoved) {
-      const beforeResult = await removeBackground(beforePhoto.dataUrl);
-      if (beforeResult) {
-        const updatedBefore: Photo = {
-          ...beforePhoto,
-          dataUrl: beforeResult.processedDataUrl,
-          hasBackgroundRemoved: true,
-          originalDataUrl: beforePhoto.originalDataUrl || beforePhoto.dataUrl,
-          segmentationMask: beforeResult.mask,
-        };
-        setBeforePhoto(updatedBefore);
-      }
-    }
+    setIsRemovingBackgrounds(true);
 
-    // Remove background from "after" photo if not already done
-    if (!afterPhoto.hasBackgroundRemoved) {
-      const afterResult = await removeBackground(afterPhoto.dataUrl);
-      if (afterResult) {
-        const updatedAfter: Photo = {
-          ...afterPhoto,
-          dataUrl: afterResult.processedDataUrl,
-          hasBackgroundRemoved: true,
-          originalDataUrl: afterPhoto.originalDataUrl || afterPhoto.dataUrl,
-          segmentationMask: afterResult.mask,
-        };
-        setAfterPhoto(updatedAfter);
+    try {
+      // Remove background from "before" photo if not already done
+      if (!beforePhoto.hasBackgroundRemoved) {
+        const beforeResult = await removeBackground(beforePhoto.dataUrl);
+        if (beforeResult) {
+          const updatedBefore: Photo = {
+            ...beforePhoto,
+            dataUrl: beforeResult.processedDataUrl,
+            hasBackgroundRemoved: true,
+            originalDataUrl: beforePhoto.originalDataUrl || beforePhoto.dataUrl,
+            segmentationMask: beforeResult.mask,
+          };
+          setBeforePhoto(updatedBefore);
+        }
       }
+
+      // Remove background from "after" photo if not already done
+      if (!afterPhoto.hasBackgroundRemoved) {
+        const afterResult = await removeBackground(afterPhoto.dataUrl);
+        if (afterResult) {
+          const updatedAfter: Photo = {
+            ...afterPhoto,
+            dataUrl: afterResult.processedDataUrl,
+            hasBackgroundRemoved: true,
+            originalDataUrl: afterPhoto.originalDataUrl || afterPhoto.dataUrl,
+            segmentationMask: afterResult.mask,
+          };
+          setAfterPhoto(updatedAfter);
+        }
+      }
+    } finally {
+      setIsRemovingBackgrounds(false);
     }
   };
 
@@ -293,7 +299,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
 
   // Combined error display
   const displayError = localError || exportError || gifError || bgRemovalError;
-  const isAnyExporting = isExporting || isExportingGif || isRemovingBackground;
+  const isAnyExporting = isExporting || isExportingGif || isRemovingBackgrounds;
 
   return (
     <>
@@ -320,7 +326,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
             )}
           >
             {/* Processing Overlay - Full modal overlay */}
-            {isRemovingBackground && (
+            {isRemovingBackgrounds && (
               <div className="absolute inset-0 z-50 bg-[var(--surface-primary)]/95 backdrop-blur-sm flex items-center justify-center rounded-2xl">
                 <div className="text-center">
                   <div className="relative w-16 h-16 mx-auto mb-4">
