@@ -7,8 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security (P0 - Critical)
+
+- **Stripe webhook security hardening**
+  - Added livemode check to reject test events in production
+  - Added idempotency tracking via `webhook_events` table to prevent duplicate processing
+  - Added tier-resolver utility (`lib/stripe/tier-resolver.ts`) for centralized price ID validation
+- **Removed production bypass** - Fixed `isPro = true` hardcoded bypass in ExportModal
+- **Fixed FREE_EXPORT_LIMIT** - Now properly imported from `lib/stripe/plans.ts` instead of hardcoded
+- **Pinned MediaPipe version** to 0.10.22 for stability (was using `@latest`)
+
 ### Added
 
+- **GPU fallback for pose detection** - MediaPipe now automatically falls back to CPU if GPU initialization fails
+- **Billing period utility** (`lib/utils/billing-period.ts`) - Centralized UTC-based billing period calculations
+- **Tier resolver utility** (`lib/stripe/tier-resolver.ts`) - Single source of truth for Stripe price ID to tier mapping
+- **Error boundary component** (`components/ui/ErrorBoundary.tsx`) - React error boundary with retry functionality
+- **Structured logger utility** (`lib/logger.ts`) - Namespaced logging with production filtering
+- **API test suite** - Comprehensive tests for webhook and usage endpoints
+  - `tests/api/test-utils.ts` - Shared mocks and helpers
+  - `tests/api/stripe/webhook.test.ts` - 15+ webhook test cases
+  - `tests/api/usage/usage.test.ts` - 10+ usage API test cases
+- **Database migration** for webhook_events table (`supabase/migrations/20260104000000_add_webhook_events.sql`)
 - **Debug logging system for alignment exports** (`lib/debug/alignment-logger.ts`)
   - Toggleable via `window.svoltaDebug.enable()` in browser console
   - Or via localStorage: `svolta_debug_alignment`
@@ -32,6 +52,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Auth listener cleanup** - Moved from user-store.ts to UserProvider with proper useEffect cleanup
+- **Usage tracking** - All usage routes now use centralized `getCurrentBillingPeriod()` utility
+- **Webhook handler** - Now uses tier-resolver instead of hardcoded price ID matching
 - **Refactored alignment algorithm** - Consolidated into shared module for consistency
 - CI workflow now uses manual promotion (develop → staging → main) with Husky gates
 - Improved alignment UX with enhanced grid overlay
@@ -55,12 +78,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 97 TypeScript/TSX source files
 - 7 custom React hooks
-- 12 UI components (Button, BottomSheet, Card, Input, MagicLinkForm, Modal, OAuthButtons, SegmentedControl, Slider, SvoltaLogo, Toggle, UpgradePrompt)
+- 13 UI components (Button, BottomSheet, Card, ErrorBoundary, Input, MagicLinkForm, Modal, OAuthButtons, SegmentedControl, Slider, SvoltaLogo, Toggle, UpgradePrompt)
 - 8 API routes (added debug endpoint)
-- 6 test files
+- 9 test files (added API tests)
 - 134 visual test fixtures
 - Comprehensive 4-phase alignment algorithm with dynamic crop
 - Debug logging infrastructure for alignment troubleshooting
+- Webhook idempotency via database-backed event tracking
+- GPU/CPU fallback for browser-based ML inference
 
 ---
 

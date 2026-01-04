@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { constructWebhookEvent } from '@/lib/stripe/server';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { resolveTierFromPriceId } from '@/lib/stripe/tier-resolver';
 
 let supabaseAdminInstance: SupabaseClient | null = null;
 
@@ -50,6 +51,46 @@ export async function POST(request: NextRequest) {
         { error: 'Invalid signature' },
         { status: 400 }
       );
+    }
+
+    // Security: Reject test events in production
+    const isProduction = process.env.NODE_ENV === 'production';
+    if (isProduction && !event.livemode) {
+      console.warn('Rejected test event in production:', event.id);
+      return NextResponse.json(
+        { error: 'Test events rejected in production' },
+        { status: 400 }
+      );
+    }
+
+    // Idempotency: Check if event was already processed
+    const supabase = getSupabaseAdmin();
+    const { data: existingEvent } = await supabase
+      .from('webhook_events')
+      .select('id')
+      .eq('stripe_event_id', event.id)
+      .single();
+
+    if (existingEvent) {
+      console.log('Duplicate event skipped:', event.id);
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+
+    // Record event before processing to ensure idempotency
+    const { error: insertError } = await supabase
+      .from('webhook_events')
+      .insert({
+        stripe_event_id: event.id,
+        event_type: event.type,
+      });
+
+    if (insertError) {
+      // If insert fails due to unique constraint, another worker got it first
+      if (insertError.code === '23505') {
+        console.log('Event already being processed by another worker:', event.id);
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+      console.error('Failed to record webhook event:', insertError);
     }
 
     // Handle events
@@ -179,14 +220,9 @@ async function updateSubscriptionStatus(userId: string, subscription: Stripe.Sub
 
   const status = statusMap[subscription.status] || 'inactive';
 
-  // Determine tier from price
+  // Determine tier from price using PLANS configuration
   const priceId = subscription.items.data[0]?.price.id;
-  let tier = 'free';
-  if (priceId?.includes('pro')) {
-    tier = 'pro';
-  } else if (priceId?.includes('team')) {
-    tier = 'team';
-  }
+  const tier = resolveTierFromPriceId(priceId);
 
   const { error } = await getSupabaseAdmin()
     .from('subscriptions')

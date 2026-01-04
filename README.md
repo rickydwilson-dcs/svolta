@@ -143,15 +143,15 @@ MIT
 
 | Metric               | Count             |
 | -------------------- | ----------------- |
-| Source Files         | 95 TypeScript/TSX |
+| Source Files         | 97 TypeScript/TSX |
 | Custom Hooks         | 7                 |
 | State Stores         | 2                 |
-| UI Components        | 12                |
-| API Routes           | 7                 |
-| Test Files           | 6                 |
+| UI Components        | 13                |
+| API Routes           | 8                 |
+| Test Files           | 9                 |
 | Visual Test Fixtures | 134               |
 
 ---
 
 **Domain:** www.svolta.app
-**Last Updated:** 2026-01-02
+**Last Updated:** 2026-01-04

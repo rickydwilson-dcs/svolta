@@ -60,9 +60,7 @@ const imagePresets = [
 
 export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const { beforePhoto, afterPhoto, alignment, backgroundSettings, setBeforePhoto, setAfterPhoto, setBackgroundSettings } = useEditorStore();
-  // TODO: Remove this bypass once payment is implemented
-  const isPro = true; // Temporarily bypass Pro checks for testing
-  // const isPro = useUserStore((state) => state.isPro());
+  const isPro = useUserStore((state) => state.isPro());
   const profile = useUserStore((state) => state.profile);
   const { limit, remaining, checkAndIncrement } = useUsageLimit();
   const { isExporting, error: exportError, exportAndDownload, clearError } = useCanvasExport();

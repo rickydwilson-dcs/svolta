@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { FREE_EXPORT_LIMIT } from '@/lib/stripe/plans';
+import { getCurrentBillingPeriod } from '@/lib/utils/billing-period';
 
 /**
  * POST /api/usage/increment
@@ -34,8 +35,8 @@ export async function POST() {
       );
     }
 
-    // Get current month in YYYY-MM format
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    // Get current billing period (UTC-based for consistency)
+    const currentMonth = getCurrentBillingPeriod();
 
     // Fetch user's subscription to determine limit
     const { data: subscription } = await supabase

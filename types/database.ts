@@ -120,6 +120,26 @@ export interface Database {
           updated_at?: string
         }
       }
+      webhook_events: {
+        Row: {
+          id: string
+          stripe_event_id: string
+          event_type: string
+          processed_at: string
+        }
+        Insert: {
+          id?: string
+          stripe_event_id: string
+          event_type: string
+          processed_at?: string
+        }
+        Update: {
+          id?: string
+          stripe_event_id?: string
+          event_type?: string
+          processed_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -165,6 +185,9 @@ export type SubscriptionUpdate = Database['public']['Tables']['subscriptions']['
 export type Usage = Database['public']['Tables']['usage']['Row']
 export type UsageInsert = Database['public']['Tables']['usage']['Insert']
 export type UsageUpdate = Database['public']['Tables']['usage']['Update']
+
+export type WebhookEvent = Database['public']['Tables']['webhook_events']['Row']
+export type WebhookEventInsert = Database['public']['Tables']['webhook_events']['Insert']
 
 export type SubscriptionTier = Database['public']['Enums']['subscription_tier']
 export type SubscriptionStatus = Database['public']['Enums']['subscription_status']

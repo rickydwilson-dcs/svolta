@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile, Subscription, Usage } from '@/types/database';
-
-const FREE_EXPORT_LIMIT = 100; // TODO: Set back to 5 for production
+import { FREE_EXPORT_LIMIT } from '@/lib/stripe/plans';
+import { getCurrentBillingPeriod } from '@/lib/utils/billing-period';
 
 interface UserState {
   // Data
@@ -111,22 +111,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         fetchUsage(),
       ]);
 
-      // Set up auth state change listener
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_OUT') {
-          get().reset();
-        } else if (event === 'SIGNED_IN' && session?.user) {
-          set({ user: session.user });
-          await Promise.all([
-            fetchProfile(),
-            fetchSubscription(),
-            fetchUsage(),
-          ]);
-        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-          set({ user: session.user });
-        }
-      });
-
+      // Auth state change listener is now managed by UserProvider for proper cleanup
       set({ isInitialized: true });
     } catch (error) {
       console.error('Error initializing user store:', error);
@@ -191,7 +176,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     if (!user) return;
 
     const supabase = createClient();
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+    const currentMonth = getCurrentBillingPeriod();
 
     try {
       const { data, error } = await supabase
@@ -231,7 +216,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     }
 
     const supabase = createClient();
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = getCurrentBillingPeriod();
 
     try {
       // Upsert usage record

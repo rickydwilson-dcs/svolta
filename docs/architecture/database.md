@@ -1,7 +1,7 @@
 # Database Schema
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-22
+**Version:** 1.1.0
+**Last Updated:** 2026-01-04
 **Scope:** Supabase database schema, tables, RPC functions, and Row Level Security policies
 
 ## Table of Contents
@@ -18,13 +18,14 @@
 
 ## Overview
 
-Svolta uses Supabase (PostgreSQL) for data persistence with three primary tables:
+Svolta uses Supabase (PostgreSQL) for data persistence with four primary tables:
 
-| Table           | Purpose                                | Records              |
-| --------------- | -------------------------------------- | -------------------- |
-| `profiles`      | User profile and subscription metadata | 1 per user           |
-| `subscriptions` | Detailed subscription information      | 1 per user           |
-| `usage`         | Monthly export tracking                | 1 per user per month |
+| Table            | Purpose                                | Records              |
+| ---------------- | -------------------------------------- | -------------------- |
+| `profiles`       | User profile and subscription metadata | 1 per user           |
+| `subscriptions`  | Detailed subscription information      | 1 per user           |
+| `usage`          | Monthly export tracking                | 1 per user per month |
+| `webhook_events` | Stripe webhook idempotency tracking    | 1 per webhook event  |
 
 **Key Design Principles:**
 
@@ -314,6 +315,80 @@ const { data: usage } = await supabase
 
 console.log(usage?.exports_count ?? 0); // 0-5 for free, unlimited for pro
 ```
+
+---
+
+### `webhook_events`
+
+Stripe webhook idempotency tracking to prevent duplicate event processing.
+
+**Schema:**
+
+```sql
+CREATE TABLE webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  stripe_event_id TEXT NOT NULL UNIQUE,
+  event_type TEXT NOT NULL,
+  processed_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes
+CREATE INDEX idx_webhook_events_stripe_id ON webhook_events(stripe_event_id);
+```
+
+**Columns:**
+
+| Column            | Type          | Nullable | Description                                     |
+| ----------------- | ------------- | -------- | ----------------------------------------------- |
+| `id`              | `uuid`        | No       | Record ID                                       |
+| `stripe_event_id` | `text`        | No       | Stripe event ID (e.g., `evt_xxxxx`)             |
+| `event_type`      | `text`        | No       | Event type (e.g., `checkout.session.completed`) |
+| `processed_at`    | `timestamptz` | No       | When the event was processed                    |
+
+**Constraints:**
+
+- `UNIQUE(stripe_event_id)` - Each Stripe event processed only once
+
+**TypeScript Type:**
+
+```typescript
+export interface WebhookEvent {
+  id: string;
+  stripe_event_id: string;
+  event_type: string;
+  processed_at: string;
+}
+```
+
+**Example:**
+
+```typescript
+// Check if event was already processed
+const { data: existingEvent } = await supabase
+  .from("webhook_events")
+  .select("id")
+  .eq("stripe_event_id", event.id)
+  .single();
+
+if (existingEvent) {
+  // Skip duplicate event
+  return { duplicate: true };
+}
+
+// Record new event before processing
+await supabase.from("webhook_events").insert({
+  stripe_event_id: event.id,
+  event_type: event.type,
+});
+```
+
+**Purpose:**
+
+Stripe webhooks can be delivered multiple times (retries, network issues). This table ensures:
+
+- Each event is processed exactly once
+- Race conditions are handled via unique constraint
+- Audit trail of processed events is maintained
 
 ---
 

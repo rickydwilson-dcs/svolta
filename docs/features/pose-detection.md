@@ -1,7 +1,7 @@
 # Pose Detection with MediaPipe
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-22
+**Version:** 1.1.0
+**Last Updated:** 2026-01-04
 **Status:** Production
 
 ## Scope
@@ -110,9 +110,14 @@ Svolta uses the **Pose Landmarker Lite** model:
 The pose detector uses a **singleton pattern** to avoid redundant model loading:
 
 ```typescript
+// Pinned version for stability
+const MEDIAPIPE_VERSION = "0.10.22";
+const MEDIAPIPE_CDN_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
+
 // Singleton instance (shared across app)
 let poseLandmarker: PoseLandmarker | null = null;
 let initializationPromise: Promise<PoseLandmarker> | null = null;
+let usingCpuFallback = false;
 
 export async function initializePoseDetector(): Promise<PoseLandmarker> {
   // Return existing instance if available
@@ -127,27 +132,43 @@ export async function initializePoseDetector(): Promise<PoseLandmarker> {
 
   // Start new initialization (only once)
   initializationPromise = (async () => {
-    const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm",
-    );
+    const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_CDN_URL);
 
-    poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath:
-          "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-        delegate: "GPU",
-      },
-      runningMode: "IMAGE",
-      numPoses: 1,
-      minPoseDetectionConfidence: 0.5,
-      minPosePresenceConfidence: 0.5,
-      minTrackingConfidence: 0.5,
-    });
+    // Helper function to create PoseLandmarker with specific delegate
+    const createPoseLandmarker = async (delegate: "GPU" | "CPU") => {
+      return PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+          delegate,
+        },
+        runningMode: "IMAGE",
+        numPoses: 1,
+        minPoseDetectionConfidence: 0.5,
+        minPosePresenceConfidence: 0.5,
+        minTrackingConfidence: 0.5,
+      });
+    };
+
+    // Try GPU first, fall back to CPU if it fails
+    try {
+      poseLandmarker = await createPoseLandmarker("GPU");
+      usingCpuFallback = false;
+    } catch (gpuError) {
+      console.warn("GPU initialization failed, falling back to CPU:", gpuError);
+      poseLandmarker = await createPoseLandmarker("CPU");
+      usingCpuFallback = true;
+    }
 
     return poseLandmarker;
   })();
 
   return initializationPromise;
+}
+
+// Check if using CPU fallback
+export function isUsingCpuFallback(): boolean {
+  return usingCpuFallback;
 }
 ```
 
@@ -604,7 +625,7 @@ Cache-Control: public, max-age=31536000, immutable
 - First load: 2-5 seconds (download)
 - Subsequent loads: < 100ms (cache hit)
 
-### GPU Acceleration
+### GPU Acceleration with Automatic Fallback
 
 **WebGL Delegate:**
 
@@ -618,8 +639,32 @@ delegate: "GPU"; // 10-20x faster than CPU
 - Hardware GPU (Intel/AMD/NVIDIA)
 - Not blocked by browser settings
 
-**Fallback:**
-If GPU unavailable, MediaPipe falls back to CPU (slower but functional).
+**Automatic CPU Fallback:**
+
+Svolta automatically detects GPU failures and falls back to CPU mode:
+
+```typescript
+// Try GPU first, fall back to CPU if it fails
+try {
+  poseLandmarker = await createPoseLandmarker("GPU");
+  usingCpuFallback = false;
+} catch (gpuError) {
+  console.warn("GPU initialization failed, falling back to CPU:", gpuError);
+  poseLandmarker = await createPoseLandmarker("CPU");
+  usingCpuFallback = true;
+}
+```
+
+**Common GPU Failure Scenarios:**
+
+- WebGL disabled in browser settings
+- Low memory on mobile devices
+- GPU driver issues
+- Browser privacy mode restrictions
+
+✅ **CORRECT:** Automatic fallback ensures detection works on all devices
+
+❌ **WRONG:** Failing silently when GPU isn't available
 
 ### Singleton Pattern Benefits
 
@@ -1152,4 +1197,4 @@ import { PoseClassifier } from "@mediapipe/pose-classifier";
 
 **Document Status:** Production-ready
 **Maintainer:** Svolta Engineering
-**Last Review:** 2025-12-22
+**Last Review:** 2026-01-04

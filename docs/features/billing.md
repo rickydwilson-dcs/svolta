@@ -1,7 +1,7 @@
 # Billing & Subscription System
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-22
+**Version:** 1.1.0
+**Last Updated:** 2026-01-04
 **Scope:** Stripe integration, usage tracking, subscription lifecycle management
 
 ---
@@ -370,6 +370,32 @@ export async function POST(request: NextRequest) {
   // Verify webhook signature
   const event = await constructWebhookEvent(body, signature);
 
+  // Security: Reject test events in production
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction && !event.livemode) {
+    return NextResponse.json(
+      { error: "Test events rejected in production" },
+      { status: 400 },
+    );
+  }
+
+  // Idempotency check - prevent duplicate processing
+  const { data: existingEvent } = await supabase
+    .from("webhook_events")
+    .select("id")
+    .eq("stripe_event_id", event.id)
+    .single();
+
+  if (existingEvent) {
+    return NextResponse.json({ received: true, duplicate: true });
+  }
+
+  // Record event before processing
+  await supabase.from("webhook_events").insert({
+    stripe_event_id: event.id,
+    event_type: event.type,
+  });
+
   switch (event.type) {
     case "checkout.session.completed":
       await handleCheckoutCompleted(event.data.object);
@@ -452,6 +478,26 @@ flowchart TD
     style Block fill:#ffcdd2
     style UpdateDB fill:#fff9c4
 ```
+
+### Billing Period Consistency
+
+All usage tracking uses UTC-based billing periods for consistency:
+
+```typescript
+// lib/utils/billing-period.ts
+export function getCurrentBillingPeriod(): string {
+  return new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+}
+
+export function getBillingPeriodStart(period?: string): string {
+  const billingPeriod = period ?? getCurrentBillingPeriod();
+  return `${billingPeriod}-01`;
+}
+```
+
+✅ **CORRECT:** Use the `getCurrentBillingPeriod()` utility for consistency
+
+❌ **WRONG:** Using `new Date().toISOString().slice(0, 7)` inline (inconsistent behavior)
 
 ### API Endpoints
 
@@ -907,6 +953,71 @@ export async function constructWebhookEvent(
 
 ❌ **DANGEROUS:** Accepting webhook data without signature verification
 
+### Webhook Idempotency
+
+Webhooks can be delivered multiple times due to retries. We use a `webhook_events` table to ensure each event is processed only once:
+
+```sql
+-- supabase/migrations/20260104000000_add_webhook_events.sql
+CREATE TABLE webhook_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  stripe_event_id TEXT NOT NULL UNIQUE,
+  event_type TEXT NOT NULL,
+  processed_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_webhook_events_stripe_id ON webhook_events(stripe_event_id);
+```
+
+✅ **CORRECT:** Check for duplicate events before processing
+
+❌ **WRONG:** Processing the same event multiple times (can cause duplicate charges)
+
+### Livemode Validation
+
+Test events should never be processed in production:
+
+```typescript
+const isProduction = process.env.NODE_ENV === "production";
+if (isProduction && !event.livemode) {
+  return NextResponse.json(
+    { error: "Test events rejected in production" },
+    { status: 400 },
+  );
+}
+```
+
+✅ **CORRECT:** Reject test events in production
+
+❌ **WRONG:** Allowing test events to affect production data
+
+### Price ID Validation with Tier Resolver
+
+Instead of hardcoding price IDs, use the centralized `PLANS` configuration:
+
+```typescript
+// lib/stripe/tier-resolver.ts
+import { PLANS, SubscriptionTier } from "./plans";
+
+export function resolveTierFromPriceId(
+  priceId: string | undefined | null,
+): SubscriptionTier {
+  if (!priceId) return "free";
+  for (const [tierId, plan] of Object.entries(PLANS)) {
+    if (
+      plan.stripePriceId === priceId ||
+      plan.stripePriceIdYearly === priceId
+    ) {
+      return tierId as SubscriptionTier;
+    }
+  }
+  return "free";
+}
+```
+
+✅ **CORRECT:** Single source of truth for tier resolution
+
+❌ **WRONG:** Hardcoding price IDs in webhook handlers
+
 ### Row-Level Security (RLS)
 
 ```sql
@@ -1030,5 +1141,5 @@ console.error('Upsert error:', error);
 ---
 
 **Maintainer:** Ricky Wilson
-**Last Reviewed:** 2025-12-22
+**Last Reviewed:** 2026-01-04
 **Status:** ✅ Production-ready

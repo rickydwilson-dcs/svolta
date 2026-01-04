@@ -1,12 +1,13 @@
 /**
  * MediaPipe Pose Landmarker Singleton
- * Provides efficient pose detection with GPU acceleration
+ * Provides efficient pose detection with GPU acceleration and CPU fallback
  */
 
 import {
   PoseLandmarker,
   FilesetResolver,
   type PoseLandmarkerResult,
+  type FilesetResolver as FilesetResolverType,
 } from '@mediapipe/tasks-vision';
 
 import {
@@ -16,13 +17,39 @@ import {
   PoseDetectionErrorType,
 } from '@/types/landmarks';
 
+// Pinned version for stability
+const MEDIAPIPE_VERSION = '0.10.22';
+const MEDIAPIPE_CDN_URL = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
+const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task';
+
 // Singleton instance
 let poseLandmarker: PoseLandmarker | null = null;
 let initializationPromise: Promise<PoseLandmarker> | null = null;
+let usingCpuFallback = false;
+
+/**
+ * Create PoseLandmarker with specified delegate
+ */
+async function createPoseLandmarker(
+  vision: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>>,
+  delegate: 'GPU' | 'CPU'
+): Promise<PoseLandmarker> {
+  return PoseLandmarker.createFromOptions(vision, {
+    baseOptions: {
+      modelAssetPath: MODEL_URL,
+      delegate,
+    },
+    runningMode: 'IMAGE',
+    numPoses: 1,
+    minPoseDetectionConfidence: 0.5,
+    minPosePresenceConfidence: 0.5,
+    minTrackingConfidence: 0.5,
+  });
+}
 
 /**
  * Initialize the PoseLandmarker singleton
- * Uses dynamic import for code splitting
+ * Attempts GPU first, falls back to CPU if unavailable
  */
 export async function initializePoseDetector(): Promise<PoseLandmarker> {
   // Return existing instance if available
@@ -39,23 +66,17 @@ export async function initializePoseDetector(): Promise<PoseLandmarker> {
   initializationPromise = (async () => {
     try {
       // Load the vision tasks WASM files
-      const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm'
-      );
+      const vision = await FilesetResolver.forVisionTasks(MEDIAPIPE_CDN_URL);
 
-      // Create the pose landmarker with GPU delegate
-      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-        baseOptions: {
-          modelAssetPath:
-            'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
-          delegate: 'GPU',
-        },
-        runningMode: 'IMAGE',
-        numPoses: 1, // Only detect one person
-        minPoseDetectionConfidence: 0.5,
-        minPosePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
+      // Try GPU first, fall back to CPU if it fails
+      try {
+        poseLandmarker = await createPoseLandmarker(vision, 'GPU');
+        usingCpuFallback = false;
+      } catch (gpuError) {
+        console.warn('GPU initialization failed, falling back to CPU:', gpuError);
+        poseLandmarker = await createPoseLandmarker(vision, 'CPU');
+        usingCpuFallback = true;
+      }
 
       return poseLandmarker;
     } catch (error) {
@@ -72,6 +93,13 @@ export async function initializePoseDetector(): Promise<PoseLandmarker> {
   })();
 
   return initializationPromise;
+}
+
+/**
+ * Check if pose detector is using CPU fallback
+ */
+export function isUsingCpuFallback(): boolean {
+  return usingCpuFallback;
 }
 
 /**
