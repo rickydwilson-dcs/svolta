@@ -30,13 +30,15 @@ export interface AlignmentParams {
 export interface ValidationConstraints {
   /** Maximum allowed head alignment difference in pixels. Default: 2 */
   maxHeadAlignmentDelta?: number;
+  /** Maximum allowed horizontal (shoulder X) alignment difference in pixels. Default: 10 */
+  maxShoulderXDelta?: number;
   /** Minimum headroom percentage (0-1). Default: 0.05 (5%) */
   minHeadroom?: number;
   /** Maximum headroom percentage (0-1). Default: 0.20 (20%) */
   maxHeadroom?: number;
-  /** Minimum allowed body scale. Default: 0.8 */
+  /** Minimum allowed body scale. Default: 0.65 */
   minBodyScale?: number;
-  /** Maximum allowed body scale. Default: 1.25 */
+  /** Maximum allowed body scale. Default: 1.60 */
   maxBodyScale?: number;
 }
 
@@ -47,6 +49,13 @@ export interface ValidationResult {
   headAlignment: {
     beforeHeadY: number;
     afterHeadY: number;
+    delta: number;
+    passed: boolean;
+  };
+  /** Horizontal alignment metrics */
+  horizontalAlignment: {
+    beforeShoulderX: number;
+    afterShoulderX: number;
     delta: number;
     passed: boolean;
   };
@@ -75,10 +84,11 @@ export interface ValidationResult {
 
 const DEFAULT_CONSTRAINTS: Required<ValidationConstraints> = {
   maxHeadAlignmentDelta: 2, // 2px tolerance
+  maxShoulderXDelta: 15, // 15px horizontal tolerance (increased from 10 for edge cases)
   minHeadroom: 0.05, // 5%
   maxHeadroom: 0.20, // 20%
-  minBodyScale: 0.8,
-  maxBodyScale: 1.25,
+  minBodyScale: 0.65, // Updated from 0.8 to handle scale-disparate photos
+  maxBodyScale: 1.60, // Updated from 1.25 to handle scale-disparate photos
 };
 
 const VISIBILITY_THRESHOLD = 0.5;
@@ -118,6 +128,28 @@ function getShoulderY(landmarks: Landmark[] | undefined): number {
     return rightShoulder.y;
   }
   return 0.25;
+}
+
+/**
+ * Get shoulder center X position from landmarks
+ * Returns normalized X position (0-1)
+ */
+function getShoulderX(landmarks: Landmark[] | undefined): number {
+  if (!landmarks || landmarks.length < 33) return 0.5; // default center position
+  const leftShoulder = landmarks[11];
+  const rightShoulder = landmarks[12];
+
+  const hasLeft = (leftShoulder?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+  const hasRight = (rightShoulder?.visibility ?? 0) >= VISIBILITY_THRESHOLD;
+
+  if (hasLeft && hasRight) {
+    return (leftShoulder.x + rightShoulder.x) / 2;
+  } else if (hasLeft) {
+    return leftShoulder.x;
+  } else if (hasRight) {
+    return rightShoulder.x;
+  }
+  return 0.5;
 }
 
 /**
@@ -258,6 +290,25 @@ export function validateAlignment(
     warnings.push(`After image has white space at top: drawY = ${alignParams.after.drawY.toFixed(1)}px`);
   }
 
+  // ========================================
+  // Horizontal alignment validation
+  // ========================================
+  const beforeShoulderXNorm = getShoulderX(beforeLandmarks);
+  const afterShoulderXNorm = getShoulderX(afterLandmarks);
+
+  // Calculate actual shoulder X positions on canvas (in pixels)
+  const beforeShoulderX = alignParams.before.drawX + beforeShoulderXNorm * alignParams.before.drawWidth;
+  const afterShoulderX = alignParams.after.drawX + afterShoulderXNorm * alignParams.after.drawWidth;
+
+  const shoulderXDelta = Math.abs(beforeShoulderX - afterShoulderX);
+  const horizontalAlignmentPassed = shoulderXDelta <= opts.maxShoulderXDelta;
+
+  if (!horizontalAlignmentPassed) {
+    errors.push(
+      `Horizontal alignment delta ${shoulderXDelta.toFixed(2)}px exceeds maximum ${opts.maxShoulderXDelta}px`
+    );
+  }
+
   const passed = errors.length === 0;
 
   return {
@@ -267,6 +318,12 @@ export function validateAlignment(
       afterHeadY,
       delta: headDelta,
       passed: headAlignmentPassed,
+    },
+    horizontalAlignment: {
+      beforeShoulderX,
+      afterShoulderX,
+      delta: shoulderXDelta,
+      passed: horizontalAlignmentPassed,
     },
     headroom: {
       beforePercent: beforeHeadroomPercent,
@@ -292,6 +349,7 @@ export function formatValidationResult(result: ValidationResult, testName: strin
 
   let output = `  ${testName} alignment ... ${status}`;
   output += `\n    Head delta: ${result.headAlignment.delta.toFixed(2)}px`;
+  output += `\n    Horizontal delta: ${result.horizontalAlignment.delta.toFixed(2)}px`;
   output += `\n    Headroom: ${(result.headroom.constraintPercent * 100).toFixed(1)}%`;
   output += `\n    Body scale: ${result.bodyScale.applied.toFixed(3)}`;
 

@@ -152,6 +152,32 @@ function getShoulderCenterY(
 }
 
 /**
+ * Get shoulder center X position from landmarks
+ * Returns normalized X (0-1) or null if shoulders not visible
+ */
+function getShoulderCenterX(
+  landmarks: Landmark[] | undefined,
+  visibilityThreshold: number = 0.5
+): number | null {
+  if (!landmarks || landmarks.length < 33) return null;
+
+  const leftShoulder = landmarks[11];
+  const rightShoulder = landmarks[12];
+
+  const hasLeft = (leftShoulder?.visibility ?? 0) >= visibilityThreshold;
+  const hasRight = (rightShoulder?.visibility ?? 0) >= visibilityThreshold;
+
+  if (hasLeft && hasRight) {
+    return (leftShoulder.x + rightShoulder.x) / 2;
+  } else if (hasLeft) {
+    return leftShoulder.x;
+  } else if (hasRight) {
+    return rightShoulder.x;
+  }
+  return null;
+}
+
+/**
  * Get hip center Y position from landmarks
  * Returns normalized Y (0-1) or null if hips not visible
  */
@@ -307,7 +333,7 @@ export function calculateAlignedDrawParams(
   const afterBodyH = getBodyHeight(afterLandmarks);
 
   let bodyScale = afterBodyH > 0 ? beforeBodyH / afterBodyH : 1;
-  bodyScale = Math.max(0.8, Math.min(1.25, bodyScale));
+  bodyScale = Math.max(0.65, Math.min(1.60, bodyScale));
 
   // Phase 1.5: Normalize overflow
   const beforeFit = calculateCoverFit(beforeImg.width, beforeImg.height, targetWidth, targetHeight);
@@ -368,8 +394,27 @@ export function calculateAlignedDrawParams(
     afterDrawY = clampForHeadVisibility(afterDrawY, afterScaledHeight, targetHeight, afterHeadY);
   }
 
-  const beforeDrawX = (targetWidth - beforeScaledWidth) / 2;
-  const afterDrawX = (targetWidth - afterScaledWidth) / 2;
+  // Phase 4: Horizontal alignment based on shoulder center
+  const beforeAnchorX = getShoulderCenterX(beforeLandmarks, VISIBILITY_THRESHOLD) ?? 0.5;
+  const afterAnchorX = getShoulderCenterX(afterLandmarks, VISIBILITY_THRESHOLD) ?? 0.5;
+
+  // Position so shoulder centers align at canvas center
+  const canvasCenterX = targetWidth / 2;
+  let beforeDrawX = canvasCenterX - beforeAnchorX * beforeScaledWidth;
+  let afterDrawX = canvasCenterX - afterAnchorX * afterScaledWidth;
+
+  // Clamp to prevent excessive cropping (max 20% crop on each side)
+  const beforeMaxCrop = beforeScaledWidth * 0.2;
+  const afterMaxCrop = afterScaledWidth * 0.2;
+
+  beforeDrawX = Math.max(
+    -(beforeScaledWidth - targetWidth) - beforeMaxCrop,
+    Math.min(beforeMaxCrop, beforeDrawX)
+  );
+  afterDrawX = Math.max(
+    -(afterScaledWidth - targetWidth) - afterMaxCrop,
+    Math.min(afterMaxCrop, afterDrawX)
+  );
 
   return {
     before: {

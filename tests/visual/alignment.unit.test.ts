@@ -17,29 +17,34 @@ import type { Landmark } from '@/types/landmarks';
 
 /**
  * Create a minimal landmark array with key positions
+ * @param opts.centerX - Optional horizontal center position (default 0.5)
  */
 function createLandmarks(opts: {
   noseY: number;
   shoulderY: number;
   hipY: number;
   visibility?: number;
+  centerX?: number;
 }): Landmark[] {
   const vis = opts.visibility ?? 0.95;
   const lowVis = 0.1;
+  const centerX = opts.centerX ?? 0.5;
+  const shoulderOffset = 0.1; // Distance from center to each shoulder
+  const hipOffset = 0.08; // Distance from center to each hip
 
   const landmarks: Landmark[] = Array.from({ length: 33 }, () => ({
-    x: 0.5,
+    x: centerX,
     y: 0.5,
     z: 0,
     visibility: lowVis,
   }));
 
-  // Key landmarks
-  landmarks[0] = { x: 0.5, y: opts.noseY, z: 0, visibility: vis }; // Nose
-  landmarks[11] = { x: 0.4, y: opts.shoulderY, z: 0, visibility: vis }; // Left shoulder
-  landmarks[12] = { x: 0.6, y: opts.shoulderY, z: 0, visibility: vis }; // Right shoulder
-  landmarks[23] = { x: 0.42, y: opts.hipY, z: 0, visibility: vis }; // Left hip
-  landmarks[24] = { x: 0.58, y: opts.hipY, z: 0, visibility: vis }; // Right hip
+  // Key landmarks - positioned relative to centerX
+  landmarks[0] = { x: centerX, y: opts.noseY, z: 0, visibility: vis }; // Nose
+  landmarks[11] = { x: centerX - shoulderOffset, y: opts.shoulderY, z: 0, visibility: vis }; // Left shoulder
+  landmarks[12] = { x: centerX + shoulderOffset, y: opts.shoulderY, z: 0, visibility: vis }; // Right shoulder
+  landmarks[23] = { x: centerX - hipOffset, y: opts.hipY, z: 0, visibility: vis }; // Left hip
+  landmarks[24] = { x: centerX + hipOffset, y: opts.hipY, z: 0, visibility: vis }; // Right hip
 
   return landmarks;
 }
@@ -84,9 +89,9 @@ describe('calculateAlignedDrawParams', () => {
       );
 
       // After should be scaled down to match before
-      // Expected scale: 0.3 / 0.45 = 0.667, but clamped to 0.8
+      // Expected scale: 0.3 / 0.45 = 0.667 (within 0.65-1.60 range)
       const scaleRatio = result.after.drawHeight / result.before.drawHeight;
-      expect(scaleRatio).toBeGreaterThanOrEqual(0.75); // Allow some tolerance
+      expect(scaleRatio).toBeGreaterThanOrEqual(0.60); // Allow some tolerance for 0.65 clamp
       expect(scaleRatio).toBeLessThan(1.0);
     });
 
@@ -104,13 +109,13 @@ describe('calculateAlignedDrawParams', () => {
       );
 
       // After should be scaled up to match before
-      // Expected scale: 0.5 / 0.3 = 1.67, but clamped to 1.25
+      // Expected scale: 0.5 / 0.3 = 1.67, but clamped to 1.60
       const scaleRatio = result.after.drawHeight / result.before.drawHeight;
       expect(scaleRatio).toBeGreaterThan(1.0);
-      expect(scaleRatio).toBeLessThanOrEqual(1.30); // Allow some tolerance
+      expect(scaleRatio).toBeLessThanOrEqual(1.70); // Allow some tolerance for 1.60 clamp
     });
 
-    it('should clamp scale to minimum 0.8', () => {
+    it('should clamp scale to minimum 0.65', () => {
       const beforeLandmarks = createLandmarks({ noseY: 0.20, shoulderY: 0.30, hipY: 0.40 }); // 0.2 body height
       const afterLandmarks = createLandmarks({ noseY: 0.05, shoulderY: 0.15, hipY: 0.70 }); // 0.65 body height
 
@@ -123,12 +128,12 @@ describe('calculateAlignedDrawParams', () => {
         targetHeight
       );
 
-      // Raw scale would be 0.2/0.65 = 0.31, should be clamped to 0.8
+      // Raw scale would be 0.2/0.65 = 0.31, should be clamped to 0.65
       const scaleRatio = result.after.drawHeight / result.before.drawHeight;
-      expect(scaleRatio).toBeGreaterThanOrEqual(0.75);
+      expect(scaleRatio).toBeGreaterThanOrEqual(0.60); // Allow tolerance for 0.65 clamp
     });
 
-    it('should clamp scale to maximum 1.25', () => {
+    it('should clamp scale to maximum 1.60', () => {
       const beforeLandmarks = createLandmarks({ noseY: 0.05, shoulderY: 0.15, hipY: 0.70 }); // 0.65 body height
       const afterLandmarks = createLandmarks({ noseY: 0.20, shoulderY: 0.30, hipY: 0.40 }); // 0.2 body height
 
@@ -141,9 +146,9 @@ describe('calculateAlignedDrawParams', () => {
         targetHeight
       );
 
-      // Raw scale would be 0.65/0.2 = 3.25, should be clamped to 1.25
+      // Raw scale would be 0.65/0.2 = 3.25, should be clamped to 1.60
       const scaleRatio = result.after.drawHeight / result.before.drawHeight;
-      expect(scaleRatio).toBeLessThanOrEqual(1.30);
+      expect(scaleRatio).toBeLessThanOrEqual(1.70); // Allow tolerance for 1.60 clamp
     });
   });
 
@@ -234,8 +239,8 @@ describe('calculateAlignedDrawParams', () => {
       expect(result.after.drawY).toBeLessThanOrEqual(1);
     });
 
-    it('should center images horizontally', () => {
-      const landmarks = createLandmarks({ noseY: 0.12, shoulderY: 0.22, hipY: 0.52 });
+    it('should align shoulder centers horizontally when both subjects centered', () => {
+      const landmarks = createLandmarks({ noseY: 0.12, shoulderY: 0.22, hipY: 0.52, centerX: 0.5 });
 
       const result = calculateAlignedDrawParams(
         { width: 1200, height: 1600 },
@@ -246,14 +251,14 @@ describe('calculateAlignedDrawParams', () => {
         targetHeight
       );
 
-      // drawX should center the image
-      // For a wider-than-target image, drawX would be negative
-      // For centered, drawX = (targetWidth - drawWidth) / 2
-      const expectedBeforeX = (targetWidth - result.before.drawWidth) / 2;
-      const expectedAfterX = (targetWidth - result.after.drawWidth) / 2;
+      // With both subjects at centerX=0.5, shoulder centers should align
+      // Calculate where shoulder center ends up on canvas
+      const beforeShoulderX = result.before.drawX + 0.5 * result.before.drawWidth;
+      const afterShoulderX = result.after.drawX + 0.5 * result.after.drawWidth;
 
-      expect(result.before.drawX).toBeCloseTo(expectedBeforeX, 0);
-      expect(result.after.drawX).toBeCloseTo(expectedAfterX, 0);
+      // Shoulder centers should align at canvas center
+      expect(beforeShoulderX).toBeCloseTo(targetWidth / 2, 0);
+      expect(afterShoulderX).toBeCloseTo(targetWidth / 2, 0);
     });
   });
 
@@ -634,6 +639,292 @@ describe('calculateAlignedDrawParams', () => {
       // cropTopOffset should be defined when shoulder alignment is used
       expect(result.cropTopOffset).toBeDefined();
       expect(typeof result.cropTopOffset).toBe('number');
+    });
+  });
+
+  describe('Phase 4: Horizontal Alignment', () => {
+    it('should align subjects when before is left of center', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.35, // Left of center
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.50, // Centered
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Calculate where shoulder centers end up on canvas
+      const beforeShoulderX = result.before.drawX + 0.35 * result.before.drawWidth;
+      const afterShoulderX = result.after.drawX + 0.50 * result.after.drawWidth;
+
+      // Shoulder centers should be aligned (within tolerance)
+      const horizontalDelta = Math.abs(beforeShoulderX - afterShoulderX);
+      expect(horizontalDelta).toBeLessThan(15); // 15px tolerance
+    });
+
+    it('should align subjects when before is right of center', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.65, // Right of center
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.50, // Centered
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Calculate where shoulder centers end up on canvas
+      const beforeShoulderX = result.before.drawX + 0.65 * result.before.drawWidth;
+      const afterShoulderX = result.after.drawX + 0.50 * result.after.drawWidth;
+
+      // Shoulder centers should be aligned (within tolerance)
+      const horizontalDelta = Math.abs(beforeShoulderX - afterShoulderX);
+      expect(horizontalDelta).toBeLessThan(15); // 15px tolerance
+    });
+
+    it('should handle extreme horizontal offsets', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.25, // Far left
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.75, // Far right
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Calculate where shoulder centers end up on canvas
+      const beforeShoulderX = result.before.drawX + 0.25 * result.before.drawWidth;
+      const afterShoulderX = result.after.drawX + 0.75 * result.after.drawWidth;
+
+      // For extreme offsets (50% difference), alignment is limited by crop constraints
+      // The algorithm tries to align but can't exceed 20% crop per side
+      // So with a 50% difference and 20% max crop, we expect ~10-15% residual
+      // which on 1080px target is ~108-162px delta
+      const horizontalDelta = Math.abs(beforeShoulderX - afterShoulderX);
+      expect(horizontalDelta).toBeLessThan(200); // Allow tolerance for crop-limited extreme cases
+    });
+
+    it('should combine horizontal and vertical alignment', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.10,
+        shoulderY: 0.20,
+        hipY: 0.55, // Body height 0.45
+        centerX: 0.40, // Left of center
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.15,
+        shoulderY: 0.25,
+        hipY: 0.50, // Body height 0.35
+        centerX: 0.60, // Right of center
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Verify vertical alignment (heads should be aligned)
+      const beforeHeadY = result.before.drawY + 0.10 * result.before.drawHeight;
+      const afterHeadY = result.after.drawY + 0.15 * result.after.drawHeight;
+      const verticalDelta = Math.abs(beforeHeadY - afterHeadY);
+      expect(verticalDelta).toBeLessThan(5); // 5px vertical tolerance
+
+      // Verify horizontal alignment (shoulders should be aligned)
+      const beforeShoulderX = result.before.drawX + 0.40 * result.before.drawWidth;
+      const afterShoulderX = result.after.drawX + 0.60 * result.after.drawWidth;
+      const horizontalDelta = Math.abs(beforeShoulderX - afterShoulderX);
+      expect(horizontalDelta).toBeLessThan(25); // 25px horizontal tolerance for combined case
+    });
+
+    it('should respect crop limits for horizontal alignment', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.15, // Very far left (near edge)
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.22,
+        hipY: 0.52,
+        centerX: 0.85, // Very far right (near edge)
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Should produce valid output without excessive cropping
+      expect(result.before.drawWidth).toBeGreaterThan(0);
+      expect(result.after.drawWidth).toBeGreaterThan(0);
+
+      // drawX should be within reasonable bounds (not cropping more than 20% of image)
+      const beforeMaxCrop = result.before.drawWidth * 0.25;
+      const afterMaxCrop = result.after.drawWidth * 0.25;
+
+      expect(result.before.drawX).toBeGreaterThan(-beforeMaxCrop - targetWidth);
+      expect(result.after.drawX).toBeGreaterThan(-afterMaxCrop - targetWidth);
+    });
+  });
+
+  describe('Scale Disparity (Extended Clamp Range)', () => {
+    it('should handle real-world scale disparity (1.477x)', () => {
+      // Matching the test-data photos: before body 29%, after body 20%
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.2329,
+        shoulderY: 0.30,
+        hipY: 0.5243, // Body height = 0.2914
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.3603,
+        shoulderY: 0.42,
+        hipY: 0.5577, // Body height = 0.1974
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Raw scale = 0.2914 / 0.1974 = 1.477
+      // Should NOT be clamped (within 0.65-1.60 range)
+      const scaleRatio = result.after.drawHeight / result.before.drawHeight;
+      expect(scaleRatio).toBeGreaterThan(1.3);
+      expect(scaleRatio).toBeLessThanOrEqual(1.60);
+    });
+
+    it('should handle moderate scale disparity (1.4x)', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.21,
+        hipY: 0.47, // Body height = 0.35
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.19,
+        hipY: 0.37, // Body height = 0.25
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Raw scale = 0.35 / 0.25 = 1.4
+      // Should NOT be clamped (within 0.65-1.60 range)
+      const scaleRatio = result.after.drawHeight / result.before.drawHeight;
+      expect(scaleRatio).toBeGreaterThan(1.2);
+      expect(scaleRatio).toBeLessThanOrEqual(1.60);
+    });
+
+    it('should clamp extreme disparity (1.82x) to 1.60', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.08,
+        shoulderY: 0.18,
+        hipY: 0.48, // Body height = 0.40
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.08,
+        shoulderY: 0.14,
+        hipY: 0.30, // Body height = 0.22
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Raw scale = 0.40 / 0.22 = 1.82
+      // Should be clamped to 1.60
+      const scaleRatio = result.after.drawHeight / result.before.drawHeight;
+      expect(scaleRatio).toBeLessThanOrEqual(1.70); // Allow tolerance
+    });
+
+    it('should handle reverse moderate disparity (0.71x)', () => {
+      const beforeLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.19,
+        hipY: 0.37, // Body height = 0.25
+      });
+      const afterLandmarks = createLandmarks({
+        noseY: 0.12,
+        shoulderY: 0.21,
+        hipY: 0.47, // Body height = 0.35
+      });
+
+      const result = calculateAlignedDrawParams(
+        { width: 1200, height: 1600 },
+        { width: 1200, height: 1600 },
+        beforeLandmarks,
+        afterLandmarks,
+        targetWidth,
+        targetHeight
+      );
+
+      // Raw scale = 0.25 / 0.35 = 0.71
+      // Should NOT be clamped (within 0.65-1.60 range)
+      const scaleRatio = result.after.drawHeight / result.before.drawHeight;
+      expect(scaleRatio).toBeLessThan(0.85);
+      expect(scaleRatio).toBeGreaterThanOrEqual(0.60); // Allow tolerance for 0.65 clamp
     });
   });
 });

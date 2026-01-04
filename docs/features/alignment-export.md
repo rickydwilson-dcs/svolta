@@ -1,7 +1,7 @@
 # Alignment & Export Algorithm
 
-**Version:** 2.0.0
-**Last Updated:** 2025-12-22
+**Version:** 2.1.0
+**Last Updated:** 2026-01-04
 **Status:** Production
 
 ## Scope
@@ -11,7 +11,9 @@ This document describes the **core business logic** of Svolta: the 4-step alignm
 **Key Files:**
 
 - `/lib/canvas/export.ts` - Export algorithm implementation
+- `/lib/canvas/aligned-draw-params.ts` - Shared alignment calculation (used by export, GIF, and preview)
 - `/lib/canvas/alignment.ts` - Alignment calculation utilities
+- `/lib/debug/alignment-logger.ts` - Debug logging utility for alignment exports
 - `/components/features/editor/ExportModal.tsx` - Export UI
 
 **Critical Importance:** This algorithm is the foundation of Svolta's value proposition. Understanding it is essential for:
@@ -888,9 +890,72 @@ Only depends on pose landmarks.
 
 ## Debugging Guide
 
-### Console Logs
+### Debug Logging System
 
-The export function logs detailed information to help diagnose alignment issues:
+Svolta includes a toggleable debug logging system that writes alignment data to both the browser console and a file for easy analysis.
+
+#### Enabling Debug Logging
+
+```javascript
+// In browser console:
+window.svoltaDebug.enable(); // Enable debug logging
+window.svoltaDebug.disable(); // Disable debug logging
+window.svoltaDebug.isEnabled(); // Check status
+
+// Or via localStorage:
+localStorage.setItem("svolta_debug_alignment", "true");
+
+// Or via environment variable in .env.local:
+NEXT_PUBLIC_DEBUG_ALIGNMENT = true;
+```
+
+#### Log File Output
+
+When enabled, alignment data is written to `debug/alignment-log.json` (development only):
+
+```json
+[
+  {
+    "timestamp": "2026-01-04T10:30:45.123Z",
+    "input": {
+      "beforeImg": { "width": 1536, "height": 2048 },
+      "afterImg": { "width": 1536, "height": 2048 },
+      "targetWidth": 1080,
+      "targetHeight": 1350,
+      "beforeLandmarks": {
+        "count": 33,
+        "nose": { "y": 0.2328, "visibility": 0.9999 },
+        "leftShoulder": { "x": 0.5709, "y": 0.3136, "visibility": 0.9999 },
+        "rightShoulder": { "x": 0.3756, "y": 0.3195, "visibility": 0.9999 },
+        "leftHip": { "y": 0.5213, "visibility": 0.9997 },
+        "rightHip": { "y": 0.5272, "visibility": 0.9997 }
+      },
+      "afterLandmarks": { ... }
+    },
+    "result": {
+      "before": { "drawX": -11.13, "drawY": -91.5, "drawWidth": 1164.38, "drawHeight": 1552.5 },
+      "after": { "drawX": -308.51, "drawY": -556.28, "drawWidth": 1719.89, "drawHeight": 2293.19 },
+      "useShoulderAlignment": false,
+      "cropTopOffset": 0
+    },
+    "metadata": { "source": "png" }
+  }
+]
+```
+
+#### Debug API Endpoints
+
+| Method | Endpoint                   | Description          |
+| ------ | -------------------------- | -------------------- |
+| GET    | `/api/debug/alignment-log` | Read all log entries |
+| POST   | `/api/debug/alignment-log` | Append new log entry |
+| DELETE | `/api/debug/alignment-log` | Clear the log file   |
+
+**Note:** Debug endpoints only work in development mode (`NODE_ENV=development`).
+
+### Legacy Console Logs
+
+The export function also logs detailed information to help diagnose alignment issues:
 
 ```typescript
 console.log("[Phase1] Body heights:", {
@@ -1026,20 +1091,32 @@ ctx.stroke();
 
 ### Primary Files
 
-**`/lib/canvas/export.ts`** (639 lines)
+**`/lib/canvas/aligned-draw-params.ts`** - Shared alignment algorithm
 
-- Lines 1-13: Module header with `@see` reference to this documentation
-- Lines 59-74: `loadImage` utility
-- Lines 76-109: `calculateDimensions` utility
-- Lines 111-125: `getAspectRatio` helper (for Phase 4 dynamic crop)
-- Lines 127-165: `calculateCoverFit` cover-fit calculation
-- Lines 167-198: `getBodyHeight` from landmarks
-- Lines 200-227: `clampForHeadVisibility` smart clamping (Phase 3)
-- Lines 229-382: `calculateAlignedDrawParams` - **THE CORE ALGORITHM** (Phases 1, 1.5, 2, 3)
-- Lines 384-403: `drawPhotoWithParams` canvas drawing
-- Lines 405-446: `drawLabels` text rendering
-- Lines 448-618: `exportCanvas` main export function (includes Phase 4 dynamic crop)
-- Lines 620-639: `triggerDownload` browser download
+- `calculateCoverFit` - Cover-fit calculation
+- `getBodyHeight` - Extract body height from landmarks
+- `calculateAlignedDrawParams` - **THE CORE ALGORITHM** (Phases 1, 1.5, 2, 3)
+- Used by PNG export, GIF export, and preview components
+
+**`/lib/canvas/export.ts`** - PNG export with debug wrapper
+
+- `loadImage` - Utility to load images from data URLs
+- `calculateDimensions` - Calculate target dimensions for format
+- `getAspectRatio` - Helper for Phase 4 dynamic crop
+- `calculateAlignedDrawParamsWithDebug` - Debug wrapper that calls shared algorithm
+- `drawPhotoWithParams` - Canvas drawing utility
+- `drawLabels` - Text rendering for Before/After labels
+- `exportCanvas` - Main export function (includes Phase 4 dynamic crop)
+- `triggerDownload` - Browser download helper
+
+**`/lib/debug/alignment-logger.ts`** - Debug logging utility
+
+- `isAlignmentDebugEnabled()` - Check if debug is enabled
+- `setAlignmentDebug(enabled)` - Enable/disable debug mode
+- `buildLogEntry()` - Create structured log entries
+- `logAlignment()` - Log to console and file API
+- `extractLandmarkSummary()` - Extract key landmarks for logging
+- `window.svoltaDebug` - Browser console helper object
 
 **`/lib/canvas/alignment.ts`**
 

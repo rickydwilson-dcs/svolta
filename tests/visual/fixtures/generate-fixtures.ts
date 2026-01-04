@@ -354,11 +354,11 @@ function generateTestFixtures(): { fixtures: TestFixture[]; figures: Map<string,
   // ========================================
   // Category 3: Body Height Extremes (6 fixtures)
   // ========================================
-  // Test scale clamping boundaries (0.8 - 1.25)
+  // Test scale clamping boundaries (0.65 - 1.60)
 
   const extremeConfigs = [
-    { id: 'extreme-tall-before', beforeBody: 0.60, afterBody: 0.40, desc: 'Tall before, short after (should clamp to 1.25)' },
-    { id: 'extreme-short-before', beforeBody: 0.30, afterBody: 0.50, desc: 'Short before, tall after (should clamp to 0.8)' },
+    { id: 'extreme-tall-before', beforeBody: 0.60, afterBody: 0.40, desc: 'Tall before, short after (scale 1.5)' },
+    { id: 'extreme-short-before', beforeBody: 0.30, afterBody: 0.50, desc: 'Short before, tall after (scale 0.6, clamp to 0.65)' },
     { id: 'extreme-edge-high', beforeBody: 0.50, afterBody: 0.40, desc: 'Near upper clamp boundary (1.25)' },
     { id: 'extreme-edge-low', beforeBody: 0.40, afterBody: 0.50, desc: 'Near lower clamp boundary (0.8)' },
     { id: 'extreme-tiny', beforeBody: 0.25, afterBody: 0.25, desc: 'Very short body heights' },
@@ -389,7 +389,7 @@ function generateTestFixtures(): { fixtures: TestFixture[]; figures: Map<string,
     figures.set(afterFig.id, afterFig);
 
     const rawScale = config.beforeBody / config.afterBody;
-    const clampedScale = Math.max(0.8, Math.min(1.25, rawScale));
+    const clampedScale = Math.max(0.65, Math.min(1.60, rawScale));
 
     fixtures.push({
       id: config.id,
@@ -699,7 +699,7 @@ function generateTestFixtures(): { fixtures: TestFixture[]; figures: Map<string,
     figures.set(afterFig.id, afterFig);
 
     const rawScale = config.beforeBody / config.afterBody;
-    const clampedScale = Math.max(0.8, Math.min(1.25, rawScale));
+    const clampedScale = Math.max(0.65, Math.min(1.60, rawScale));
 
     fixtures.push({
       id: config.id,
@@ -1129,6 +1129,306 @@ function generateTestFixtures(): { fixtures: TestFixture[]; figures: Map<string,
       },
       expected: {
         bodyScale: 1.0,
+        headAlignmentDelta: 0,
+      },
+    });
+  }
+
+  // ========================================
+  // Category 10: Scale Disparity (8 fixtures)
+  // ========================================
+  // Test the extended scale clamp [0.65, 1.60] with real-world disparities
+  // These simulate cases where subjects are at very different distances from camera
+
+  const scaleDisparityConfigs = [
+    // Real-world case from test-data photos (1.477x needed)
+    {
+      id: 'scale-disparity-real',
+      beforeNoseY: 0.2329,
+      beforeHipY: 0.5243,  // Body = 0.2914 (29%)
+      afterNoseY: 0.3603,
+      afterHipY: 0.5577,   // Body = 0.1974 (20%)
+      desc: 'Real-world 1.477x disparity (test-data match)'
+    },
+    // Moderate disparity (1.4x)
+    {
+      id: 'scale-disparity-moderate',
+      beforeNoseY: 0.12,
+      beforeHipY: 0.47,    // Body = 0.35
+      afterNoseY: 0.12,
+      afterHipY: 0.37,     // Body = 0.25
+      desc: 'Moderate 1.4x disparity'
+    },
+    // Near upper clamp boundary (1.55x, within 1.60 limit)
+    {
+      id: 'scale-disparity-near-upper',
+      beforeNoseY: 0.10,
+      beforeHipY: 0.56,    // Body = 0.46
+      afterNoseY: 0.10,
+      afterHipY: 0.40,     // Body = 0.30
+      desc: 'Near upper clamp 1.53x'
+    },
+    // At upper clamp boundary (1.60x exactly)
+    {
+      id: 'scale-disparity-upper-clamp',
+      beforeNoseY: 0.10,
+      beforeHipY: 0.58,    // Body = 0.48
+      afterNoseY: 0.10,
+      afterHipY: 0.40,     // Body = 0.30
+      desc: 'At upper clamp boundary 1.60x'
+    },
+    // Exceeds upper clamp (1.82x, should clamp to 1.60)
+    {
+      id: 'scale-disparity-exceeds-upper',
+      beforeNoseY: 0.08,
+      beforeHipY: 0.48,    // Body = 0.40
+      afterNoseY: 0.08,
+      afterHipY: 0.30,     // Body = 0.22
+      desc: 'Exceeds upper clamp 1.82x (clamped to 1.60)'
+    },
+    // Reverse disparity near lower clamp (0.71x)
+    {
+      id: 'scale-disparity-reverse-moderate',
+      beforeNoseY: 0.12,
+      beforeHipY: 0.37,    // Body = 0.25
+      afterNoseY: 0.12,
+      afterHipY: 0.47,     // Body = 0.35
+      desc: 'Reverse moderate 0.71x'
+    },
+    // At lower clamp boundary (0.65x)
+    {
+      id: 'scale-disparity-lower-clamp',
+      beforeNoseY: 0.10,
+      beforeHipY: 0.36,    // Body = 0.26
+      afterNoseY: 0.10,
+      afterHipY: 0.50,     // Body = 0.40
+      desc: 'At lower clamp boundary 0.65x'
+    },
+    // Exceeds lower clamp (0.55x, should clamp to 0.65)
+    {
+      id: 'scale-disparity-exceeds-lower',
+      beforeNoseY: 0.10,
+      beforeHipY: 0.32,    // Body = 0.22
+      afterNoseY: 0.10,
+      afterHipY: 0.50,     // Body = 0.40
+      desc: 'Exceeds lower clamp 0.55x (clamped to 0.65)'
+    },
+  ];
+
+  for (const config of scaleDisparityConfigs) {
+    // Calculate body heights from nose/hip positions
+    const beforeBodyH = config.beforeHipY - config.beforeNoseY;
+    const afterBodyH = config.afterHipY - config.afterNoseY;
+
+    const beforeFig = createFigure({
+      id: `${config.id}-before`,
+      category: 'scale-disparity',
+      description: `Before: ${config.desc}`,
+      width: 1200,
+      height: 1600,
+      noseY: config.beforeNoseY,
+      bodyHeight: beforeBodyH,
+    });
+    const afterFig = createFigure({
+      id: `${config.id}-after`,
+      category: 'scale-disparity',
+      description: `After: ${config.desc}`,
+      width: 1200,
+      height: 1600,
+      noseY: config.afterNoseY,
+      bodyHeight: afterBodyH,
+    });
+
+    figures.set(beforeFig.id, beforeFig);
+    figures.set(afterFig.id, afterFig);
+
+    const rawScale = beforeBodyH / afterBodyH;
+    const clampedScale = Math.max(0.65, Math.min(1.60, rawScale));
+
+    fixtures.push({
+      id: config.id,
+      category: 'scale-disparity',
+      description: config.desc,
+      before: {
+        imagePath: `images/${beforeFig.id}.png`,
+        width: beforeFig.imageWidth,
+        height: beforeFig.imageHeight,
+        landmarks: beforeFig.landmarks,
+      },
+      after: {
+        imagePath: `images/${afterFig.id}.png`,
+        width: afterFig.imageWidth,
+        height: afterFig.imageHeight,
+        landmarks: afterFig.landmarks,
+      },
+      expected: {
+        bodyScale: clampedScale,
+        headAlignmentDelta: 0,
+      },
+    });
+  }
+
+  // ========================================
+  // Category 11: Horizontal Alignment (10 fixtures)
+  // ========================================
+  // Test shoulder-center-based horizontal alignment
+  // These simulate cases where subjects are positioned differently left/right
+
+  const horizontalAlignmentConfigs: Array<{
+    id: string;
+    beforeCenterX: number;
+    afterCenterX: number;
+    beforeBody: number;
+    afterBody: number;
+    beforeNoseY?: number;
+    afterNoseY?: number;
+    desc: string;
+  }> = [
+    // Before subject left, after centered
+    {
+      id: 'horizontal-left-to-center',
+      beforeCenterX: 0.35,
+      afterCenterX: 0.50,
+      beforeBody: 0.45,
+      afterBody: 0.45,
+      desc: 'Before left (35%), after centered'
+    },
+    // Before subject right, after centered
+    {
+      id: 'horizontal-right-to-center',
+      beforeCenterX: 0.65,
+      afterCenterX: 0.50,
+      beforeBody: 0.45,
+      afterBody: 0.45,
+      desc: 'Before right (65%), after centered'
+    },
+    // Both subjects off-center opposite sides
+    {
+      id: 'horizontal-opposite-sides',
+      beforeCenterX: 0.30,
+      afterCenterX: 0.70,
+      beforeBody: 0.45,
+      afterBody: 0.45,
+      desc: 'Before left (30%), after right (70%)'
+    },
+    // Combined: horizontal offset + moderate scale disparity
+    {
+      id: 'horizontal-combined-scale-left',
+      beforeCenterX: 0.35,
+      afterCenterX: 0.50,
+      beforeBody: 0.50,
+      afterBody: 0.35,
+      desc: 'Left to center + scale up 1.43x'
+    },
+    // Combined: horizontal offset + reverse scale
+    {
+      id: 'horizontal-combined-scale-right',
+      beforeCenterX: 0.50,
+      afterCenterX: 0.65,
+      beforeBody: 0.35,
+      afterBody: 0.50,
+      desc: 'Center to right + scale down 0.70x'
+    },
+    // Extreme horizontal offset (near edges)
+    {
+      id: 'horizontal-extreme-offset',
+      beforeCenterX: 0.20,
+      afterCenterX: 0.80,
+      beforeBody: 0.45,
+      afterBody: 0.45,
+      desc: 'Extreme offset (20% vs 80%)'
+    },
+    // Subtle horizontal misalignment
+    {
+      id: 'horizontal-subtle',
+      beforeCenterX: 0.48,
+      afterCenterX: 0.52,
+      beforeBody: 0.45,
+      afterBody: 0.45,
+      desc: 'Subtle misalignment (48% vs 52%)'
+    },
+    // Combined: extreme horizontal + headroom difference
+    {
+      id: 'horizontal-with-headroom',
+      beforeCenterX: 0.35,
+      afterCenterX: 0.65,
+      beforeBody: 0.45,
+      afterBody: 0.45,
+      beforeNoseY: 0.08,
+      afterNoseY: 0.15,
+      desc: 'Horizontal + headroom mismatch'
+    },
+    // Combined: all factors (horizontal + scale + headroom)
+    {
+      id: 'horizontal-complex',
+      beforeCenterX: 0.30,
+      afterCenterX: 0.60,
+      beforeBody: 0.50,
+      afterBody: 0.35,
+      beforeNoseY: 0.10,
+      afterNoseY: 0.18,
+      desc: 'Complex: horizontal + scale + headroom'
+    },
+    // Real-world inspired: IMG_0667/IMG_0669 scenario
+    {
+      id: 'horizontal-real-world',
+      beforeCenterX: 0.40,
+      afterCenterX: 0.55,
+      beforeBody: 0.42,
+      afterBody: 0.40,
+      desc: 'Real-world horizontal misalignment'
+    },
+  ];
+
+  for (const config of horizontalAlignmentConfigs) {
+    const beforeNoseY = 'beforeNoseY' in config ? config.beforeNoseY : 0.12;
+    const afterNoseY = 'afterNoseY' in config ? config.afterNoseY : 0.12;
+
+    const beforeFig = createFigure({
+      id: `${config.id}-before`,
+      category: 'horizontal',
+      description: `Before: ${config.desc}`,
+      width: 1200,
+      height: 1600,
+      noseY: beforeNoseY,
+      bodyHeight: config.beforeBody,
+      centerX: config.beforeCenterX,
+    });
+    const afterFig = createFigure({
+      id: `${config.id}-after`,
+      category: 'horizontal',
+      description: `After: ${config.desc}`,
+      width: 1200,
+      height: 1600,
+      noseY: afterNoseY,
+      bodyHeight: config.afterBody,
+      centerX: config.afterCenterX,
+    });
+
+    figures.set(beforeFig.id, beforeFig);
+    figures.set(afterFig.id, afterFig);
+
+    const rawScale = config.beforeBody / config.afterBody;
+    const clampedScale = Math.max(0.65, Math.min(1.60, rawScale));
+
+    fixtures.push({
+      id: config.id,
+      category: 'horizontal',
+      description: config.desc,
+      before: {
+        imagePath: `images/${beforeFig.id}.png`,
+        width: beforeFig.imageWidth,
+        height: beforeFig.imageHeight,
+        landmarks: beforeFig.landmarks,
+      },
+      after: {
+        imagePath: `images/${afterFig.id}.png`,
+        width: afterFig.imageWidth,
+        height: afterFig.imageHeight,
+        landmarks: afterFig.landmarks,
+      },
+      expected: {
+        bodyScale: clampedScale,
         headAlignmentDelta: 0,
       },
     });

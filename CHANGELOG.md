@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Debug logging system for alignment exports** (`lib/debug/alignment-logger.ts`)
+  - Toggleable via `window.svoltaDebug.enable()` in browser console
+  - Or via localStorage: `svolta_debug_alignment`
+  - Or via env var: `NEXT_PUBLIC_DEBUG_ALIGNMENT=true`
+  - Writes structured JSON to `debug/alignment-log.json` for easy comparison
+  - API endpoints: GET/POST/DELETE `/api/debug/alignment-log` (dev only)
+- **Shared alignment algorithm module** (`lib/canvas/aligned-draw-params.ts`)
+  - Extracted from export.ts for reuse across PNG export, GIF export, and preview
+  - Single source of truth for alignment calculations
 - OAuth and Magic Link authentication (replacing email/password)
 - Visual regression test suite with 134 comprehensive fixtures
   - Resolution variations (QVGA to 24MP, mismatched before/after)
@@ -23,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Refactored alignment algorithm** - Consolidated into shared module for consistency
 - CI workflow now uses manual promotion (develop → staging → main) with Husky gates
 - Improved alignment UX with enhanced grid overlay
 - Updated pricing to £7.99/month and £79/year
@@ -43,13 +53,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
-- 95 TypeScript/TSX source files
+- 97 TypeScript/TSX source files
 - 7 custom React hooks
 - 12 UI components (Button, BottomSheet, Card, Input, MagicLinkForm, Modal, OAuthButtons, SegmentedControl, Slider, SvoltaLogo, Toggle, UpgradePrompt)
-- 7 API routes
+- 8 API routes (added debug endpoint)
 - 6 test files
 - 134 visual test fixtures
 - Comprehensive 4-phase alignment algorithm with dynamic crop
+- Debug logging infrastructure for alignment troubleshooting
 
 ---
 

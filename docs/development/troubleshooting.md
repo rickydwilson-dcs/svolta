@@ -1,7 +1,7 @@
 # Svolta - Troubleshooting Guide
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-22
+**Version:** 1.1.0
+**Last Updated:** 2026-01-04
 **Scope:** Common issues, solutions, and debugging strategies
 
 ## Table of Contents
@@ -1134,9 +1134,70 @@ if (isSessionMissing) {
 
 ## Debugging Strategies
 
-### Enable Debug Logging
+### Alignment Debug Logging
 
-Add debug mode to see detailed logs:
+Svolta includes a dedicated alignment debug logging system that writes to both the browser console and a file for easy comparison.
+
+#### Enable Alignment Debug Logging
+
+```javascript
+// In browser console:
+window.svoltaDebug.enable(); // Enable debug logging
+window.svoltaDebug.disable(); // Disable debug logging
+window.svoltaDebug.isEnabled(); // Check status
+
+// Or via localStorage:
+localStorage.setItem("svolta_debug_alignment", "true");
+
+// Or via environment variable in .env.local:
+NEXT_PUBLIC_DEBUG_ALIGNMENT = true;
+```
+
+#### Debug Log Output
+
+When enabled, each export writes structured data to `debug/alignment-log.json`:
+
+```json
+{
+  "timestamp": "2026-01-04T10:30:45.123Z",
+  "input": {
+    "beforeImg": { "width": 1536, "height": 2048 },
+    "afterImg": { "width": 1536, "height": 2048 },
+    "targetWidth": 1080,
+    "targetHeight": 1350,
+    "beforeLandmarks": { "count": 33, "nose": {...}, "shoulders": {...} },
+    "afterLandmarks": { "count": 33, "nose": {...}, "shoulders": {...} }
+  },
+  "result": {
+    "before": { "drawX": -11, "drawY": -91, "drawWidth": 1164, "drawHeight": 1552 },
+    "after": { "drawX": -308, "drawY": -556, "drawWidth": 1719, "drawHeight": 2293 },
+    "useShoulderAlignment": false,
+    "cropTopOffset": 0
+  },
+  "metadata": { "source": "png" }
+}
+```
+
+#### Debug API Endpoints (Development Only)
+
+```bash
+# Read all log entries
+curl http://localhost:3000/api/debug/alignment-log
+
+# Clear log file
+curl -X DELETE http://localhost:3000/api/debug/alignment-log
+```
+
+**Key Files:**
+
+- `/lib/debug/alignment-logger.ts` - Debug utility module
+- `/app/api/debug/alignment-log/route.ts` - File writing API
+
+---
+
+### Generic Debug Logging
+
+Add general debug mode to see detailed logs:
 
 ```typescript
 // lib/debug.ts

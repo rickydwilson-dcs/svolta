@@ -1,7 +1,7 @@
 # Svolta API Reference
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-22
+**Version:** 1.1.0
+**Last Updated:** 2026-01-04
 **Base URL:** `https://www.svolta.app/api` (Production) | `http://localhost:3000/api` (Development)
 
 ## Overview
@@ -34,6 +34,7 @@ Svolta's REST API provides endpoints for Stripe payment integration, usage track
    - [Get Usage](#get-apiusage)
    - [Increment Usage](#post-apiusageincrement)
    - [Delete Account](#delete-apiaccountdelete)
+   - [Debug Alignment Log](#debug-alignment-log-development-only)
 3. [Error Handling](#error-handling)
 4. [Rate Limiting](#rate-limiting)
 5. [Webhooks](#webhooks)
@@ -530,6 +531,125 @@ if (confirmed) {
 
 ---
 
+### Debug Alignment Log (Development Only)
+
+Debug endpoints for alignment logging. These endpoints only work in development mode (`NODE_ENV=development`).
+
+#### GET /api/debug/alignment-log
+
+Read all alignment log entries.
+
+**Authentication:** None required
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "entriesCount": 3,
+  "logs": [
+    {
+      "timestamp": "2026-01-04T10:30:45.123Z",
+      "input": {
+        "beforeImg": { "width": 1536, "height": 2048 },
+        "afterImg": { "width": 1536, "height": 2048 },
+        "targetWidth": 1080,
+        "targetHeight": 1350,
+        "beforeLandmarks": { "count": 33, "nose": {...}, "shoulders": {...} },
+        "afterLandmarks": { "count": 33, "nose": {...}, "shoulders": {...} }
+      },
+      "result": {
+        "before": { "drawX": -11, "drawY": -91, "drawWidth": 1164, "drawHeight": 1552 },
+        "after": { "drawX": -308, "drawY": -556, "drawWidth": 1719, "drawHeight": 2293 },
+        "useShoulderAlignment": false,
+        "cropTopOffset": 0
+      },
+      "metadata": { "source": "png" }
+    }
+  ]
+}
+```
+
+**Response (403 Forbidden - Production):**
+
+```json
+{
+  "error": "Debug logging disabled in production"
+}
+```
+
+---
+
+#### POST /api/debug/alignment-log
+
+Append a new alignment log entry.
+
+**Authentication:** None required
+
+**Request Body:**
+
+```json
+{
+  "timestamp": "2026-01-04T10:30:45.123Z",
+  "input": { ... },
+  "result": { ... },
+  "metadata": { "source": "png" }
+}
+```
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "entriesCount": 4,
+  "path": "debug/alignment-log.json"
+}
+```
+
+---
+
+#### DELETE /api/debug/alignment-log
+
+Clear all alignment log entries.
+
+**Authentication:** None required
+
+**Response (200 OK):**
+
+```json
+{
+  "success": true,
+  "message": "Log file deleted"
+}
+```
+
+---
+
+#### Enabling Debug Logging
+
+Debug logging is controlled by localStorage or environment variable:
+
+```javascript
+// Browser console:
+window.svoltaDebug.enable(); // Enable
+window.svoltaDebug.disable(); // Disable
+window.svoltaDebug.isEnabled(); // Check status
+
+// Or localStorage:
+localStorage.setItem("svolta_debug_alignment", "true");
+
+// Or environment variable (.env.local):
+NEXT_PUBLIC_DEBUG_ALIGNMENT = true;
+```
+
+**Key Files:**
+
+- `/lib/debug/alignment-logger.ts` - Debug utility module
+- `/app/api/debug/alignment-log/route.ts` - File writing API
+
+---
+
 ## Error Handling
 
 ### Standard Error Response Format
@@ -754,7 +874,7 @@ stripe trigger checkout.session.completed
 
 ---
 
-**Last Updated:** 2025-12-26
-**API Version:** 1.0.0
-**Next.js Version:** 16
+**Last Updated:** 2026-01-04
+**API Version:** 1.1.0
+**Next.js Version:** 16.1.1
 **Supabase SDK:** Latest
