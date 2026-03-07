@@ -22,9 +22,12 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
       alignment,
       showLandmarks,
       showGrid,
+      userFraming,
       updateAlignment,
       toggleLandmarks,
       toggleGrid,
+      setUserFraming,
+      resetUserFraming,
     } = useEditorStore();
 
     // Handle anchor selection
@@ -339,6 +342,21 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
           />
         </div>
 
+        {/* Framing */}
+        <div className="mt-6 pt-6 border-t border-[var(--border-default)] space-y-3">
+          <Slider
+            label="Crop Zoom"
+            showValue
+            valueFormatter={(value) => `${value.toFixed(1)}x`}
+            min={1.0}
+            max={3.0}
+            step={0.1}
+            value={userFraming.zoom}
+            onChange={(e) => setUserFraming({ zoom: Number(e.target.value) })}
+            aria-label="Crop zoom level"
+          />
+        </div>
+
         {/* Action Buttons */}
         <div className="mt-6 flex flex-wrap gap-3">
           <Button
@@ -347,7 +365,7 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
             onClick={handleReset}
             className="flex-1 min-w-[120px]"
           >
-            Reset
+            Reset Alignment
           </Button>
           <Button
             variant="primary"
@@ -357,6 +375,14 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
             disabled={!onAutoAlign}
           >
             Auto-align
+          </Button>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={resetUserFraming}
+            className="flex-1 min-w-[120px]"
+          >
+            Reset Framing
           </Button>
         </div>
 
