@@ -15,9 +15,6 @@ export function useZoomPanGestures(
   options: ZoomPanGestureOptions
 ) {
   const {
-    onZoomChange,
-    onPanChange,
-    getCurrentState,
     minZoom = 1.0,
     maxZoom = 3.0,
     enabled = true,
@@ -137,6 +134,9 @@ export function useZoomPanGestures(
     // ── Pointer drag pan ─────────────────────────────────────────────────────
     const handlePointerDown = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return; // handled by touch events
+      // Don't intercept clicks on interactive elements (buttons, links, etc.)
+      const target = e.target as HTMLElement;
+      if (target.closest('button, a, [role="button"]')) return;
       const { panX, panY } = optionsRef.current.getCurrentState();
       isDraggingRef.current = true;
       dragStartRef.current = { x: e.clientX, y: e.clientY, panX, panY };
