@@ -1,8 +1,19 @@
-# Pose Detection with MediaPipe
+# How Pose Detection Works
 
 **Version:** 1.1.0
 **Last Updated:** 2026-01-04
 **Status:** Production
+
+## Why This Matters
+
+Pose detection is the foundation of the entire alignment system — without accurate landmark coordinates, the alignment algorithm has nothing to work with. The decision to run MediaPipe fully client-side (via WebAssembly/WebGL) is also Svolta's primary privacy guarantee: photos are never uploaded to any server.
+
+## Key Files
+
+| File                        | Purpose                                              |
+| --------------------------- | ---------------------------------------------------- |
+| `hooks/usePoseDetection.ts` | React hook for triggering and managing detection     |
+| `lib/mediapipe/`            | MediaPipe singleton, detection logic, and public API |
 
 ## Scope
 
@@ -44,7 +55,7 @@ Pose detection identifies the spatial positions of human body parts in images. S
 - Upper body (shoulders, elbows, wrists, hands)
 - Lower body (hips, knees, ankles, feet)
 
-### Why Client-Side ML?
+### Why This Matters
 
 Svolta processes all photos **in the browser** for three critical reasons:
 

@@ -1,8 +1,27 @@
-# Svolta - State Management & Hooks
+# How State Management Works
 
 **Version:** 1.1.0
 **Last Updated:** 2026-01-04
 **Scope:** Zustand stores and custom React hooks architecture
+
+## Why This Matters
+
+Zustand was chosen over Redux and React Context because it provides global state without boilerplate, without providers wrapping the tree, and without forcing re-renders on unrelated components. For an editor-heavy app where dozens of components read slice of state (photos, landmarks, alignment params), this matters for both developer velocity and runtime performance.
+
+## Key Files
+
+| File                            | Purpose                                                     |
+| ------------------------------- | ----------------------------------------------------------- |
+| `stores/editor-store.ts`        | Editor state: photos, landmarks, alignment settings, canvas |
+| `stores/user-store.ts`          | Auth and subscription state: user, tier, usage counts       |
+| `hooks/useAlignment.ts`         | Alignment calculation driven by editor store                |
+| `hooks/useBackgroundRemoval.ts` | Background removal with @imgly/background-removal           |
+| `hooks/useCanvasExport.ts`      | PNG/JPEG export pipeline                                    |
+| `hooks/useGifExport.ts`         | Animated GIF export (3 styles)                              |
+| `hooks/useKeyboardShortcuts.ts` | Keyboard shortcut bindings                                  |
+| `hooks/usePoseDetection.ts`     | MediaPipe pose detection                                    |
+| `hooks/useUsageLimit.ts`        | Export limit enforcement                                    |
+| `hooks/useZoomPanGestures.ts`   | Pinch-to-zoom and pan gestures                              |
 
 ## Table of Contents
 

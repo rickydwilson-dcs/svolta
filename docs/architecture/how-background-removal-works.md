@@ -1,8 +1,16 @@
-# Custom Background Upload (Pro Feature)
+# How Background Removal Works
 
-**Feature:** Allow Pro users to upload custom branded backgrounds for their exports
-**Status:** Step C2 - API and Database Implementation Complete
-**Branch:** `feature/pro-export-options`
+**Status:** Production
+
+## Why This Matters
+
+Background removal is a key Pro differentiator — it lets coaches present polished, distraction-free comparisons on branded backgrounds. Processing happens entirely client-side using `@imgly/background-removal`, reinforcing Svolta's privacy-first promise: no photo ever leaves the browser.
+
+## Key Files
+
+| File                            | Purpose                                       |
+| ------------------------------- | --------------------------------------------- |
+| `hooks/useBackgroundRemoval.ts` | React hook orchestrating the removal pipeline |
 
 ## Overview
 

@@ -1,8 +1,22 @@
-# Billing & Subscription System
+# How Billing Works
 
 **Version:** 1.1.0
 **Last Updated:** 2026-01-04
 **Scope:** Stripe integration, usage tracking, subscription lifecycle management
+
+## Why This Matters
+
+Billing is the revenue model that makes Svolta sustainable. The freemium tier lets coaches experience the product before committing, while the Pro upgrade removes friction (watermarks, export limits) at the moment of maximum value. Understanding this system is essential for debugging payment issues, adjusting conversion prompts, and extending the subscription model.
+
+## Key Files
+
+| File                   | Purpose                                              |
+| ---------------------- | ---------------------------------------------------- |
+| `lib/stripe/`          | Stripe client, price IDs, and helper utilities       |
+| `app/api/stripe/`      | Webhook handler and checkout/portal session routes   |
+| `stores/user-store.ts` | Client-side subscription state (tier, limits, usage) |
+
+> For setup instructions, see [Stripe Integration Guide](../guides/stripe-integration.md).
 
 ---
 

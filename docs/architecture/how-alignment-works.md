@@ -1,8 +1,20 @@
-# Alignment & Export Algorithm
+# How Alignment Works
 
 **Version:** 2.1.0
 **Last Updated:** 2026-01-04
 **Status:** Production
+
+## Why This Matters
+
+The alignment algorithm is Svolta's core business logic — it is the reason coaches choose this tool over manually cropping photos. It transforms raw pose landmark coordinates into precisely aligned, cropped, and scaled export images. Every pixel in the final export passes through this algorithm.
+
+## Key Files
+
+| File                                  | Purpose                                         |
+| ------------------------------------- | ----------------------------------------------- |
+| `hooks/useAlignment.ts`               | React hook orchestrating the alignment pipeline |
+| `lib/canvas/alignment.ts`             | Alignment calculation utilities                 |
+| `tests/visual/alignment.unit.test.ts` | Unit tests for the algorithm                    |
 
 ## Scope
 
