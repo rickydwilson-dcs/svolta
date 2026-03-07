@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-03-07
+
+### Added
+
+- **Editor:** Crop Zoom slider and Reset Framing button to AlignmentControls
+- **Editor:** Zoom/pan gestures to PhotoPanel via `useZoomPanGestures` hook
+- **Alignment:** Phase 5 user framing override with shared clamping logic
+- **Editor:** `UserFramingOverride` type and store slice for per-panel framing state
+
+### Fixed
+
+- **Export:** Apply aspect ratio per-panel instead of to doubled canvas width
+- **Editor:** Thread `userFraming` through GifPreview and all rendering callers
+- **Export:** Remove unused `getAspectRatio` and `finalWidth`/`finalHeight` vars
+- **Preview:** Match AlignedPreview to new total-canvas aspect ratio
+- **Export:** Preserve exact target ratio, remove width trim
+
+### Technical
+
+- 95 TypeScript/TSX source files
+- 8 custom React hooks (added useZoomPanGestures)
+- 5 test files
+
+---
+
 ## [0.3.3] - 2026-01-06
 
 ### Fixed

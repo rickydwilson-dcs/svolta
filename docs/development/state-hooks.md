@@ -18,6 +18,7 @@
   - [useKeyboardShortcuts](#usekeyboardshortcuts)
   - [usePoseDetection](#useposedetection)
   - [useUsageLimit](#useusagelimit)
+  - [useZoomPanGestures](#usezoompanestures)
 - [State Flow Diagrams](#state-flow-diagrams)
 - [Best Practices](#best-practices)
 
@@ -50,6 +51,7 @@ graph TB
         UKS[useKeyboardShortcuts]
         UPD[usePoseDetection]
         UUL[useUsageLimit]
+        UZP[useZoomPanGestures]
     end
 
     subgraph "Component Layer"
@@ -913,6 +915,59 @@ if (!user) {
 - **Development:** 100 exports/month (temporary for testing)
 - **Production:** 5 exports/month (change `FREE_EXPORT_LIMIT` in `user-store.ts`)
 - **Reset:** Monthly on first day of month (automatic)
+
+---
+
+### useZoomPanGestures
+
+**Location:** `/hooks/useZoomPanGestures.ts`
+
+Attaches wheel, touch pinch, and pointer drag event listeners to a container element to enable zoom and pan interactions. Uses `requestAnimationFrame` batching to avoid excessive re-renders.
+
+```typescript
+interface ZoomPanGestureOptions {
+  onZoomChange: (newZoom: number) => void;
+  onPanChange: (newPanX: number, newPanY: number) => void;
+  getCurrentState: () => { zoom: number; panX: number; panY: number };
+  minZoom?: number; // default: 1.0
+  maxZoom?: number; // default: 3.0
+  enabled?: boolean; // default: true
+}
+
+function useZoomPanGestures(
+  containerRef: RefObject<HTMLElement | null>,
+  options: ZoomPanGestureOptions,
+): { isDragging: RefObject<boolean> };
+```
+
+**Usage:**
+
+```typescript
+import { useZoomPanGestures } from "@/hooks/useZoomPanGestures";
+
+const containerRef = useRef<HTMLDivElement>(null);
+const [zoom, setZoom] = useState(1);
+const [panX, setPanX] = useState(0);
+const [panY, setPanY] = useState(0);
+
+useZoomPanGestures(containerRef, {
+  onZoomChange: setZoom,
+  onPanChange: (x, y) => {
+    setPanX(x);
+    setPanY(y);
+  },
+  getCurrentState: () => ({ zoom, panX, panY }),
+  minZoom: 1.0,
+  maxZoom: 3.0,
+});
+```
+
+**Supported interactions:**
+
+- **Wheel / trackpad pinch:** zoom in/out
+- **Touch pinch (two fingers):** zoom in/out
+- **Single-finger touch drag:** pan
+- **Pointer drag (mouse/stylus):** pan
 
 ---
 
