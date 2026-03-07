@@ -78,16 +78,16 @@ function calculateDimensions(
 
   switch (format) {
     case '1:1':
-      height = resolution;
+      height = width;
       break;
     case '4:5':
-      height = Math.round(resolution * 1.25);
+      height = Math.round(width * (5 / 4));
       break;
     case '9:16':
-      height = Math.round((resolution * 16) / 9);
+      height = Math.round(width * (16 / 9));
       break;
     default:
-      height = resolution;
+      height = width;
   }
 
   return {
