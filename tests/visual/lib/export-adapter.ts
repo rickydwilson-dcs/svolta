@@ -272,7 +272,8 @@ export function calculateAlignedDrawParams(
   beforeLandmarks: Landmark[] | undefined,
   afterLandmarks: Landmark[] | undefined,
   targetWidth: number,
-  targetHeight: number
+  targetHeight: number,
+  _userFraming?: { zoom: number; panX: number; panY: number }
 ): {
   before: DrawParams;
   after: DrawParams;

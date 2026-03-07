@@ -16,6 +16,7 @@ import {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Type used for test documentation
   type AnchorType,
 } from '../alignment';
+import { calculateAlignedDrawParams } from '../aligned-draw-params';
 import type { Landmark } from '@/types/landmarks';
 
 /**
@@ -408,6 +409,116 @@ describe('side pose handling (fallback strategies)', () => {
     expect(result.scale).toBeDefined();
     expect(typeof result.scale).toBe('number');
     expect(!isNaN(result.scale)).toBe(true);
+  });
+});
+
+describe('Phase 5: user framing override', () => {
+  const targetWidth = 540;
+  const targetHeight = 540;
+
+  // Standard square images for most tests
+  const squareImg = { width: 1080, height: 1080 };
+
+  // Landmarks that represent a standard front-facing pose
+  const stdLandmarks = createMockLandmarks({
+    noseY: 0.2,
+    leftShoulderY: 0.35,
+    rightShoulderY: 0.35,
+    leftHipY: 0.6,
+    rightHipY: 0.6,
+    centerX: 0.5,
+  });
+
+  it('no override — matches baseline exactly', () => {
+    const baseline = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight
+    );
+    const withDefaultFraming = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight,
+      { zoom: 1, panX: 0, panY: 0 }
+    );
+    // Phase 5 is skipped when zoom=1 and pan=0, so results should be identical
+    expect(withDefaultFraming.before.drawX).toBeCloseTo(baseline.before.drawX, 5);
+    expect(withDefaultFraming.before.drawY).toBeCloseTo(baseline.before.drawY, 5);
+    expect(withDefaultFraming.before.drawWidth).toBeCloseTo(baseline.before.drawWidth, 5);
+    expect(withDefaultFraming.after.drawWidth).toBeCloseTo(baseline.after.drawWidth, 5);
+  });
+
+  it('zoom 2x — drawWidth approximately doubles', () => {
+    const baseline = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight
+    );
+    const zoomed = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight,
+      { zoom: 2, panX: 0, panY: 0 }
+    );
+    expect(zoomed.before.drawWidth).toBeCloseTo(baseline.before.drawWidth * 2, 1);
+    expect(zoomed.after.drawWidth).toBeCloseTo(baseline.after.drawWidth * 2, 1);
+    expect(zoomed.effectiveZoom).toBe(2);
+  });
+
+  it('pan at zoom 1.0 — image shifts within MIN_OVERFLOW bounds', () => {
+    const panned = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight,
+      { zoom: 1, panX: 1, panY: 0 }
+    );
+    // At zoom=1, MIN_OVERFLOW (1.15) provides ~40px of pan range at 540px target.
+    // Panning right moves drawX rightward but clamped to never expose a blank left border.
+    expect(panned.before.drawX).toBeLessThanOrEqual(0);
+    expect(panned.before.drawX + panned.before.drawWidth).toBeGreaterThanOrEqual(targetWidth);
+  });
+
+  it('pan at zoom 2.0 — position shifts from zoom-only baseline', () => {
+    const zoomOnly = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight,
+      { zoom: 2, panX: 0, panY: 0 }
+    );
+    const zoomAndPan = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight,
+      { zoom: 2, panX: 0.5, panY: -0.5 }
+    );
+    // Positions should differ from zoom-only
+    const xDiff = Math.abs(zoomAndPan.before.drawX - zoomOnly.before.drawX);
+    const yDiff = Math.abs(zoomAndPan.before.drawY - zoomOnly.before.drawY);
+    expect(xDiff).toBeGreaterThan(1);
+    expect(yDiff).toBeGreaterThan(1);
+    expect(zoomAndPan.wasClamped).toBe(false);
+  });
+
+  it('shared clamp with asymmetric images — wasClamped is true', () => {
+    const wideImg = { width: 1600, height: 900 };
+    const tallImg = { width: 900, height: 1600 };
+    const result = calculateAlignedDrawParams(
+      wideImg, tallImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight,
+      { zoom: 2, panX: 1, panY: 1 }
+    );
+    expect(result.wasClamped).toBe(true);
+  });
+
+  it('wasClamped is false when within bounds', () => {
+    const result = calculateAlignedDrawParams(
+      squareImg, squareImg,
+      stdLandmarks, stdLandmarks,
+      targetWidth, targetHeight,
+      { zoom: 2, panX: 0, panY: 0 }
+    );
+    expect(result.wasClamped).toBe(false);
   });
 });
 
