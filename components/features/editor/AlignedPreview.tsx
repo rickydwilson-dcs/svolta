@@ -23,18 +23,20 @@ export interface AlignedPreviewProps {
 }
 
 /**
- * Get aspect ratio (width/height) for a given format
+ * Get total canvas aspect ratio (width/height) for side-by-side layout.
+ * The format ratio applies to each half-panel, so total width is doubled.
+ * Must match export.ts calculateDimensions(): width = resolution * 2.
  */
 function getAspectRatio(format: '1:1' | '4:5' | '9:16'): number {
   switch (format) {
     case '1:1':
-      return 1.0;
+      return 2.0;
     case '4:5':
-      return 0.8;
+      return 2 * (4 / 5);
     case '9:16':
-      return 9 / 16;
+      return 2 * (9 / 16);
     default:
-      return 1.0;
+      return 2.0;
   }
 }
 
@@ -73,7 +75,7 @@ export function AlignedPreview({
     let targetHeight: number;
 
     // Fit to container while maintaining aspect ratio
-    const canvasAspectRatio = aspectRatio; // Format ratio applies to total canvas
+    const canvasAspectRatio = aspectRatio; // Total canvas ratio (2x panel width)
 
     if (containerWidth / containerHeight > canvasAspectRatio) {
       targetHeight = containerHeight;
