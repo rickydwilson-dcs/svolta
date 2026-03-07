@@ -13,6 +13,7 @@
 import { addWatermark, type WatermarkOptions } from './watermark';
 import type { Landmark } from '@/types/landmarks';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
+import type { UserFramingOverride } from '@/types/editor';
 import {
   calculateAlignedDrawParams,
   type AlignedDrawResult,
@@ -36,6 +37,7 @@ export interface ExportOptions {
   };
   quality?: number; // 0.8-1.0, default 0.92
   backgroundSettings?: BackgroundSettings; // Optional background replacement settings
+  userFraming?: UserFramingOverride;
 }
 
 export interface ExportResult {
@@ -115,7 +117,8 @@ function calculateAlignedDrawParamsWithDebug(
   afterLandmarks: Landmark[] | undefined,
   targetWidth: number,
   targetHeight: number,
-  source: 'png' | 'gif' | 'preview' = 'png'
+  source: 'png' | 'gif' | 'preview' = 'png',
+  userFraming?: UserFramingOverride
 ): AlignedDrawResult {
   // Call the shared alignment function
   const result = calculateAlignedDrawParams(
@@ -124,7 +127,8 @@ function calculateAlignedDrawParamsWithDebug(
     beforeLandmarks,
     afterLandmarks,
     targetWidth,
-    targetHeight
+    targetHeight,
+    userFraming
   );
 
   // Only log if debug is enabled
@@ -256,7 +260,9 @@ export async function exportCanvas(
     beforePhoto.landmarks,
     afterPhoto.landmarks,
     targetHalfWidth,
-    targetHeight
+    targetHeight,
+    'png',
+    options.userFraming
   );
 
   // Canvas dimensions are fixed to the exact target ratio

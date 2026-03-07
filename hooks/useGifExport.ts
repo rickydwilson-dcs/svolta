@@ -5,6 +5,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { exportGif, triggerGifDownload, type GifExportOptions, type PhotoData } from '@/lib/canvas/export-gif';
+import { useEditorStore } from '@/stores/editor-store';
 
 /**
  * Status of GIF export operation
@@ -66,6 +67,7 @@ export function useGifExport(): UseGifExportReturn {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<GifExportStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const userFraming = useEditorStore((state) => state.userFraming);
 
   // Track if export was cancelled
   const cancelledRef = useRef(false);
@@ -110,6 +112,7 @@ export function useGifExport(): UseGifExportReturn {
         // Export GIF with progress tracking
         const result = await exportGif(beforePhoto, afterPhoto, {
           ...options,
+          userFraming,
           onProgress: (progressValue: number, progressStatus: 'frames' | 'encoding') => {
             // Check if cancelled
             if (cancelledRef.current) {

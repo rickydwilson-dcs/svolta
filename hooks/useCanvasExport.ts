@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { exportCanvas, triggerDownload, type ExportOptions } from '@/lib/canvas/export';
 import type { Photo, AlignmentSettings } from '@/types/editor';
+import { useEditorStore } from '@/stores/editor-store';
 
 /**
  * Hook for managing canvas export functionality
@@ -15,6 +16,7 @@ import type { Photo, AlignmentSettings } from '@/types/editor';
 export function useCanvasExport() {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const userFraming = useEditorStore((state) => state.userFraming);
 
   /**
    * Export canvas and trigger browser download
@@ -69,7 +71,7 @@ export function useCanvasExport() {
         beforePhotoData,
         afterPhotoData,
         alignment.anchor,
-        options
+        { ...options, userFraming }
       );
 
       // Trigger browser download

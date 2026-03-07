@@ -101,7 +101,7 @@ const imagePresets = [
 ];
 
 export function ExportModal({ isOpen, onClose }: ExportModalProps) {
-  const { beforePhoto, afterPhoto, alignment, backgroundSettings, setBeforePhoto, setAfterPhoto, setBackgroundSettings } = useEditorStore();
+  const { beforePhoto, afterPhoto, alignment, backgroundSettings, setBeforePhoto, setAfterPhoto, setBackgroundSettings, setUserFraming } = useEditorStore();
   const isPro = useUserStore((state) => state.isPro());
   const profile = useUserStore((state) => state.profile);
   const { limit, remaining, checkAndIncrement, isAnonymous } = useUsageLimit();
@@ -674,7 +674,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                           {(['4:5', '1:1', '9:16'] as AspectRatio[]).map((ratio) => (
                             <button
                               key={ratio}
-                              onClick={() => setAspectRatio(ratio)}
+                              onClick={() => { setAspectRatio(ratio); setUserFraming({ panX: 0, panY: 0 }); }}
                               className={cn(
                                 'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200',
                                 aspectRatio === ratio

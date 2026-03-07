@@ -26,6 +26,7 @@ import {
   type DrawParams,
 } from './gif-animations';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
+import type { UserFramingOverride } from '@/types/editor';
 import { calculateAlignedDrawParams } from './aligned-draw-params';
 
 /**
@@ -46,6 +47,7 @@ export interface GifExportOptions {
     customLogoUrl?: string;
   };
   backgroundSettings?: BackgroundSettings; // Optional background replacement settings
+  userFraming?: UserFramingOverride;
   onProgress?: (progress: number, status: 'frames' | 'encoding') => void;
 }
 
@@ -220,7 +222,8 @@ export async function exportGif(
     beforePhoto.landmarks,
     afterPhoto.landmarks,
     width,
-    height
+    height,
+    options.userFraming
   );
 
   // Get animation parameters

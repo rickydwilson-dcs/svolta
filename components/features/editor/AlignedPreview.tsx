@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import type { Photo } from '@/types/editor';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
 import { calculateAlignedDrawParams } from '@/lib/canvas/aligned-draw-params';
+import { useEditorStore } from '@/stores/editor-store';
 
 export interface AlignedPreviewProps {
   beforePhoto: Photo;
@@ -48,6 +49,7 @@ export function AlignedPreview({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [isRendering, setIsRendering] = React.useState(false);
+  const userFraming = useEditorStore((state) => state.userFraming);
 
   // Render the aligned preview
   React.useEffect(() => {
@@ -131,7 +133,8 @@ export function AlignedPreview({
           beforePhoto.landmarks,
           afterPhoto.landmarks,
           halfWidth,
-          targetHeight
+          targetHeight,
+          userFraming
         );
 
         // Keep canvas at target dimensions (exact ratio)
@@ -194,7 +197,7 @@ export function AlignedPreview({
         console.error('Failed to render aligned preview:', error);
         setIsRendering(false);
       });
-  }, [beforePhoto, afterPhoto, format, showLabels, backgroundSettings]);
+  }, [beforePhoto, afterPhoto, format, showLabels, backgroundSettings, userFraming]);
 
   return (
     <div ref={containerRef} className={cn('flex items-center justify-center', className)}>
