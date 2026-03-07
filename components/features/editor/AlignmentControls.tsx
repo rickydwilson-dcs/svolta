@@ -22,11 +22,9 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
       alignment,
       showLandmarks,
       showGrid,
-      linkedZoom,
       updateAlignment,
       toggleLandmarks,
       toggleGrid,
-      toggleLinkedZoom,
     } = useEditorStore();
 
     // Handle anchor selection
@@ -338,11 +336,6 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
             label="Show grid"
             checked={showGrid}
             onChange={toggleGrid}
-          />
-          <Toggle
-            label="Link zoom"
-            checked={linkedZoom}
-            onChange={toggleLinkedZoom}
           />
         </div>
 

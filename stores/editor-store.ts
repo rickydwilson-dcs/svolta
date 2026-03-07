@@ -4,7 +4,8 @@
  */
 
 import { create } from 'zustand';
-import type { Photo, AlignmentSettings } from '@/types/editor';
+import type { Photo, AlignmentSettings, UserFramingOverride } from '@/types/editor';
+import { DEFAULT_USER_FRAMING } from '@/types/editor';
 import type { Landmark } from '@/types/landmarks';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
 
@@ -17,7 +18,7 @@ interface EditorState {
   alignment: AlignmentSettings;
   showLandmarks: boolean;
   showGrid: boolean;
-  linkedZoom: boolean;
+  userFraming: UserFramingOverride;
 
   // Background removal settings for export
   backgroundSettings: BackgroundSettings;
@@ -35,7 +36,8 @@ interface EditorState {
   setBackgroundSettings: (settings: BackgroundSettings) => void;
   toggleLandmarks: () => void;
   toggleGrid: () => void;
-  toggleLinkedZoom: () => void;
+  setUserFraming: (partial: Partial<UserFramingOverride>) => void;
+  resetUserFraming: () => void;
   setIsDetecting: (detecting: boolean) => void;
   setError: (error: string | null) => void;
   reset: () => void;
@@ -59,7 +61,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   alignment: initialAlignment,
   showLandmarks: true,
   showGrid: false,
-  linkedZoom: true,
+  userFraming: DEFAULT_USER_FRAMING,
   backgroundSettings: defaultBackgroundSettings,
   isDetecting: false,
   error: null,
@@ -97,8 +99,13 @@ export const useEditorStore = create<EditorState>((set) => ({
   toggleGrid: () =>
     set((state) => ({ showGrid: !state.showGrid })),
 
-  toggleLinkedZoom: () =>
-    set((state) => ({ linkedZoom: !state.linkedZoom })),
+  setUserFraming: (partial) =>
+    set((state) => ({
+      userFraming: { ...state.userFraming, ...partial },
+    })),
+
+  resetUserFraming: () =>
+    set({ userFraming: DEFAULT_USER_FRAMING }),
 
   setIsDetecting: (detecting) => set({ isDetecting: detecting }),
 
@@ -111,7 +118,7 @@ export const useEditorStore = create<EditorState>((set) => ({
       alignment: initialAlignment,
       showLandmarks: true,
       showGrid: false,
-      linkedZoom: true,
+      userFraming: DEFAULT_USER_FRAMING,
       backgroundSettings: defaultBackgroundSettings,
       isDetecting: false,
       error: null,

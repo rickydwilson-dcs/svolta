@@ -43,3 +43,15 @@ export const DEFAULT_ALIGNMENT: AlignmentSettings = {
   offsetX: 0,
   offsetY: 0,
 };
+
+export interface UserFramingOverride {
+  zoom: number;   // 1.0 = auto default, >1 = zoomed in. Range [1.0, 3.0]
+  panX: number;   // Normalized horizontal offset [-1, 1]. 0 = centered.
+  panY: number;   // Normalized vertical offset [-1, 1]. 0 = centered.
+}
+
+export const DEFAULT_USER_FRAMING: UserFramingOverride = {
+  zoom: 1,
+  panX: 0,
+  panY: 0,
+};
