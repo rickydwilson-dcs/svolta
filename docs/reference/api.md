@@ -531,6 +531,104 @@ if (confirmed) {
 
 ---
 
+### POST /api/exports/log
+
+Logs an export event for analytics tracking. Called after every successful export (anonymous, free, or Pro).
+
+**Authentication:** Optional (supports anonymous logging)
+
+#### Request Body
+
+```json
+{
+  "export_format": "png" | "gif",
+  "aspect_ratio": "1:1" | "4:5" | "9:16",
+  "anon_id": "string"
+}
+```
+
+| Field           | Type   | Required | Description                                |
+| --------------- | ------ | -------- | ------------------------------------------ |
+| `export_format` | string | Yes      | `"png"` or `"gif"`                         |
+| `aspect_ratio`  | string | No       | Export aspect ratio                        |
+| `anon_id`       | string | No       | Browser fingerprint for anonymous tracking |
+
+#### Response
+
+**Success (200 OK):**
+
+```json
+{ "success": true, "id": "uuid" }
+```
+
+---
+
+### POST /api/logos/upload
+
+Uploads a custom logo for Pro users. Rate limited to 10 uploads per 15 minutes.
+
+**Authentication:** Required (Bearer token) — Pro subscription required
+
+#### Request Body
+
+`multipart/form-data` with file field. Max 2MB. Allowed formats: JPG, PNG, WebP.
+
+#### Response
+
+**Success (200 OK):**
+
+```json
+{
+  "success": true,
+  "url": "https://...",
+  "message": "Logo uploaded successfully"
+}
+```
+
+**Error Responses:**
+
+| Status | Error                       | Description                  |
+| ------ | --------------------------- | ---------------------------- |
+| 401    | `Unauthorized`              | Missing or invalid JWT token |
+| 403    | `Pro subscription required` | User is on free tier         |
+| 413    | `File too large`            | Exceeds 2MB limit            |
+| 415    | `Invalid file type`         | Not JPG, PNG, or WebP        |
+
+---
+
+### POST /api/backgrounds/upload
+
+Uploads a custom background image for Pro users. Rate limited to 10 uploads per 15 minutes.
+
+**Authentication:** Required (Bearer token) — Pro subscription required
+
+#### Request Body
+
+`multipart/form-data` with file field. Max 2MB. Allowed formats: JPG, PNG, WebP.
+
+#### Response
+
+**Success (200 OK):**
+
+```json
+{
+  "success": true,
+  "url": "https://...",
+  "message": "Background uploaded successfully"
+}
+```
+
+**Error Responses:**
+
+| Status | Error                       | Description                  |
+| ------ | --------------------------- | ---------------------------- |
+| 401    | `Unauthorized`              | Missing or invalid JWT token |
+| 403    | `Pro subscription required` | User is on free tier         |
+| 413    | `File too large`            | Exceeds 2MB limit            |
+| 415    | `Invalid file type`         | Not JPG, PNG, or WebP        |
+
+---
+
 ### Debug Alignment Log (Development Only)
 
 Debug endpoints for alignment logging. These endpoints only work in development mode (`NODE_ENV=development`).

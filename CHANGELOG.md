@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.7] - 2026-03-07
+
+### Technical
+
+- **Deps:** Bump fabric 6.9.0 → 7.1.0 (major version, reduced lockfile by ~1000 lines)
+- **Deps:** Bump tailwindcss 4.1.17 → 4.1.18 and @tailwindcss/postcss 4.1.17 → 4.1.18
+- **Deps:** Bump eslint 9.39.1 → 9.39.2
+- **Deps:** Bump framer-motion 12.23.24 → 12.23.26
+- **Deps:** Bump supabase CLI 2.63.1 → 2.70.5 and supabase-ecosystem packages
+- **Deps:** Bump @types/node ^20 → ^22 to match runtime
+- **Deps:** Bump testing-tools group (vitest, playwright, and related packages)
+
+---
+
 ## [0.3.6] - 2026-03-07
 
 ### Fixed
