@@ -33,6 +33,10 @@ export interface AlignedDrawResult {
   after: DrawParams;
   useShoulderAlignment?: boolean;
   cropTopOffset?: number;
+  effectiveZoom?: number;
+  effectivePanX?: number;
+  effectivePanY?: number;
+  wasClamped?: boolean;
 }
 
 // ============================================================================
@@ -251,7 +255,8 @@ export function calculateAlignedDrawParams(
   beforeLandmarks: Landmark[] | undefined | null,
   afterLandmarks: Landmark[] | undefined | null,
   targetWidth: number,
-  targetHeight: number
+  targetHeight: number,
+  userFraming?: { zoom: number; panX: number; panY: number }
 ): AlignedDrawResult {
   // ========================================
   // Determine alignment anchor (head vs shoulder)
@@ -389,7 +394,7 @@ export function calculateAlignedDrawParams(
     Math.min(afterMaxCrop, afterDrawX)
   );
 
-  return {
+  const result: AlignedDrawResult = {
     before: {
       drawX: beforeDrawX,
       drawY: beforeDrawY,
@@ -405,4 +410,69 @@ export function calculateAlignedDrawParams(
     useShoulderAlignment,
     cropTopOffset,
   };
+
+  // ========================================
+  // PHASE 5: User framing override
+  // ========================================
+
+  if (userFraming && (userFraming.zoom !== 1 || userFraming.panX !== 0 || userFraming.panY !== 0)) {
+    const { zoom, panX, panY } = userFraming;
+    const clampedZoom = Math.max(1, Math.min(3, zoom));
+
+    // 5a. ZOOM — scale both images around panel center
+    const bw = result.before.drawWidth * clampedZoom;
+    const bh = result.before.drawHeight * clampedZoom;
+    const aw = result.after.drawWidth * clampedZoom;
+    const ah = result.after.drawHeight * clampedZoom;
+
+    // Recenter after zoom
+    let bx = result.before.drawX - (bw - result.before.drawWidth) / 2;
+    let by = result.before.drawY - (bh - result.before.drawHeight) / 2;
+    let ax = result.after.drawX - (aw - result.after.drawWidth) / 2;
+    let ay = result.after.drawY - (ah - result.after.drawHeight) / 2;
+
+    // 5b. PAN — shared bounds (use strictest limit across both images)
+    const beforeMaxPanX = Math.max(0, (bw - targetWidth) / 2);
+    const afterMaxPanX = Math.max(0, (aw - targetWidth) / 2);
+    const sharedMaxPanX = Math.min(beforeMaxPanX, afterMaxPanX);
+
+    const beforeMaxPanY = Math.max(0, (bh - targetHeight) / 2);
+    const afterMaxPanY = Math.max(0, (ah - targetHeight) / 2);
+    const sharedMaxPanY = Math.min(beforeMaxPanY, afterMaxPanY);
+
+    const panShiftX = panX * sharedMaxPanX;
+    const panShiftY = panY * sharedMaxPanY;
+
+    bx += panShiftX;
+    ax += panShiftX;
+    by += panShiftY;
+    ay += panShiftY;
+
+    // 5c. CLAMP safety net — ensure no blank borders
+    let wasClamped = false;
+
+    // Clamp before
+    if (bx > 0) { bx = 0; wasClamped = true; }
+    if (bx + bw < targetWidth) { bx = targetWidth - bw; wasClamped = true; }
+    if (by > 0) { by = 0; wasClamped = true; }
+    if (by + bh < targetHeight) { by = targetHeight - bh; wasClamped = true; }
+
+    // Clamp after
+    if (ax > 0) { ax = 0; wasClamped = true; }
+    if (ax + aw < targetWidth) { ax = targetWidth - aw; wasClamped = true; }
+    if (ay > 0) { ay = 0; wasClamped = true; }
+    if (ay + ah < targetHeight) { ay = targetHeight - ah; wasClamped = true; }
+
+    // Apply
+    result.before = { drawX: bx, drawY: by, drawWidth: bw, drawHeight: bh };
+    result.after = { drawX: ax, drawY: ay, drawWidth: aw, drawHeight: ah };
+
+    // 5d. Metadata
+    result.effectiveZoom = clampedZoom;
+    result.effectivePanX = sharedMaxPanX > 0 ? panShiftX / sharedMaxPanX : 0;
+    result.effectivePanY = sharedMaxPanY > 0 ? panShiftY / sharedMaxPanY : 0;
+    result.wasClamped = wasClamped;
+  }
+
+  return result;
 }
