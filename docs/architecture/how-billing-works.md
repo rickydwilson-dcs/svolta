@@ -1142,8 +1142,7 @@ console.error('Upsert error:', error);
 
 ## Related Documentation
 
-- [Authentication System](/Users/rickywilson/Library/CloudStorage/GoogleDrive-rickydwilson@gmail.com/My Drive/Websites/GitHub/PoseProof/docs/features/authentication.md) - User auth flow
-- [Database Schema](/Users/rickywilson/Library/CloudStorage/GoogleDrive-rickydwilson@gmail.com/My Drive/Websites/GitHub/PoseProof/docs/database/schema.md) - Complete schema reference
+- [Database Schema](./database.md) - Complete schema reference
 - [API Routes](/Users/rickywilson/Library/CloudStorage/GoogleDrive-rickydwilson@gmail.com/My Drive/Websites/GitHub/PoseProof/docs/api/routes.md) - All API endpoints
 
 **External Resources:**

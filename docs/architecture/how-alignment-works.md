@@ -1272,7 +1272,7 @@ This algorithm is the **foundation of Svolta's value proposition** and must be m
 **Related Documentation:**
 
 - [Pose Detection](./pose-detection.md) - MediaPipe integration and landmark reference
-- [Architecture Overview](../architecture/overview.md) - System design and data flow
+- [Architecture Overview](./architecture.md) - System design and data flow
 - [Testing Standards](../standards/testing.md) - Visual regression testing for alignment validation
 
 ---

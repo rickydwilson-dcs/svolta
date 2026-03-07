@@ -209,7 +209,7 @@ const { data } = await supabase.from("usage").select("*");
 ```markdown
 # Internal links (relative paths)
 
-[Architecture](../architecture/overview.md)
+[Architecture](../architecture/architecture.md)
 
 # Link to heading
 
