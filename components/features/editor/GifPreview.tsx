@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import type { AnimationStyle } from '@/lib/canvas/export-gif';
 import type { Photo } from '@/types/editor';
 import { calculateAlignedDrawParams } from '@/lib/canvas/aligned-draw-params';
+import { useEditorStore } from '@/stores/editor-store';
 
 export interface GifPreviewProps {
   beforePhoto: Photo;
@@ -59,6 +60,7 @@ export function GifPreview({
   const containerRef = React.useRef<HTMLDivElement>(null);
   const animationRef = React.useRef<number>(0);
   const [isReady, setIsReady] = React.useState(false);
+  const userFraming = useEditorStore((state) => state.userFraming);
 
   // Store pre-rendered frames
   const beforeCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
@@ -109,7 +111,8 @@ export function GifPreview({
           beforePhoto.landmarks,
           afterPhoto.landmarks,
           targetWidth,
-          targetHeight
+          targetHeight,
+          userFraming
         );
 
         // Create before canvas
@@ -168,7 +171,7 @@ export function GifPreview({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [beforePhoto, afterPhoto, format]);
+  }, [beforePhoto, afterPhoto, format, userFraming]);
 
   // Animation loop
   React.useEffect(() => {
