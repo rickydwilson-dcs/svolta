@@ -1229,3 +1229,20 @@ Use this checklist during PR reviews:
 **Version:** 1.0.0
 **Last Updated:** 2025-12-22
 **Maintainer:** Svolta Engineering Team
+
+---
+
+## What NOT to Do
+
+- **No `any` types** — use `unknown` and narrow, or define a proper type
+- **No barrel exports** (`index.ts` re-exporting everything) — import directly from source files
+- **No default exports** — all exports must be named
+- **No CSS-in-JS** — use Tailwind utility classes and design tokens only
+
+## Verification Checklist
+
+- [ ] `npm run lint` returns zero errors
+- [ ] No `any` type in new code (TypeScript strict mode passes)
+- [ ] All new components use design tokens, not raw hex or pixel values
+- [ ] All exports are named (no `export default`)
+- [ ] No new barrel export files created

@@ -282,3 +282,18 @@ components/ui/
 ---
 
 _Finalized: December 2024_
+
+---
+
+## What NOT to Do
+
+- **No wrong logo proportions** — never stretch or squash the mark; maintain the defined aspect ratio
+- **No uppercase tagline** — "The Turning Point" always appears in lowercase italic: _the turning point_
+- **No non-brand colors** — use only the defined palette; no ad-hoc grays or accent colors
+
+## Verification Checklist
+
+- [ ] Logo follows mark spec (correct proportions, clearspace respected)
+- [ ] Tagline always rendered lowercase italic
+- [ ] All colors sourced from the brand palette (no one-off values)
+- [ ] Dark/light mode variants verified for new brand elements

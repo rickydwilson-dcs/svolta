@@ -1296,3 +1296,19 @@ open "https://securityheaders.com/?q=https%3A%2F%2Fsvolta.app"
 **Last Updated:** 2026-01-04
 **Maintained By:** Svolta Engineering Team
 **Next Review:** 2026-04-04 (Quarterly)
+
+---
+
+## What NOT to Do
+
+- **Never store photos server-side** — client-side processing is the privacy guarantee; violating this breaks GDPR compliance
+- **Never skip rate limiting** on API routes — unprotected endpoints will be abused
+- **Never expose the service role key** client-side — it bypasses all RLS policies
+
+## Verification Checklist
+
+- [ ] Rate limiting applied to all new API routes
+- [ ] Security headers present (check via `curl -I` or browser DevTools)
+- [ ] No secrets or service role keys in client-side code
+- [ ] New API routes validate input before processing
+- [ ] Stripe webhook signature verified before processing events

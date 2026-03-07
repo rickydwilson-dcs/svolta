@@ -214,3 +214,18 @@ export function HeroSection() {
 ---
 
 **Last Updated:** 2025-11-30
+
+---
+
+## What NOT to Do
+
+- **No raw hex values** in component code — use `--color-*` CSS variables
+- **No hardcoded spacing** (e.g., `mt-[24px]`) — use token-based spacing scale
+- **No non-token font sizes** — use `text-*` classes mapped to the type scale
+
+## Verification Checklist
+
+- [ ] No raw color values (hex, rgb) in new components
+- [ ] All spacing uses Tailwind token classes (no arbitrary values for standard sizes)
+- [ ] All typography uses the defined type scale classes
+- [ ] Dark mode variants tested for all new color usages

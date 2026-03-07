@@ -422,3 +422,80 @@ This command will:
 ---
 
 **Last Updated:** 2026-01-04
+
+---
+
+## Document Templates
+
+### Template A — Architecture ("How X Works")
+
+```markdown
+# How [System] Works
+
+## Why This Matters
+
+## Key Files
+
+## [Content sections]
+```
+
+Use for: `docs/architecture/how-*.md`
+
+### Template B — Standards
+
+```markdown
+# [Topic] Standards
+
+## [Content sections]
+
+## What NOT to Do
+
+## Verification Checklist
+```
+
+Use for: `docs/standards/*.md`
+
+### Template C — Guide
+
+```markdown
+# [Task Name]
+
+> [One-line purpose]
+
+## Prerequisites
+
+## Steps
+
+## Verification
+
+## Troubleshooting
+```
+
+Use for: `docs/guides/*.md`
+
+### Template D — Navigation README
+
+```markdown
+# [Section Name]
+
+[One-sentence description]
+| Document | Purpose |
+```
+
+Use for: `docs/*/README.md`
+
+---
+
+## What NOT to Do
+
+- **No docs without cross-references** — every document should link to related docs
+- **No missing verification checklists** in standards files
+- **No stale version dates** — update `Last Updated` when making substantive changes
+
+## Verification Checklist
+
+- [ ] Every subdirectory under `docs/` has a `README.md`
+- [ ] All standards files have "What NOT to Do" and "Verification Checklist" sections
+- [ ] No broken internal links (run link checker or manually verify after moves)
+- [ ] New architecture docs follow Template A
+- [ ] New guides follow Template C

@@ -311,3 +311,18 @@ sudo apt-get install libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsv
 3. Run fixture generator: `npm run test:visual:generate`
 4. Run tests to generate baselines: `npm run test:visual`
 5. Review and commit new baselines
+
+---
+
+## What NOT to Do
+
+- **Don't mock Zustand in pure function tests** — pure functions don't need store mocks; test the function directly
+- **Don't write snapshot-only tests** — snapshots catch regressions but don't assert behavior; pair with assertions
+- **Don't skip visual regression** when changing alignment logic — pixel accuracy is the product
+
+## Verification Checklist
+
+- [ ] `npm run test` passes with no failures
+- [ ] New custom hooks have unit tests
+- [ ] Alignment logic changes have updated visual regression baselines
+- [ ] New visual baselines reviewed and committed before merging
