@@ -53,7 +53,7 @@ const VISIBILITY_THRESHOLD = 0.5;
 /**
  * Calculate canvas dimensions based on format and resolution
  */
-function calculateDimensions(
+export function calculateDimensions(
   format: ExportFormat,
   resolution: ExportResolution
 ): { width: number; height: number; halfWidth: number } {
@@ -62,16 +62,16 @@ function calculateDimensions(
 
   switch (format) {
     case '1:1':
-      height = resolution;
+      height = width;
       break;
     case '4:5':
-      height = Math.round(resolution * 1.25);
+      height = Math.round(width * (5 / 4));
       break;
     case '9:16':
-      height = Math.round((resolution * 16) / 9);
+      height = Math.round(width * (16 / 9));
       break;
     default:
-      height = resolution;
+      height = width;
   }
 
   return { width, height, halfWidth: resolution };
@@ -466,15 +466,15 @@ export async function exportCanvasNode(
     targetHeight
   );
 
-  // Phase 4: Dynamic crop
+  // Canvas dimensions are fixed to the exact target ratio
+  const finalWidth = targetHalfWidth * 2;
+  const finalHalfWidth = targetHalfWidth;
+  const finalHeight = targetHeight;
+
+  // Calculate visible photo area (clip to shortest image bottom to avoid photo-area white space)
   const beforeBottom = alignParams.before.drawY + alignParams.before.drawHeight;
   const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
-  const visibleHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
-
-  const aspectRatio = getAspectRatio(format);
-  const finalHalfWidth = Math.round(visibleHeight * aspectRatio);
-  const finalWidth = finalHalfWidth * 2;
-  const finalHeight = visibleHeight;
+  const photoClipHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
 
   // Create canvas
   const canvas = createCanvas(finalWidth, finalHeight);
@@ -488,43 +488,31 @@ export async function exportCanvasNode(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, finalWidth, finalHeight);
 
-  // Width trim for centering
-  const widthTrimPerSide = (targetHalfWidth - finalHalfWidth) / 2;
-
-  const beforeAdjustedParams = {
-    ...alignParams.before,
-    drawX: alignParams.before.drawX - widthTrimPerSide,
-  };
-  const afterAdjustedParams = {
-    ...alignParams.after,
-    drawX: alignParams.after.drawX - widthTrimPerSide,
-  };
-
-  // Draw before photo (left half)
+  // Draw before photo (left half), clipped to photo area
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, 0, finalHalfWidth, finalHeight);
+  ctx.rect(0, 0, finalHalfWidth, photoClipHeight);
   ctx.clip();
   ctx.drawImage(
     beforeImg,
-    beforeAdjustedParams.drawX,
-    beforeAdjustedParams.drawY,
-    beforeAdjustedParams.drawWidth,
-    beforeAdjustedParams.drawHeight
+    alignParams.before.drawX,
+    alignParams.before.drawY,
+    alignParams.before.drawWidth,
+    alignParams.before.drawHeight
   );
   ctx.restore();
 
-  // Draw after photo (right half)
+  // Draw after photo (right half), clipped to photo area
   ctx.save();
   ctx.beginPath();
-  ctx.rect(finalHalfWidth, 0, finalHalfWidth, finalHeight);
+  ctx.rect(finalHalfWidth, 0, finalHalfWidth, photoClipHeight);
   ctx.clip();
   ctx.drawImage(
     afterImg,
-    finalHalfWidth + afterAdjustedParams.drawX,
-    afterAdjustedParams.drawY,
-    afterAdjustedParams.drawWidth,
-    afterAdjustedParams.drawHeight
+    finalHalfWidth + alignParams.after.drawX,
+    alignParams.after.drawY,
+    alignParams.after.drawWidth,
+    alignParams.after.drawHeight
   );
   ctx.restore();
 

@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { calculateAlignedDrawParams } from './lib/export-adapter';
+import { calculateAlignedDrawParams, calculateDimensions } from './lib/export-adapter';
 import type { Landmark } from '@/types/landmarks';
 
 // ============================================================================
@@ -926,5 +926,13 @@ describe('calculateAlignedDrawParams', () => {
       expect(scaleRatio).toBeLessThan(0.85);
       expect(scaleRatio).toBeGreaterThanOrEqual(0.60); // Allow tolerance for 0.65 clamp
     });
+  });
+});
+
+describe('calculateDimensions', () => {
+  it('applies aspect ratio to total canvas, not per-panel', () => {
+    expect(calculateDimensions('1:1', 1080)).toEqual({ width: 2160, height: 2160, halfWidth: 1080 });
+    expect(calculateDimensions('4:5', 1080)).toEqual({ width: 2160, height: 2700, halfWidth: 1080 });
+    expect(calculateDimensions('9:16', 1080)).toEqual({ width: 2160, height: 3840, halfWidth: 1080 });
   });
 });
