@@ -33,6 +33,11 @@ app/
 │   └── callback/   # OAuth callback
 ├── (marketing)/    # Public marketing pages
 └── api/            # API routes
+    ├── account/    # Account management
+    ├── backgrounds/# Background upload (Pro)
+    ├── debug/      # Debug utilities
+    ├── exports/    # Export tracking
+    ├── logos/      # Logo assets
     ├── stripe/     # Stripe webhooks & checkout
     └── usage/      # Usage tracking
 
@@ -49,7 +54,8 @@ hooks/              # Custom React hooks
 ├── useGifExport.ts           # Animated GIF export
 ├── useKeyboardShortcuts.ts
 ├── usePoseDetection.ts       # MediaPipe integration
-└── useUsageLimit.ts          # Usage limit tracking
+├── useUsageLimit.ts          # Usage limit tracking
+└── useZoomPanGestures.ts     # Zoom/pan gesture handling
 
 lib/
 ├── canvas/         # Canvas utilities & watermark

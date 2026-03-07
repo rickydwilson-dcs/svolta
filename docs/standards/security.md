@@ -1286,8 +1286,7 @@ open "https://securityheaders.com/?q=https%3A%2F%2Fsvolta.app"
 
 ## Related Documentation
 
-- [ACTION_PLAN.md](../architecture/ACTION_PLAN.md) - Security hardening implementation plan
-- [SECURITY_NEXT_STEPS.md](../SECURITY_NEXT_STEPS.md) - Future security improvements
+- [Architecture Overview](../architecture/architecture.md) - System design and security architecture
 - [documentation.md](./documentation.md) - Documentation standards
 
 ---

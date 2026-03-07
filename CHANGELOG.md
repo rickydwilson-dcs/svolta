@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.5] - 2026-03-07
+
+### Changed
+
+- **Docs:** Restructure documentation to architecture/guides/reference/standards layout
+- **Docs:** Rename feature docs to "How X Works" with pedagogical framing (Why This Matters, Key Files)
+- **Docs:** Rewrite root docs/README.md with Quick Start Paths (277 → 73 lines)
+
+### Added
+
+- **Docs:** Navigation READMEs for all docs subdirectories
+- **Docs:** `docs/project-history.md` with development phases and features shipped
+- **Docs:** `docs/guides/stripe-integration.md` extracted from billing architecture doc
+- **Docs:** Verification Checklists and "What NOT to Do" sections to all 6 standards docs
+- **Docs:** Prerequisites and Verification sections to all 4 guides
+- **Docs:** Template A/B/C/D definitions in documentation.md
+
+### Fixed
+
+- **CI:** Prevent security scan from failing on pre-existing audit vulnerabilities
+- **Docs:** Broken cross-references updated to reflect new file locations
+
+### Technical
+
+- 26 documentation files (up from 21 after restructure)
+
+---
+
 ## [0.3.4] - 2026-03-07
 
 ### Added

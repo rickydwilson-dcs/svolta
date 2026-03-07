@@ -892,7 +892,7 @@ const usage = await supabase
 
 ## Related Documentation
 
-- **[Architecture Overview](./overview.md)** - System architecture and data flow
+- **[Architecture Overview](./architecture.md)** - System architecture and data flow
 - **[User Store](../../stores/user-store.ts)** - Client-side user state management
 - **[API Routes](../../app/api/)** - Stripe webhooks and usage tracking
 

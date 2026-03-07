@@ -577,9 +577,8 @@ sequenceDiagram
 ## Related Documentation
 
 - **[Database Schema](./database.md)** - Detailed database structure
-- **[Component Library](../components.md)** - Component documentation (planned)
-- **[Git Workflow](../workflow/git.md)** - Development workflow
-- **[Deployment Guide](../workflow/deployment.md)** - Deployment process
+- **[Components](../reference/components.md)** - Component documentation
+- **[Git Workflow](../guides/git-workflow.md)** - Development workflow and deployment process
 
 ---
 

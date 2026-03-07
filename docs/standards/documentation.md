@@ -142,17 +142,18 @@ docs/
 │   ├── documentation.md
 │   ├── git-workflow.md
 │   └── testing.md
-├── development/
-│   ├── setup.md
-│   ├── state-hooks.md
-│   └── troubleshooting.md
+├── guides/
+│   ├── local-development-setup.md
+│   ├── git-workflow.md
+│   ├── troubleshooting.md
+│   ├── mediapipe-self-hosting.md
+│   └── stripe-integration.md
 ├── architecture/
-│   ├── overview.md
-│   └── database.md
-├── features/
-│   ├── alignment-export.md
-│   ├── billing.md
-│   └── pose-detection.md
+│   ├── architecture.md
+│   ├── database.md
+│   ├── how-alignment-works.md
+│   ├── how-billing-works.md
+│   └── how-pose-detection-works.md
 ├── api/
 │   └── reference.md
 ├── components/
