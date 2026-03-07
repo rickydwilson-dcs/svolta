@@ -275,26 +275,21 @@ export async function exportCanvas(
     targetHeight
   );
 
-  // Calculate where each image ends (bottom edge)
+  // Canvas dimensions are fixed to the exact target ratio
+  const finalWidth = targetHalfWidth * 2;
+  const finalHalfWidth = targetHalfWidth;
+  const finalHeight = targetHeight;
+
+  // Calculate visible photo area (clip to shortest image bottom to avoid photo-area white space)
   const beforeBottom = alignParams.before.drawY + alignParams.before.drawHeight;
   const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
-
-  // Crop to the shortest image's bottom to avoid white space
-  // Also don't exceed the target height
-  const visibleHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
-
-  // Calculate width to maintain aspect ratio
-  const aspectRatio = getAspectRatio(options.format);
-  const finalHalfWidth = Math.round(visibleHeight * aspectRatio);
-  const finalWidth = finalHalfWidth * 2;
-  const finalHeight = visibleHeight;
+  const photoClipHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
 
   console.log('[Export] Dynamic dimensions:', {
     targetHeight,
     beforeBottom,
     afterBottom,
-    visibleHeight,
-    aspectRatio,
+    photoClipHeight,
     finalWidth,
     finalHeight
   });
@@ -317,42 +312,20 @@ export async function exportCanvas(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, finalWidth, finalHeight);
 
-  // Calculate how much width we're trimming from each side
-  // The alignParams were calculated for targetHalfWidth, but we're now using finalHalfWidth
-  // Crop equally from both sides by shifting the draw position
-  const widthTrimPerSide = (targetHalfWidth - finalHalfWidth) / 2;
-
-  console.log('[Export] Width trim:', {
-    targetHalfWidth,
-    finalHalfWidth,
-    widthTrimPerSide
-  });
-
-  // Create adjusted params with the trimmed X offset
-  // We shift left by widthTrimPerSide to crop equally from both sides
-  const beforeAdjustedParams = {
-    ...alignParams.before,
-    drawX: alignParams.before.drawX - widthTrimPerSide
-  };
-  const afterAdjustedParams = {
-    ...alignParams.after,
-    drawX: alignParams.after.drawX - widthTrimPerSide
-  };
-
-  // Draw before photo on left half with clipping
+  // Draw before photo on left half, clipped to photo area
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, 0, finalHalfWidth, finalHeight);
+  ctx.rect(0, 0, finalHalfWidth, photoClipHeight);
   ctx.clip();
-  drawPhotoWithParams(ctx, beforeImg, 0, 0, beforeAdjustedParams);
+  drawPhotoWithParams(ctx, beforeImg, 0, 0, alignParams.before);
   ctx.restore();
 
-  // Draw after photo on right half with clipping
+  // Draw after photo on right half, clipped to photo area
   ctx.save();
   ctx.beginPath();
-  ctx.rect(finalHalfWidth, 0, finalHalfWidth, finalHeight);
+  ctx.rect(finalHalfWidth, 0, finalHalfWidth, photoClipHeight);
   ctx.clip();
-  drawPhotoWithParams(ctx, afterImg, finalHalfWidth, 0, afterAdjustedParams);
+  drawPhotoWithParams(ctx, afterImg, finalHalfWidth, 0, alignParams.after);
   ctx.restore();
 
   // Add labels if requested
