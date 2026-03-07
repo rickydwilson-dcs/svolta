@@ -98,22 +98,6 @@ function calculateDimensions(
 }
 
 /**
- * Get aspect ratio (width/height) for a given format
- */
-function getAspectRatio(format: ExportFormat): number {
-  switch (format) {
-    case '1:1':
-      return 1.0;
-    case '4:5':
-      return 0.8;
-    case '9:16':
-      return 9 / 16; // 0.5625
-    default:
-      return 1.0;
-  }
-}
-
-/**
  * Debug wrapper for calculateAlignedDrawParams
  *
  * When debug logging is enabled (via localStorage or env var), this logs

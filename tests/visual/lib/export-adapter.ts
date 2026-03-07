@@ -78,22 +78,6 @@ export function calculateDimensions(
 }
 
 /**
- * Get aspect ratio for a given format
- */
-function getAspectRatio(format: ExportFormat): number {
-  switch (format) {
-    case '1:1':
-      return 1.0;
-    case '4:5':
-      return 0.8;
-    case '9:16':
-      return 9 / 16;
-    default:
-      return 1.0;
-  }
-}
-
-/**
  * Calculate cover-fit dimensions
  */
 function calculateCoverFit(

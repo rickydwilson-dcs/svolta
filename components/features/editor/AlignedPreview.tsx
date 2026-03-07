@@ -135,8 +135,6 @@ export function AlignedPreview({
         );
 
         // Keep canvas at target dimensions (exact ratio)
-        const finalWidth = targetWidth;
-        const finalHeight = targetHeight;
         const finalHalfWidth = halfWidth;
 
         // Calculate photo clip height (avoid white space at bottom of photo area)
