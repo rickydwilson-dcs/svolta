@@ -930,9 +930,9 @@ describe('calculateAlignedDrawParams', () => {
 });
 
 describe('calculateDimensions', () => {
-  it('applies aspect ratio to total canvas, not per-panel', () => {
-    expect(calculateDimensions('1:1', 1080)).toEqual({ width: 2160, height: 2160, halfWidth: 1080 });
-    expect(calculateDimensions('4:5', 1080)).toEqual({ width: 2160, height: 2700, halfWidth: 1080 });
-    expect(calculateDimensions('9:16', 1080)).toEqual({ width: 2160, height: 3840, halfWidth: 1080 });
+  it('applies aspect ratio per-panel, not to total canvas', () => {
+    expect(calculateDimensions('1:1', 1080)).toEqual({ width: 2160, height: 1080, halfWidth: 1080 });
+    expect(calculateDimensions('4:5', 1080)).toEqual({ width: 2160, height: 1350, halfWidth: 1080 });
+    expect(calculateDimensions('9:16', 1080)).toEqual({ width: 2160, height: 1920, halfWidth: 1080 });
   });
 });
