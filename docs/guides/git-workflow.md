@@ -4,6 +4,12 @@
 **Last Updated:** 2025-12-23
 **Scope:** Svolta branching strategy, CI/CD, and deployment
 
+## Prerequisites
+
+- Git configured with your credentials
+- Husky hooks installed (`npm install` sets these up)
+- Vercel CLI installed if using deploy script: `npm i -g vercel`
+
 ---
 
 ## Overview
@@ -280,3 +286,10 @@ gh run list --branch staging  # Check staging CI status
 5. **Write meaningful commit messages**
 6. **Wait for E2E** - don't push to main until staging E2E passes
 7. **Use the deploy script** - it handles verification automatically
+
+## Verification
+
+- [ ] Pre-push hooks run without errors on every push
+- [ ] Branch promotion follows develop → staging → main order
+- [ ] Staging E2E passes before promoting to main
+- [ ] Commit messages follow conventional commits format

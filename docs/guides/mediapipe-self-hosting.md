@@ -1,5 +1,11 @@
 # MediaPipe Self-Hosting Setup
 
+## Prerequisites
+
+- Node.js 18+ installed
+- `npm install` completed (runs `copy-mediapipe-assets` post-install)
+- Access to `/public/mediapipe/` directory
+
 ## Overview
 
 Svolta self-hosts MediaPipe WASM files and pose detection models to eliminate dependency on external CDNs (jsdelivr, Google Storage). This improves reliability and ensures pose detection works even if external CDNs are unavailable.
@@ -269,3 +275,10 @@ npm run build
 - Pose Landmarker Guide: https://developers.google.com/mediapipe/solutions/vision/pose_landmarker/web_js
 - Script Source: `/scripts/copy-mediapipe-assets.js`
 - Pose Detector: `/lib/mediapipe/pose-detector.ts`
+
+## Verification
+
+- [ ] `/public/mediapipe/wasm/` contains WASM files
+- [ ] `/public/mediapipe/models/pose_landmarker_lite.task` exists
+- [ ] Pose detection works in browser without network requests to external CDNs
+- [ ] `npm run dev` loads without MediaPipe 404 errors in console

@@ -573,3 +573,11 @@ Now that your development environment is set up:
 - **Project Board:** [Linear - Svolta](https://linear.app/rickydwilson/project/svolta-832cc9c427e2)
 - **Documentation:** See `docs/` directory
 - **Claude Skills:** Use `@cs-fullstack-engineer` or other agents for help
+
+## Verification
+
+- [ ] `npm run dev` starts without errors and http://localhost:3000 loads
+- [ ] Supabase connection works (auth flows complete without 500 errors)
+- [ ] Stripe keys configured (checkout page loads in test mode)
+- [ ] `npm run test` passes
+- [ ] `npm run lint` returns zero errors

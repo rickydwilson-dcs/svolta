@@ -4,6 +4,12 @@
 **Last Updated:** 2026-01-04
 **Scope:** Common issues, solutions, and debugging strategies
 
+## Prerequisites
+
+- Local development environment running (`npm run dev`)
+- Access to browser DevTools (Console and Network tabs)
+- Supabase project credentials configured in `.env.local`
+
 ## Table of Contents
 
 - [Build & Development Issues](#build--development-issues)
@@ -1301,5 +1307,12 @@ Use Chrome DevTools Performance tab:
 
 **Next Steps:**
 
-- [Setup Guide](setup.md) - Development environment setup
-- [State & Hooks Guide](state-hooks.md) - State management architecture
+- [Local Development Setup](./local-development-setup.md) - Development environment setup
+- [How State Management Works](../architecture/how-state-management-works.md) - State management architecture
+
+## Verification
+
+- [ ] Issue reproduced and root cause identified
+- [ ] Fix applied and verified in browser
+- [ ] Relevant tests pass (`npm run test` or `npm run test:visual`)
+- [ ] No regressions introduced
