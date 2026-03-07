@@ -57,6 +57,3 @@ tests/visual/report.html
 # They are self-hosted for reliability but regenerated on each install
 public/mediapipe/
 
-# Output folder for agent outputs, plans, and session notes
-/output/
-!output/README.md
