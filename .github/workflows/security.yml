@@ -34,7 +34,7 @@ jobs:
       - name: Run npm audit (production)
         id: npm-audit
         run: |
-          npm audit --production --audit-level=moderate
+          npm audit --omit=dev --audit-level=moderate
         continue-on-error: true
 
       - name: Check for outdated dependencies
@@ -46,7 +46,7 @@ jobs:
       - name: Generate audit report
         if: always()
         run: |
-          npm audit --production --json > audit-report.json
+          npm audit --omit=dev --json > audit-report.json || true
           echo "Audit report generated"
 
       - name: Upload audit report
