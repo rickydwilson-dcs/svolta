@@ -71,18 +71,14 @@ export function AlignedPreview({
     let targetHeight: number;
 
     // Fit to container while maintaining aspect ratio
-    // For side-by-side, total width is 2x the single panel width
-    const singlePanelAspect = aspectRatio;
-    const sideBySideAspect = singlePanelAspect * 2;
+    const canvasAspectRatio = aspectRatio; // Format ratio applies to total canvas
 
-    if (containerWidth / containerHeight > sideBySideAspect) {
-      // Container is wider - fit to height
+    if (containerWidth / containerHeight > canvasAspectRatio) {
       targetHeight = containerHeight;
-      targetWidth = targetHeight * sideBySideAspect;
+      targetWidth = targetHeight * canvasAspectRatio;
     } else {
-      // Container is taller - fit to width
       targetWidth = containerWidth;
-      targetHeight = targetWidth / sideBySideAspect;
+      targetHeight = targetWidth / canvasAspectRatio;
     }
 
     const halfWidth = targetWidth / 2;
@@ -138,65 +134,41 @@ export function AlignedPreview({
           targetHeight
         );
 
-        // Calculate visible height (crop to shortest image bottom)
+        // Keep canvas at target dimensions (exact ratio)
+        const finalWidth = targetWidth;
+        const finalHeight = targetHeight;
+        const finalHalfWidth = halfWidth;
+
+        // Calculate photo clip height (avoid white space at bottom of photo area)
         const beforeBottom = alignParams.before.drawY + alignParams.before.drawHeight;
         const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
-        const visibleHeight = Math.min(beforeBottom, afterBottom, targetHeight);
-
-        // Calculate final dimensions maintaining aspect ratio
-        const finalHalfWidth = visibleHeight * aspectRatio;
-        const finalWidth = finalHalfWidth * 2;
-        const finalHeight = visibleHeight;
-
-        // Resize canvas to final dimensions
-        canvas.width = finalWidth;
-        canvas.height = finalHeight;
-
-        // Clear with background colour
-        if (bgColour) {
-          ctx.fillStyle = bgColour;
-          ctx.fillRect(0, 0, finalWidth, finalHeight);
-        } else {
-          ctx.clearRect(0, 0, finalWidth, finalHeight);
-        }
-
-        // Calculate width trim
-        const widthTrimPerSide = (halfWidth - finalHalfWidth) / 2;
-
-        const beforeAdjustedParams = {
-          ...alignParams.before,
-          drawX: alignParams.before.drawX - widthTrimPerSide,
-        };
-        const afterAdjustedParams = {
-          ...alignParams.after,
-          drawX: alignParams.after.drawX - widthTrimPerSide,
-        };
+        const photoClipHeight = Math.min(beforeBottom, afterBottom, targetHeight);
 
         // Draw before photo (left half)
         ctx.save();
         ctx.beginPath();
-        ctx.rect(0, 0, finalHalfWidth, finalHeight);
+        ctx.rect(0, 0, finalHalfWidth, photoClipHeight);
         ctx.clip();
         ctx.drawImage(
           beforeImg,
-          beforeAdjustedParams.drawX,
-          beforeAdjustedParams.drawY,
-          beforeAdjustedParams.drawWidth,
-          beforeAdjustedParams.drawHeight
+          alignParams.before.drawX,
+          alignParams.before.drawY,
+          alignParams.before.drawWidth,
+          alignParams.before.drawHeight
         );
         ctx.restore();
 
         // Draw after photo (right half)
         ctx.save();
         ctx.beginPath();
-        ctx.rect(finalHalfWidth, 0, finalHalfWidth, finalHeight);
+        ctx.rect(finalHalfWidth, 0, finalHalfWidth, photoClipHeight);
         ctx.clip();
         ctx.drawImage(
           afterImg,
-          finalHalfWidth + afterAdjustedParams.drawX,
-          afterAdjustedParams.drawY,
-          afterAdjustedParams.drawWidth,
-          afterAdjustedParams.drawHeight
+          finalHalfWidth + alignParams.after.drawX,
+          alignParams.after.drawY,
+          alignParams.after.drawWidth,
+          alignParams.after.drawHeight
         );
         ctx.restore();
 
