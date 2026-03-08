@@ -72,7 +72,7 @@ export default function UpgradePage() {
             href="/editor"
             className="inline-flex items-center gap-2 text-sm text-text-secondary hover:text-text transition-colors mb-6 sm:mb-8"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             Back to Editor
@@ -188,7 +188,7 @@ export default function UpgradePage() {
                   <ul className="feature-list mb-6">
                     {plan.features.map((feature, index) => (
                       <li key={index}>
-                        <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg aria-hidden="true" className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <polyline points="20 6 9 17 4 12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="text-text-secondary">{feature}</span>
@@ -241,20 +241,20 @@ export default function UpgradePage() {
         {/* Trust Badges */}
         <div className="trust-badges mt-8">
           <div className="trust-badge">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span>Secure checkout</span>
           </div>
           <div className="trust-badge">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span>Photos never uploaded</span>
           </div>
           <div className="trust-badge">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg aria-hidden="true" className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path d="M3 6h18M3 12h18M3 18h18" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             <span>Cancel anytime</span>
@@ -265,7 +265,7 @@ export default function UpgradePage() {
         <div className="mt-10 text-center">
           <div className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-surface border border-border">
             <div className="w-10 h-10 rounded-full bg-success/10 flex items-center justify-center">
-              <svg className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
             </div>

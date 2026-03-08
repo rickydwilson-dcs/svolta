@@ -19,5 +19,10 @@ const EditorContent = dynamic(() => import('./_components/EditorContent').then((
 });
 
 export default function EditorPage() {
-  return <EditorContent />;
+  return (
+    <>
+      <h1 className="sr-only">Photo Editor</h1>
+      <EditorContent />
+    </>
+  );
 }

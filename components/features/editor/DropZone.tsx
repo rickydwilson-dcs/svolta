@@ -146,7 +146,7 @@ export function DropZone({ label, onImageLoad, photo, className }: DropZoneProps
 
       {/* Error message below */}
       {error && (
-        <div className="mt-2 text-sm text-red-600 dark:text-red-400">
+        <div role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
