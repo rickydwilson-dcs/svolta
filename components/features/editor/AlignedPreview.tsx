@@ -26,19 +26,19 @@ export interface AlignedPreviewProps {
 
 /**
  * Get total canvas aspect ratio (width/height) for side-by-side layout.
- * The format ratio applies to each half-panel, so total width is doubled.
- * Must match export.ts calculateDimensions(): width = resolution * 2.
+ * Must match export.ts calculateDimensions(), where format applies to
+ * the full exported canvas.
  */
 function getAspectRatio(format: '1:1' | '4:5' | '9:16'): number {
   switch (format) {
     case '1:1':
-      return 2.0;
+      return 1.0;
     case '4:5':
-      return 2 * (4 / 5);
+      return 4 / 5;
     case '9:16':
-      return 2 * (9 / 16);
+      return 9 / 16;
     default:
-      return 2.0;
+      return 1.0;
   }
 }
 
@@ -52,7 +52,7 @@ export function AlignedPreview({
 }: AlignedPreviewProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const [isRendering, setIsRendering] = React.useState(false);
+  const [imagesLoading, setImagesLoading] = React.useState(true);
   const userFraming = useEditorStore((state) => state.userFraming);
 
   const imagesRef = React.useRef<{
@@ -63,6 +63,42 @@ export function AlignedPreview({
   }>({ beforeImg: null, afterImg: null, beforeDataUrl: null, afterDataUrl: null });
 
   const [imagesLoaded, setImagesLoaded] = React.useState(0);
+  const [containerSize, setContainerSize] = React.useState({ width: 0, height: 0 });
+
+  // Track container size changes (handles dialog open animation)
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateSize = () => {
+      const rect = container.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
+      if (width > 0 && height > 0) {
+        setContainerSize((prev) =>
+          prev.width === width && prev.height === height ? prev : { width, height }
+        );
+      }
+    };
+
+    // Seed initial size to avoid waiting for ResizeObserver callbacks.
+    updateSize();
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        setContainerSize((prev) =>
+          prev.width === Math.round(width) && prev.height === Math.round(height)
+            ? prev
+            : { width: Math.round(width), height: Math.round(height) }
+        );
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // Effect 1: Load images when data URLs change
   React.useEffect(() => {
@@ -80,7 +116,7 @@ export function AlignedPreview({
       return;
     }
 
-    setIsRendering(true);
+    setImagesLoading(true);
 
     Promise.all([loadImage(before), loadImage(after)])
       .then(([beforeImg, afterImg]) => {
@@ -92,11 +128,12 @@ export function AlignedPreview({
           afterDataUrl: after,
         };
         setImagesLoaded((n) => n + 1);
+        setImagesLoading(false);
       })
       .catch((error) => {
         if (!cancelled) {
           editorLogger.error('Failed to load aligned preview images:', error);
-          setIsRendering(false);
+          setImagesLoading(false);
         }
       });
 
@@ -106,18 +143,17 @@ export function AlignedPreview({
   // Effect 2: Draw canvas (runs when images are ready or visual params change)
   React.useEffect(() => {
     const canvas = canvasRef.current;
-    const container = containerRef.current;
     const { beforeImg, afterImg } = imagesRef.current;
-    if (!canvas || !container || !beforeImg || !afterImg) return;
+    if (!canvas || !beforeImg || !afterImg) return;
+    if (containerSize.width === 0 || containerSize.height === 0) return;
 
     const rafId = requestAnimationFrame(() => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Get container dimensions
-    const containerRect = container.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
+    // Get container dimensions from ResizeObserver
+    const containerWidth = containerSize.width;
+    const containerHeight = containerSize.height;
 
     // Calculate target dimensions based on format
     const aspectRatio = getAspectRatio(format);
@@ -225,11 +261,10 @@ export function AlignedPreview({
       ctx.fillText('After', finalHalfWidth + finalHalfWidth / 2, padding);
     }
 
-    setIsRendering(false);
     });
 
     return () => cancelAnimationFrame(rafId);
-  }, [imagesLoaded, format, showLabels, backgroundSettings, userFraming, beforePhoto.landmarks, afterPhoto.landmarks]);
+  }, [imagesLoaded, format, showLabels, backgroundSettings, userFraming, beforePhoto.landmarks, afterPhoto.landmarks, containerSize]);
 
   return (
     <div ref={containerRef} className={cn('flex items-center justify-center', className)}>
@@ -238,9 +273,9 @@ export function AlignedPreview({
         aria-label="Aligned before and after photo preview"
         ref={canvasRef}
         className="max-w-full max-h-full object-contain"
-        style={{ display: isRendering ? 'none' : 'block' }}
+        style={{ display: 'block' }}
       />
-      {isRendering && (
+      {imagesLoading && (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]" />
         </div>
