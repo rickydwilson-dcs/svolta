@@ -46,6 +46,13 @@ export function useExportDownload(
   const subscription = useUserStore((s) => s.subscription);
   const isPro = subscription?.tier === 'pro' && subscription?.status === 'active';
   const profile = useUserStore((state) => state.profile);
+
+  const onLimitReachedRef = React.useRef(callbacks.onLimitReached);
+  const onSuccessRef = React.useRef(callbacks.onSuccess);
+  React.useLayoutEffect(() => {
+    onLimitReachedRef.current = callbacks.onLimitReached;
+    onSuccessRef.current = callbacks.onSuccess;
+  }, [callbacks.onLimitReached, callbacks.onSuccess]);
   const { checkAndIncrement, isAnonymous } = useUsageLimit();
   const { isExporting, error: canvasError, exportAndDownload, clearError: clearCanvasError } = useCanvasExport();
   const {
@@ -76,7 +83,7 @@ export function useExportDownload(
       const allowed = await checkAndIncrement();
 
       if (!allowed) {
-        callbacks.onLimitReached(isAnonymous);
+        onLimitReachedRef.current(isAnonymous);
         return;
       }
 
@@ -128,7 +135,7 @@ export function useExportDownload(
           config.aspectRatio,
           isAnonymous
         );
-        callbacks.onSuccess();
+        onSuccessRef.current();
       }
     } catch (err) {
       canvasLogger.error('Export failed', err);
@@ -146,7 +153,6 @@ export function useExportDownload(
     exportAndDownload,
     exportGifAndDownload,
     config,
-    callbacks,
   ]);
 
   return {
