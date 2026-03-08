@@ -110,6 +110,7 @@ export function AlignedPreview({
     const { beforeImg, afterImg } = imagesRef.current;
     if (!canvas || !container || !beforeImg || !afterImg) return;
 
+    const rafId = requestAnimationFrame(() => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -225,6 +226,9 @@ export function AlignedPreview({
     }
 
     setIsRendering(false);
+    });
+
+    return () => cancelAnimationFrame(rafId);
   }, [imagesLoaded, format, showLabels, backgroundSettings, userFraming, beforePhoto.landmarks, afterPhoto.landmarks]);
 
   return (
