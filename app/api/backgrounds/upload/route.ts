@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     { error: string } | { success: boolean; url: string; message: string }
   >(request, 'backgrounds-upload', async () => {
     try {
+      // Uses session-scoped client (not service client) so RLS policies
+      // enforce user-owned storage paths. See ARCH-007 review.
       const supabase = await createClient();
 
       // Verify user is authenticated
@@ -206,6 +208,8 @@ export async function DELETE(request: NextRequest) {
     'backgrounds-upload',
     async () => {
     try {
+      // Uses session-scoped client (not service client) so RLS policies
+      // enforce user-owned storage paths. See ARCH-007 review.
       const supabase = await createClient();
 
       // Verify user is authenticated

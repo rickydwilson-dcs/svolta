@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     { error: string; message?: string } | { success: boolean; url: string; message: string }
   >(request, 'logos-upload', async () => {
     try {
+      // Uses session-scoped client (not service client) so RLS policies
+      // enforce user-owned storage paths. See ARCH-007 review.
       const supabase = await createClient();
 
       // Verify user is authenticated
@@ -220,7 +222,9 @@ export async function DELETE(request: NextRequest) {
     'logos-upload',
     async () => {
       try {
-        const supabase = await createClient();
+        // Uses session-scoped client (not service client) so RLS policies
+      // enforce user-owned storage paths. See ARCH-007 review.
+      const supabase = await createClient();
 
         // Verify user is authenticated
         const { data: { user }, error: authError } = await supabase.auth.getUser();
