@@ -47,9 +47,9 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // Script: Allow inline scripts for next-themes FOUC prevention + unsafe-eval for Fabric.js
+              // Script: Allow inline scripts for next-themes FOUC prevention
               // Note: next-themes requires inline script to prevent flash of unstyled content
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://js.stripe.com https://*.supabase.co https://cdn.jsdelivr.net https://vercel.live",
+              "script-src 'self' 'unsafe-inline' blob: https://js.stripe.com https://*.supabase.co https://cdn.jsdelivr.net https://vercel.live",
               // Style: Allow inline for Tailwind + Google Fonts
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com",
