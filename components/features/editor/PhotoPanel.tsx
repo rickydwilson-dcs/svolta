@@ -81,7 +81,11 @@ export function PhotoPanel({
 
   // Detect landmarks when photo changes
   const handlePhotoLoad = useCallback(
-    async (newPhoto: Photo) => {
+    async (newPhoto: Photo | null) => {
+      if (newPhoto === null) {
+        onPhotoChange(null);
+        return;
+      }
       // First set the photo without landmarks
       onPhotoChange(newPhoto);
 

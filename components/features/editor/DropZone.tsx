@@ -6,7 +6,7 @@ import { processImage, validateImageFile, type Photo } from '@/lib/utils/image';
 
 interface DropZoneProps {
   label: string;
-  onImageLoad: (photo: Photo) => void;
+  onImageLoad: (photo: Photo | null) => void;
   photo?: Photo | null;
   className?: string;
 }
@@ -87,6 +87,7 @@ export function DropZone({ label, onImageLoad, photo, className }: DropZoneProps
       fileInputRef.current.value = '';
     }
     setError(null);
+    onImageLoad(null);
   };
 
   return (
