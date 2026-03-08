@@ -15,6 +15,7 @@
  * @see lib/canvas/gif-animations.ts for frame generation
  */
 
+import { canvasLogger } from '@/lib/logger';
 import GIF from 'gif.js';
 import { loadImage } from './load-image';
 export { triggerDownload as triggerGifDownload } from './export';
@@ -192,7 +193,7 @@ export async function exportGif(
   const width = resolution;
   const height = Math.round(width / aspectRatio);
 
-  console.log('[GIF Export] Starting export:', {
+  canvasLogger.debug('[GIF Export] Starting export:', {
     format: options.format,
     animationStyle: options.animationStyle,
     width,
@@ -221,7 +222,7 @@ export async function exportGif(
   const { frameCount, frameDelays } = getAnimationParams(options.animationStyle, duration);
   const frameGenerator = getFrameGenerator(options.animationStyle);
 
-  console.log('[GIF Export] Generating frames:', { frameCount });
+  canvasLogger.debug('[GIF Export] Generating frames:', { frameCount });
 
   // Create GIF encoder first
   const gif = new GIF({
@@ -279,7 +280,7 @@ export async function exportGif(
     await yieldToMain();
   }
 
-  console.log('[GIF Export] Encoding GIF with gif.js');
+  canvasLogger.debug('[GIF Export] Encoding GIF with gif.js');
 
   // Encode GIF with timeout to prevent hanging on worker failures
   const ENCODING_TIMEOUT = 60000; // 60 seconds max
@@ -320,7 +321,7 @@ export async function exportGif(
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const filename = `svolta-${options.animationStyle}-${timestamp}.gif`;
 
-  console.log('[GIF Export] Export complete:', {
+  canvasLogger.debug('[GIF Export] Export complete:', {
     filename,
     fileSize: blob.size,
     fileSizeMB: (blob.size / 1024 / 1024).toFixed(2),

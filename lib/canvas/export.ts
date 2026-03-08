@@ -10,6 +10,7 @@
  * @see docs/features/alignment-export.md for full documentation
  */
 
+import { canvasLogger } from '@/lib/logger';
 import { loadImage } from './load-image';
 import { addWatermark, type WatermarkOptions } from './watermark';
 import type { Landmark } from '@/types/landmarks';
@@ -259,7 +260,7 @@ export async function exportCanvas(
   const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
   const photoClipHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
 
-  console.log('[Export] Dynamic dimensions:', {
+  canvasLogger.debug('[Export] Dynamic dimensions:', {
     targetHeight,
     beforeBottom,
     afterBottom,
