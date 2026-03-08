@@ -3,7 +3,7 @@
  * Provides keyboard shortcuts for alignment, scale, and toggle controls
  */
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useLayoutEffect } from 'react';
 import { useEditorStore } from '@/stores/editor-store';
 
 export interface KeyboardShortcutsOptions {
@@ -32,6 +32,11 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}): vo
   const toggleLandmarks = useEditorStore((s) => s.toggleLandmarks);
   const toggleGrid = useEditorStore((s) => s.toggleGrid);
 
+  const alignmentRef = useRef(alignment);
+  useLayoutEffect(() => {
+    alignmentRef.current = alignment;
+  }, [alignment]);
+
   useEffect(() => {
     if (!enabled) return;
 
@@ -54,22 +59,22 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}): vo
         // Arrow keys: Move offset
         case 'ArrowUp':
           e.preventDefault();
-          updateAlignment({ offsetY: alignment.offsetY - offsetStep });
+          updateAlignment({ offsetY: alignmentRef.current.offsetY - offsetStep });
           break;
 
         case 'ArrowDown':
           e.preventDefault();
-          updateAlignment({ offsetY: alignment.offsetY + offsetStep });
+          updateAlignment({ offsetY: alignmentRef.current.offsetY + offsetStep });
           break;
 
         case 'ArrowLeft':
           e.preventDefault();
-          updateAlignment({ offsetX: alignment.offsetX - offsetStep });
+          updateAlignment({ offsetX: alignmentRef.current.offsetX - offsetStep });
           break;
 
         case 'ArrowRight':
           e.preventDefault();
-          updateAlignment({ offsetX: alignment.offsetX + offsetStep });
+          updateAlignment({ offsetX: alignmentRef.current.offsetX + offsetStep });
           break;
 
         // +/- keys: Scale
@@ -77,7 +82,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}): vo
         case '=': // Also handle = key (same key as + without shift)
           e.preventDefault();
           updateAlignment({
-            scale: Math.min(2, alignment.scale + scaleStep)
+            scale: Math.min(2, alignmentRef.current.scale + scaleStep)
           });
           break;
 
@@ -85,7 +90,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}): vo
         case '_': // Also handle _ key (same key as - with shift)
           e.preventDefault();
           updateAlignment({
-            scale: Math.max(0.5, alignment.scale - scaleStep)
+            scale: Math.max(0.5, alignmentRef.current.scale - scaleStep)
           });
           break;
 
@@ -138,7 +143,6 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}): vo
     };
   }, [
     enabled,
-    alignment,
     updateAlignment,
     toggleLandmarks,
     toggleGrid,
