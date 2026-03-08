@@ -18,17 +18,15 @@ export interface AlignmentControlsProps {
 const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProps>(
   ({ className, onAutoAlign }, ref) => {
     const [showHelpModal, setShowHelpModal] = React.useState(false);
-    const {
-      alignment,
-      showLandmarks,
-      showGrid,
-      userFraming,
-      updateAlignment,
-      toggleLandmarks,
-      toggleGrid,
-      setUserFraming,
-      resetUserFraming,
-    } = useEditorStore();
+    const alignment = useEditorStore((s) => s.alignment);
+    const showLandmarks = useEditorStore((s) => s.showLandmarks);
+    const showGrid = useEditorStore((s) => s.showGrid);
+    const userFraming = useEditorStore((s) => s.userFraming);
+    const updateAlignment = useEditorStore((s) => s.updateAlignment);
+    const toggleLandmarks = useEditorStore((s) => s.toggleLandmarks);
+    const toggleGrid = useEditorStore((s) => s.toggleGrid);
+    const setUserFraming = useEditorStore((s) => s.setUserFraming);
+    const resetUserFraming = useEditorStore((s) => s.resetUserFraming);
 
     // Handle anchor selection
     const handleAnchorChange = (value: string) => {

@@ -27,12 +27,10 @@ export interface KeyboardShortcutsOptions {
 export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
   const { enabled = true, onAutoAlign } = options;
 
-  const {
-    alignment,
-    updateAlignment,
-    toggleLandmarks,
-    toggleGrid,
-  } = useEditorStore();
+  const alignment = useEditorStore((s) => s.alignment);
+  const updateAlignment = useEditorStore((s) => s.updateAlignment);
+  const toggleLandmarks = useEditorStore((s) => s.toggleLandmarks);
+  const toggleGrid = useEditorStore((s) => s.toggleGrid);
 
   useEffect(() => {
     if (!enabled) return;

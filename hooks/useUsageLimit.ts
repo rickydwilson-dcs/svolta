@@ -24,20 +24,18 @@ export interface UsageLimit {
  * anonymous users (localStorage tracking with monthly reset via Zustand store).
  */
 export function useUsageLimit(): UsageLimit {
-  const {
-    user,
-    usage,
-    anonExports,
-    isLoading,
-    error,
-    isPro,
-    canExport,
-    exportsRemaining,
-    incrementUsage,
-    incrementAnonUsage,
-    initAnonExports,
-    fetchUsage,
-  } = useUserStore();
+  const user = useUserStore((s) => s.user);
+  const usage = useUserStore((s) => s.usage);
+  const anonExports = useUserStore((s) => s.anonExports);
+  const isLoading = useUserStore((s) => s.isLoading);
+  const error = useUserStore((s) => s.error);
+  const isPro = useUserStore((s) => s.isPro);
+  const canExport = useUserStore((s) => s.canExport);
+  const exportsRemaining = useUserStore((s) => s.exportsRemaining);
+  const incrementUsage = useUserStore((s) => s.incrementUsage);
+  const incrementAnonUsage = useUserStore((s) => s.incrementAnonUsage);
+  const initAnonExports = useUserStore((s) => s.initAnonExports);
+  const fetchUsage = useUserStore((s) => s.fetchUsage);
 
   // Initialize anonymous exports from localStorage on mount
   useEffect(() => {
