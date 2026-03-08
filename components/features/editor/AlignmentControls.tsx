@@ -149,7 +149,7 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
             type="single"
             value={alignment.anchor}
             onValueChange={handleAnchorChange}
-            className="flex flex-wrap gap-2"
+            className="flex flex-wrap flex-col sm:flex-row gap-2"
           >
             {[
               { value: 'full', label: 'Full Body' },
@@ -356,7 +356,7 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 flex flex-wrap flex-col sm:flex-row gap-3">
           <Button
             variant="secondary"
             size="md"
@@ -459,15 +459,6 @@ const AlignmentControls = React.forwardRef<HTMLDivElement, AlignmentControlsProp
             </div>
           </details>
         </div>
-
-        {/* Mobile: Stack vertically on small screens */}
-        <style jsx>{`
-          @media (max-width: 640px) {
-            .flex-wrap {
-              flex-direction: column;
-            }
-          }
-        `}</style>
 
         {/* Help Modal */}
         <Modal

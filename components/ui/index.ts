@@ -23,5 +23,10 @@ export { SegmentedControl } from './SegmentedControl';
 export type { SegmentedControlProps, SegmentedControlOption } from './SegmentedControl';
 
 export { OAuthButtons } from './OAuthButtons';
+export type { OAuthButtonsProps } from './OAuthButtons';
 
 export { MagicLinkForm } from './MagicLinkForm';
+export type { MagicLinkFormProps } from './MagicLinkForm';
+
+export { ErrorBoundary } from './ErrorBoundary';
+export type { ErrorBoundaryProps } from './ErrorBoundary';

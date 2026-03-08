@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * useAlignment Hook
  * Manages real-time alignment calculations and updates

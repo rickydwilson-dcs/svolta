@@ -1,3 +1,11 @@
+/**
+ * MediaPipe Loading Store
+ *
+ * Domain-specific Zustand store for MediaPipe pose detector loading state.
+ * Intentionally co-located with the MediaPipe module rather than in `stores/`
+ * (which holds global app stores). This store is scoped to the MediaPipe
+ * initialization lifecycle and is consumed exclusively within this module.
+ */
 import { create } from 'zustand';
 
 interface MediaPipeLoadingState {

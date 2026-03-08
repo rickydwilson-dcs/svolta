@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from './Button';
 import { Input } from './Input';
 
-interface MagicLinkFormProps {
+export interface MagicLinkFormProps {
   redirectTo?: string;
 }
 

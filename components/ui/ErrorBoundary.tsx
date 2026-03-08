@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { editorLogger } from '@/lib/logger';
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ReactNode;
   onError?: (error: Error, errorInfo: React.ErrorInfo) => void;

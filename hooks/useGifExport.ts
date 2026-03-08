@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * GIF Export Hook
  * Provides functionality for exporting animated GIF comparisons with progress tracking

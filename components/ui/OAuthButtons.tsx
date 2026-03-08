@@ -36,7 +36,7 @@ function GoogleIcon({ className }: { className?: string }) {
 //   );
 // }
 
-interface OAuthButtonsProps {
+export interface OAuthButtonsProps {
   redirectTo?: string;
 }
 

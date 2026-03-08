@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Canvas Export Hook
  * Provides functionality for exporting aligned photos with loading states

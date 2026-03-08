@@ -890,6 +890,24 @@ const usage = await supabase
 
 ---
 
+## exports
+
+Tracks every photo export event. Used for usage enforcement and funnel analytics.
+
+| Column                | Type                           | Nullable | Description                                             |
+| --------------------- | ------------------------------ | -------- | ------------------------------------------------------- |
+| `id`                  | uuid                           | No       | Primary key                                             |
+| `user_id`             | uuid                           | Yes      | Authenticated user; null for anonymous exports          |
+| `user_type`           | 'anonymous' \| 'free' \| 'pro' | No       | User tier at export time                                |
+| `anon_id`             | text                           | Yes      | Client-generated ID for anonymous tracking              |
+| `export_format`       | 'png' \| 'gif'                 | No       | Output format                                           |
+| `aspect_ratio`        | '1:1' \| '4:5' \| '9:16'       | Yes      | Canvas aspect ratio at export time                      |
+| `exported_at`         | timestamptz                    | No       | Export timestamp (default: now())                       |
+| `converted_to_signup` | boolean                        | No       | True if anonymous user later signed up (default: false) |
+| `converted_at`        | timestamptz                    | Yes      | Timestamp of signup conversion                          |
+
+---
+
 ## Related Documentation
 
 - **[Architecture Overview](./architecture.md)** - System architecture and data flow
