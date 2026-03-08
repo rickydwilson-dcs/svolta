@@ -7,6 +7,7 @@
  */
 
 import type { Config } from '@imgly/background-removal';
+import { createBlobUrl } from '@/lib/utils/object-url';
 import { drawBackground, type BackgroundSettings } from './backgrounds';
 
 export interface SegmentationResult {
@@ -77,18 +78,6 @@ function loadImage(dataUrl: string): Promise<HTMLImageElement> {
     img.onerror = () => reject(new Error('Failed to load image'));
 
     img.src = dataUrl;
-  });
-}
-
-/**
- * Convert Blob to data URL
- */
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error('Failed to convert blob to data URL'));
-    reader.readAsDataURL(blob);
   });
 }
 
@@ -196,8 +185,8 @@ export async function removeBackground(
 
     onProgress?.(0.9);
 
-    // Convert result blob to data URL
-    const processedDataUrl = await blobToDataUrl(resultBlob);
+    // Convert result blob to blob URL
+    const processedDataUrl = createBlobUrl(resultBlob);
 
     // Extract mask from the transparent result
     const mask = await extractMaskFromTransparentImage(processedDataUrl, width, height);
@@ -291,8 +280,17 @@ export async function applyBackground(
     // Draw composite onto background
     ctx.drawImage(compositeCanvas, 0, 0);
 
-    // Return as data URL
-    return canvas.toDataURL('image/png', 1.0);
+    // Return as blob URL
+    return new Promise<string>((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { reject(new Error('Failed to create background blob')); return; }
+          resolve(createBlobUrl(blob));
+        },
+        'image/png',
+        1.0
+      );
+    });
   } catch (error) {
     throw new Error(
       `Failed to apply background: ${error instanceof Error ? error.message : 'Unknown error'}`
