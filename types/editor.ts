@@ -10,6 +10,7 @@ import type { Landmark } from './landmarks';
 export interface Photo {
   id: string;
   file: File;
+  /** Image source URL (blob: URL preferred, data: URL tolerated) */
   dataUrl: string;
   width: number;
   height: number;
@@ -18,7 +19,7 @@ export interface Photo {
   // Background removal fields
   /** Whether background has been removed from this photo */
   hasBackgroundRemoved?: boolean;
-  /** Original data URL before background removal (for reverting or re-applying) */
+  /** Original image source before background removal (blob: URL) */
   originalDataUrl?: string;
   /** Segmentation mask for fast background changes (ImageData is not serializable, store in memory) */
   segmentationMask?: ImageData | null;
