@@ -101,7 +101,14 @@ const imagePresets = [
 ];
 
 export function ExportModal({ isOpen, onClose }: ExportModalProps) {
-  const { beforePhoto, afterPhoto, alignment, backgroundSettings, setBeforePhoto, setAfterPhoto, setBackgroundSettings, setUserFraming } = useEditorStore();
+  const beforePhoto = useEditorStore((s) => s.beforePhoto);
+  const afterPhoto = useEditorStore((s) => s.afterPhoto);
+  const alignment = useEditorStore((s) => s.alignment);
+  const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
+  const setBeforePhoto = useEditorStore((s) => s.setBeforePhoto);
+  const setAfterPhoto = useEditorStore((s) => s.setAfterPhoto);
+  const setBackgroundSettings = useEditorStore((s) => s.setBackgroundSettings);
+  const setUserFraming = useEditorStore((s) => s.setUserFraming);
   const isPro = useUserStore((state) => state.isPro());
   const profile = useUserStore((state) => state.profile);
   const { limit, remaining, checkAndIncrement, isAnonymous } = useUsageLimit();

@@ -51,7 +51,8 @@ export function BackgroundSettings({
   onUpgradeClick,
   className,
 }: BackgroundSettingsProps): React.ReactElement {
-  const { backgroundSettings, setBackgroundSettings } = useEditorStore();
+  const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
+  const setBackgroundSettings = useEditorStore((s) => s.setBackgroundSettings);
   const isPro = useUserStore((state) => state.isPro());
 
   const [customColor, setCustomColor] = React.useState('#ffffff');

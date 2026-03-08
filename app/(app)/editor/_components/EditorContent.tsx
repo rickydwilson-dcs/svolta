@@ -16,15 +16,13 @@ import { Button } from '@/components/ui';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
 
 export default function EditorContent() {
-  const {
-    beforePhoto,
-    afterPhoto,
-    setBeforePhoto,
-    setAfterPhoto,
-    setBeforeLandmarks,
-    setAfterLandmarks,
-    reset,
-  } = useEditorStore();
+  const beforePhoto = useEditorStore((s) => s.beforePhoto);
+  const afterPhoto = useEditorStore((s) => s.afterPhoto);
+  const setBeforePhoto = useEditorStore((s) => s.setBeforePhoto);
+  const setAfterPhoto = useEditorStore((s) => s.setAfterPhoto);
+  const setBeforeLandmarks = useEditorStore((s) => s.setBeforeLandmarks);
+  const setAfterLandmarks = useEditorStore((s) => s.setAfterLandmarks);
+  const reset = useEditorStore((s) => s.reset);
 
   const { used, limit, isPro } = useUsageLimit();
   const { setTheme, resolvedTheme } = useTheme();
