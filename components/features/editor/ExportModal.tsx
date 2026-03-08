@@ -7,13 +7,10 @@ import { UpgradePrompt } from '@/components/ui/UpgradePrompt';
 import { useEditorStore } from '@/stores/editor-store';
 import { useUserStore } from '@/stores/user-store';
 import { useUsageLimit } from '@/hooks/useUsageLimit';
-import { useCanvasExport } from '@/hooks/useCanvasExport';
-import { useGifExport } from '@/hooks/useGifExport';
-import type { ExportFormat as LibExportFormat } from '@/lib/canvas/export';
 import type { AnimationStyle } from '@/lib/canvas/export-gif';
-import { canvasLogger } from '@/lib/logger';
-import { logExportEvent, type ExportType, type AspectRatio, type BackgroundState, imagePresets } from '@/lib/export-utils';
+import { type ExportType, type AspectRatio, type BackgroundState, imagePresets } from '@/lib/export-utils';
 import { useExportBackgroundRemoval } from '@/hooks/useExportBackgroundRemoval';
+import { useExportDownload } from '@/hooks/useExportDownload';
 import { ExportPreview } from './export/ExportPreview';
 import { ExportTypeToggle } from './export/ExportTypeToggle';
 import { GifControls } from './export/GifControls';
@@ -35,21 +32,11 @@ type BackgroundType = 'original' | 'transparent' | 'color' | 'image';
 export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const beforePhoto = useEditorStore((s) => s.beforePhoto);
   const afterPhoto = useEditorStore((s) => s.afterPhoto);
-  const alignment = useEditorStore((s) => s.alignment);
   const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
   const setBackgroundSettings = useEditorStore((s) => s.setBackgroundSettings);
   const setUserFraming = useEditorStore((s) => s.setUserFraming);
   const isPro = useUserStore((state) => state.isPro());
-  const profile = useUserStore((state) => state.profile);
-  const { limit, remaining, checkAndIncrement, isAnonymous } = useUsageLimit();
-  const { isExporting, error: exportError, exportAndDownload, clearError } = useCanvasExport();
-  const {
-    isExporting: isExportingGif,
-    progress: gifProgress,
-    status: gifStatus,
-    error: gifError,
-    exportAndDownload: exportGifAndDownload,
-  } = useGifExport();
+  const { limit, remaining } = useUsageLimit();
   const {
     isRemovingBackgrounds,
     error: bgRemovalError,
@@ -78,17 +65,46 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const [showSignupPrompt, setShowSignupPrompt] = React.useState(false);
   const [upgradeTrigger, setUpgradeTrigger] = React.useState<'limit' | 'watermark' | 'format' | 'logo' | 'gif' | 'background'>('limit');
 
-  const [localError, setLocalError] = React.useState<string | null>(null);
+  const {
+    handleDownload,
+    isExporting,
+    isExportingGif,
+    gifProgress,
+    gifStatus,
+    exportError,
+    clearExportError,
+  } = useExportDownload(
+    {
+      exportType,
+      aspectRatio,
+      animationStyle,
+      duration,
+      addLabels,
+      removeWatermark,
+      addLogo,
+      hasBackgroundRemoved,
+    },
+    {
+      onLimitReached: (isAnonymous) => {
+        if (isAnonymous) {
+          setShowSignupPrompt(true);
+        } else {
+          setUpgradeTrigger('limit');
+          setShowUpgradePrompt(true);
+        }
+      },
+      onSuccess: onClose,
+    }
+  );
 
   const hasPhotos = Boolean(beforePhoto && afterPhoto);
 
   // Clear errors when modal opens/closes
   React.useEffect(() => {
     if (isOpen) {
-      clearError();
-      setLocalError(null);
+      clearExportError();
     }
-  }, [isOpen, clearError]);
+  }, [isOpen, clearExportError]);
 
   // Format the usage text
   const usageText = React.useMemo(() => {
@@ -132,14 +148,12 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const handleBackgroundTypeChange = async (type: string) => {
     const newType = type as BackgroundType;
 
-    // For transparent or colour backgrounds, we need to remove the background first
     if ((newType === 'transparent' || newType === 'color') && !hasBackgroundRemoved) {
       await handleRemoveBackgrounds();
     }
 
     setBackground(prev => ({ ...prev, type: newType }));
 
-    // Update editor store background settings
     if (newType === 'original') {
       setBackgroundSettings({ type: 'original' });
     } else if (newType === 'transparent') {
@@ -158,85 +172,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     setBackgroundSettings({ type: 'solid', color });
   };
 
-  // Handle download
-  const handleDownload = async () => {
-    if (!hasPhotos || !beforePhoto || !afterPhoto) return;
-
-    setLocalError(null);
-
-    try {
-      // Check usage limit and increment
-      const allowed = await checkAndIncrement();
-
-      if (!allowed) {
-        if (isAnonymous) {
-          setShowSignupPrompt(true);
-        } else {
-          setUpgradeTrigger('limit');
-          setShowUpgradePrompt(true);
-        }
-        return;
-      }
-
-      // Get custom logo URL if Pro user has one
-      const customLogoUrl = isPro && (profile as unknown as { logo_url?: string })?.logo_url
-        ? (profile as unknown as { logo_url: string }).logo_url
-        : undefined;
-
-      let success = false;
-
-      if (exportType === 'gif') {
-        success = await exportGifAndDownload(
-          beforePhoto,
-          afterPhoto,
-          {
-            format: aspectRatio as LibExportFormat,
-            animationStyle,
-            duration,
-            includeLabels: addLabels,
-            watermark: {
-              isPro: isPro && removeWatermark,
-              customLogoUrl: addLogo ? customLogoUrl : undefined,
-            },
-            backgroundSettings: hasBackgroundRemoved ? backgroundSettings : undefined,
-          }
-        );
-      } else {
-        success = await exportAndDownload(
-          beforePhoto,
-          afterPhoto,
-          alignment,
-          {
-            format: aspectRatio as LibExportFormat,
-            resolution: 1080,
-            includeLabels: addLabels,
-            watermark: {
-              isPro: isPro && removeWatermark,
-              customLogoUrl: addLogo ? customLogoUrl : undefined,
-            },
-            quality: 0.92,
-            backgroundSettings: hasBackgroundRemoved ? backgroundSettings : undefined,
-          }
-        );
-      }
-
-      canvasLogger.info('Export result', { success, exportType, aspectRatio, isAnonymous });
-
-      if (success) {
-        canvasLogger.debug('Logging export event');
-        logExportEvent(
-          exportType === 'gif' ? 'gif' : 'png',
-          aspectRatio,
-          isAnonymous
-        );
-        onClose();
-      }
-    } catch (error) {
-      canvasLogger.error('Export failed', error);
-      setLocalError(error instanceof Error ? error.message : 'Export failed');
-    }
-  };
-
   // Get background label for display
   const getBackgroundLabel = () => {
     switch (background.type) {
@@ -253,7 +188,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     }
   };
 
-  const displayError = localError || exportError || gifError || bgRemovalError;
+  const displayError = exportError || bgRemovalError;
   const isAnyExporting = isExporting || isExportingGif || isRemovingBackgrounds;
 
   return (
