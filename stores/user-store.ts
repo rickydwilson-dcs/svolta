@@ -5,6 +5,14 @@ import type { Profile, Subscription, Usage } from '@/types/database';
 import { FREE_EXPORT_LIMIT } from '@/lib/stripe/plans';
 import { authLogger, usageLogger, stripeLogger } from '@/lib/logger';
 
+export type IncrementFailReason = 'limit' | 'auth' | 'server' | 'network';
+
+export type IncrementResult = {
+  success: boolean;
+  remaining: number;
+  reason?: IncrementFailReason;
+};
+
 // localStorage keys for anonymous user exports
 const ANON_EXPORTS_KEY = 'svolta_anon_exports';
 const ANON_EXPORTS_MONTH_KEY = 'svolta_anon_exports_month';
@@ -76,8 +84,8 @@ interface UserState {
   fetchSubscription: () => Promise<void>;
   fetchUsage: () => Promise<void>;
   initAnonExports: () => void;
-  incrementUsage: () => Promise<{ success: boolean; remaining: number }>;
-  incrementAnonUsage: () => { success: boolean; remaining: number };
+  incrementUsage: () => Promise<IncrementResult>;
+  incrementAnonUsage: () => IncrementResult;
   signOut: () => Promise<void>;
   reset: () => void;
 }
@@ -247,7 +255,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     const { anonExports } = get();
 
     if (anonExports >= FREE_EXPORT_LIMIT) {
-      return { success: false, remaining: 0 };
+      return { success: false, remaining: 0, reason: 'limit' };
     }
 
     const newCount = incrementAnonExportsInStorage();
@@ -263,7 +271,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     const { user, isPro, canExport, exportsRemaining, fetchUsage } = get();
 
     if (!user) {
-      return { success: false, remaining: 0 };
+      return { success: false, remaining: 0, reason: 'auth' };
     }
 
     // Pro users don't need to track - return success
@@ -273,7 +281,7 @@ export const useUserStore = create<UserState>((set, get) => ({
 
     // Check if user can export
     if (!canExport()) {
-      return { success: false, remaining: 0 };
+      return { success: false, remaining: 0, reason: 'limit' };
     }
 
     try {
@@ -292,10 +300,10 @@ export const useUserStore = create<UserState>((set, get) => ({
       if (!response.ok) {
         // Check if limit was reached
         if (response.status === 403 && data.limit_reached) {
-          return { success: false, remaining: 0 };
+          return { success: false, remaining: 0, reason: 'limit' };
         }
         usageLogger.error('Error incrementing usage:', data.error);
-        return { success: false, remaining: exportsRemaining() };
+        return { success: false, remaining: exportsRemaining(), reason: 'server' };
       }
 
       // Update local state with new usage data
@@ -307,7 +315,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       };
     } catch (error) {
       usageLogger.error('Error incrementing usage:', error);
-      return { success: false, remaining: exportsRemaining() };
+      return { success: false, remaining: exportsRemaining(), reason: 'network' };
     }
   },
 

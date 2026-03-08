@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useUserStore } from '@/stores/user-store';
+import type { IncrementResult } from '@/stores/user-store';
 import { FREE_EXPORT_LIMIT } from '@/lib/stripe/plans';
 
 export interface UsageLimit {
@@ -14,7 +15,7 @@ export interface UsageLimit {
   error: string | null;
   isAnonymous: boolean;
 
-  checkAndIncrement: () => Promise<boolean>;
+  checkAndIncrement: () => Promise<IncrementResult>;
   refresh: () => Promise<void>;
 }
 
@@ -70,16 +71,14 @@ export function useUsageLimit(): UsageLimit {
    * Check if user can export and increment usage count.
    * Returns true if export was allowed and count was incremented.
    */
-  const checkAndIncrement = useCallback(async (): Promise<boolean> => {
+  const checkAndIncrement = useCallback(async (): Promise<IncrementResult> => {
     // Anonymous users: use store (localStorage-backed)
     if (!user) {
-      const result = incrementAnonUsage();
-      return result.success;
+      return incrementAnonUsage();
     }
 
     // Logged-in users: use server-side tracking
-    const result = await incrementUsage();
-    return result.success;
+    return await incrementUsage();
   }, [user, incrementUsage, incrementAnonUsage]);
 
   /**

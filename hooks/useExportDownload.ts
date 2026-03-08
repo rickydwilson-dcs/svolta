@@ -80,10 +80,18 @@ export function useExportDownload(
     setExportError(null);
 
     try {
-      const allowed = await checkAndIncrement();
+      const result = await checkAndIncrement();
 
-      if (!allowed) {
-        onLimitReachedRef.current(isAnonymous);
+      if (!result.success) {
+        if (result.reason === 'limit') {
+          onLimitReachedRef.current(isAnonymous);
+        } else if (result.reason === 'auth') {
+          canvasLogger.error('Export blocked: session expired');
+          setExportError('Session expired. Please sign in again.');
+        } else {
+          canvasLogger.error('Export blocked:', result.reason);
+          setExportError('Export failed. Please try again.');
+        }
         return;
       }
 
