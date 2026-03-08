@@ -118,18 +118,18 @@ CREATE INDEX idx_profiles_subscription_tier ON profiles(subscription_tier);
 
 **Columns:**
 
-| Column                   | Type          | Nullable | Description                              |
-| ------------------------ | ------------- | -------- | ---------------------------------------- |
-| `id`                     | `uuid`        | No       | User ID (references `auth.users.id`)     |
-| `email`                  | `text`        | No       | User email (synced from auth.users)      |
-| `full_name`              | `text`        | Yes      | User's full name                         |
-| `avatar_url`             | `text`        | Yes      | Profile avatar URL                       |
-| `subscription_tier`      | `enum`        | No       | Current tier: `free` or `pro`            |
-| `subscription_status`    | `enum`        | Yes      | Status: `active`, `canceled`, `past_due` |
-| `stripe_customer_id`     | `text`        | Yes      | Stripe customer ID (unique)              |
-| `stripe_subscription_id` | `text`        | Yes      | Stripe subscription ID (unique)          |
-| `created_at`             | `timestamptz` | No       | Record creation timestamp                |
-| `updated_at`             | `timestamptz` | No       | Last update timestamp                    |
+| Column                   | Type          | Nullable | Description                          |
+| ------------------------ | ------------- | -------- | ------------------------------------ |
+| `id`                     | `uuid`        | No       | User ID (references `auth.users.id`) |
+| `email`                  | `text`        | No       | User email (synced from auth.users)  |
+| `full_name`              | `text`        | Yes      | User's full name                     |
+| `avatar_url`             | `text`        | Yes      | Profile avatar URL                   |
+| `stripe_customer_id`     | `text`        | Yes      | Stripe customer ID (unique)          |
+| `stripe_subscription_id` | `text`        | Yes      | Stripe subscription ID (unique)      |
+| `created_at`             | `timestamptz` | No       | Record creation timestamp            |
+| `updated_at`             | `timestamptz` | No       | Last update timestamp                |
+
+> **Note:** Subscription state is canonical in the `subscriptions` table. See `app/api/stripe/webhook/route.ts` for sync logic.
 
 **Enums:**
 

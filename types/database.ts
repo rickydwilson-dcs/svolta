@@ -193,8 +193,7 @@ export interface Database {
       }
     }
     Enums: {
-      subscription_tier: 'free' | 'pro'
-      subscription_status: 'active' | 'canceled' | 'past_due'
+      [_ in never]: never
     }
   }
 }
@@ -221,5 +220,5 @@ export type ExportUpdate = Database['public']['Tables']['exports']['Update']
 export type ExportUserType = Export['user_type']
 export type ExportFormat = Export['export_format']
 
-export type SubscriptionTier = Database['public']['Enums']['subscription_tier']
-export type SubscriptionStatus = Database['public']['Enums']['subscription_status']
+export type SubscriptionTier = 'free' | 'pro'
+export type SubscriptionStatus = 'active' | 'canceled' | 'past_due'
