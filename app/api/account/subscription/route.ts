@@ -15,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch subscription using server client (bypasses RLS issues)
+    // Fetch subscription for authenticated user (uses session-scoped client with RLS)
     const { data: subscription, error: subError } = await supabase
       .from('subscriptions')
       .select('*')

@@ -66,7 +66,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // Use service role client to insert (bypasses RLS for analytics)
+    // Service role client -- bypasses RLS to insert analytics without per-user write policies
     const serviceClient = createServiceClient();
     const { data, error } = await serviceClient
       .from('exports')

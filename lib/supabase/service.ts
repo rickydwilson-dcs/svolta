@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * Create a Supabase client with the service role key.
- * This bypasses RLS and should only be used server-side for
+ * Uses the service role key which bypasses RLS. Required for server-side
  * admin operations like analytics logging.
  *
  * NEVER expose this client to the browser.

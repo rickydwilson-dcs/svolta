@@ -18,7 +18,7 @@ export async function GET() {
 
     const currentMonth = getCurrentBillingPeriod();
 
-    // Fetch usage using server client (bypasses RLS issues)
+    // Fetch usage for authenticated user (uses session-scoped client with RLS)
     const { data: usage, error: usageError } = await supabase
       .from('usage')
       .select('*')
