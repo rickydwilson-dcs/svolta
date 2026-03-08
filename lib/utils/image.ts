@@ -1,4 +1,5 @@
 import { canvasLogger } from '@/lib/logger';
+import { createBlobUrl } from './object-url';
 import type { Photo } from '@/types/editor';
 
 // Re-export the canonical Photo type
@@ -49,76 +50,76 @@ export async function processImage(file: File): Promise<Photo> {
   };
 }
 
+function loadImageElement(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = src;
+  });
+}
+
 /**
  * Scale an image to fit within max dimension while maintaining aspect ratio
- * @param dataUrl - Base64 data URL of the image
+ * @param dataUrl - Image source URL (blob: or data: URL)
  * @param maxDim - Maximum dimension (width or height)
- * @returns Promise with scaled dataUrl and dimensions
+ * @returns Promise with scaled dataUrl (blob URL) and dimensions
  */
 export async function scaleImage(
   dataUrl: string,
   maxDim: number
 ): Promise<{ dataUrl: string; width: number; height: number }> {
+  const img = await loadImageElement(dataUrl);
+  const { width: originalWidth, height: originalHeight } = img;
+
+  // Check if scaling is needed
+  if (originalWidth <= maxDim && originalHeight <= maxDim) {
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+    return { dataUrl: createBlobUrl(blob), width: originalWidth, height: originalHeight };
+  }
+
+  // Calculate new dimensions maintaining aspect ratio
+  let newWidth = originalWidth;
+  let newHeight = originalHeight;
+
+  if (originalWidth > originalHeight) {
+    if (originalWidth > maxDim) {
+      newWidth = maxDim;
+      newHeight = (originalHeight * maxDim) / originalWidth;
+    }
+  } else {
+    if (originalHeight > maxDim) {
+      newHeight = maxDim;
+      newWidth = (originalWidth * maxDim) / originalHeight;
+    }
+  }
+
+  // Create canvas and draw scaled image
+  const canvas = document.createElement('canvas');
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Failed to get canvas context');
+  }
+
+  ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
   return new Promise((resolve, reject) => {
-    const img = new Image();
-
-    img.onload = () => {
-      const { width: originalWidth, height: originalHeight } = img;
-
-      // Check if scaling is needed
-      if (originalWidth <= maxDim && originalHeight <= maxDim) {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) { reject(new Error('Failed to create image blob')); return; }
         resolve({
-          dataUrl,
-          width: originalWidth,
-          height: originalHeight,
+          dataUrl: createBlobUrl(blob),
+          width: Math.round(newWidth),
+          height: Math.round(newHeight),
         });
-        return;
-      }
-
-      // Calculate new dimensions maintaining aspect ratio
-      let newWidth = originalWidth;
-      let newHeight = originalHeight;
-
-      if (originalWidth > originalHeight) {
-        if (originalWidth > maxDim) {
-          newWidth = maxDim;
-          newHeight = (originalHeight * maxDim) / originalWidth;
-        }
-      } else {
-        if (originalHeight > maxDim) {
-          newHeight = maxDim;
-          newWidth = (originalWidth * maxDim) / originalHeight;
-        }
-      }
-
-      // Create canvas and draw scaled image
-      const canvas = document.createElement('canvas');
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Failed to get canvas context'));
-        return;
-      }
-
-      ctx.drawImage(img, 0, 0, newWidth, newHeight);
-
-      // Convert to data URL
-      const scaledDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-
-      resolve({
-        dataUrl: scaledDataUrl,
-        width: Math.round(newWidth),
-        height: Math.round(newHeight),
-      });
-    };
-
-    img.onerror = () => {
-      reject(new Error('Failed to load image'));
-    };
-
-    img.src = dataUrl;
+      },
+      'image/jpeg',
+      0.9
+    );
   });
 }
 
