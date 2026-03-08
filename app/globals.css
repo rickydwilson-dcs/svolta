@@ -318,6 +318,11 @@ body {
   transform: scale(0.98);
 }
 
+.btn-pill:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
 /* Primary Button */
 .btn-primary {
   background: linear-gradient(45deg, #F58529, #DD2A7B, #8134AF, #515BD4);

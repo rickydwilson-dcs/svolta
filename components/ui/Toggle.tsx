@@ -60,6 +60,7 @@ const Toggle = React.forwardRef<HTMLInputElement, ToggleProps>(
           <div
             className={cn(
               'w-11 h-6 rounded-full transition-all duration-300 ease-out',
+              'peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2',
               currentChecked
                 ? 'bg-instagram-gradient'
                 : 'bg-gray-200 dark:bg-gray-700'
