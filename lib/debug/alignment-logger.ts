@@ -9,6 +9,7 @@
  * - Environment: NEXT_PUBLIC_DEBUG_ALIGNMENT=true
  */
 
+import { canvasLogger } from '@/lib/logger';
 import type { AlignedDrawResult } from '@/lib/canvas/aligned-draw-params';
 import type { Landmark } from '@/types/landmarks';
 
@@ -36,10 +37,10 @@ export function setAlignmentDebug(enabled: boolean): void {
   if (typeof window !== 'undefined') {
     if (enabled) {
       localStorage.setItem(DEBUG_KEY, 'true');
-      console.log('🔍 Alignment debug logging ENABLED');
+      canvasLogger.debug('Alignment debug logging enabled');
     } else {
       localStorage.removeItem(DEBUG_KEY);
-      console.log('🔍 Alignment debug logging DISABLED');
+      canvasLogger.debug('Alignment debug logging disabled');
     }
   }
 }
@@ -178,7 +179,7 @@ export function buildLogEntry(
  */
 export async function logAlignment(entry: AlignmentLogEntry): Promise<void> {
   // Always log to console when debug is enabled
-  console.log('🔍 [DEBUG] Alignment Log Entry:', entry);
+  canvasLogger.debug('[Alignment] Log entry:', entry);
 
   // Attempt to write to file (fire and forget)
   try {
