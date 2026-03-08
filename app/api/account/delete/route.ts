@@ -5,6 +5,7 @@ import { getStripe } from '@/lib/stripe/server';
 import { logAuditEvent } from '@/lib/audit/logger';
 import { withRateLimit } from '@/lib/middleware/rate-limit';
 import { validateRequest, DeleteAccountSchema } from '@/lib/validation/api-schemas';
+import { authLogger } from '@/lib/logger';
 
 /**
  * DELETE /api/account/delete
@@ -80,7 +81,7 @@ export async function DELETE(request: Request) {
         // Optionally delete the Stripe customer
         // await stripe.customers.del(profile.stripe_customer_id);
       } catch (stripeError) {
-        console.error('Error canceling Stripe subscriptions:', stripeError);
+        authLogger.error('Error canceling Stripe subscriptions:', stripeError);
         // Continue with deletion even if Stripe fails
       }
     }
@@ -93,7 +94,7 @@ export async function DELETE(request: Request) {
       .eq('user_id', userId);
 
     if (usageError) {
-      console.error('Error deleting usage records:', usageError);
+      authLogger.error('Error deleting usage records:', usageError);
     }
 
     // 2. Delete subscription records
@@ -103,7 +104,7 @@ export async function DELETE(request: Request) {
       .eq('user_id', userId);
 
     if (subscriptionError) {
-      console.error('Error deleting subscription:', subscriptionError);
+      authLogger.error('Error deleting subscription:', subscriptionError);
     }
 
     // 3. Delete profile
@@ -113,7 +114,7 @@ export async function DELETE(request: Request) {
       .eq('id', userId);
 
     if (profileError) {
-      console.error('Error deleting profile:', profileError);
+      authLogger.error('Error deleting profile:', profileError);
     }
 
     // 4. Delete user's uploaded logos from storage
@@ -127,14 +128,14 @@ export async function DELETE(request: Request) {
         await supabaseAdmin.storage.from('logos').remove(filePaths);
       }
     } catch (storageError) {
-      console.error('Error deleting storage files:', storageError);
+      authLogger.error('Error deleting storage files:', storageError);
     }
 
     // 5. Delete the auth user (this must be done last)
     const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteUserError) {
-      console.error('Error deleting auth user:', deleteUserError);
+      authLogger.error('Error deleting auth user:', deleteUserError);
       return NextResponse.json(
         { error: 'Failed to delete account' },
         { status: 500 }
@@ -147,7 +148,7 @@ export async function DELETE(request: Request) {
       });
 
     } catch (error) {
-      console.error('Account deletion error:', error);
+      authLogger.error('Account deletion error:', error);
       return NextResponse.json(
         { error: 'Failed to delete account' },
         { status: 500 }

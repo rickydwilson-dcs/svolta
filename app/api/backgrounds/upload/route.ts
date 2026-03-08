@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { withRateLimit } from '@/lib/middleware/rate-limit';
+import { logger } from '@/lib/logger';
 
 /**
  * POST /api/backgrounds/upload
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
     const sanitizedUserId = user.id.replace(/[^a-zA-Z0-9-]/g, '');
 
     if (sanitizedUserId !== user.id) {
-      console.error('User ID sanitization changed value - potential attack:', user.id);
+      logger.error('User ID sanitization changed value - potential attack:', user.id);
       return NextResponse.json(
         { error: 'Invalid user session' },
         { status: 400 }
@@ -136,7 +137,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (uploadError) {
-      console.error('Storage upload error:', uploadError);
+      logger.error('Storage upload error:', uploadError);
       return NextResponse.json(
         {
           error: 'Upload failed',
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Profile update error:', updateError);
+      logger.error('Profile update error:', updateError);
       return NextResponse.json(
         {
           error: 'Failed to update profile',
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (error) {
-      console.error('Background upload API error:', error);
+      logger.error('Background upload API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
@@ -250,7 +251,7 @@ export async function DELETE(request: NextRequest) {
           .remove(filePaths);
 
         if (deleteError) {
-          console.error('Storage delete error:', deleteError);
+          logger.error('Storage delete error:', deleteError);
           return NextResponse.json(
             {
               error: 'Failed to delete background',
@@ -269,7 +270,7 @@ export async function DELETE(request: NextRequest) {
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Profile update error:', updateError);
+      logger.error('Profile update error:', updateError);
       return NextResponse.json(
         {
           error: 'Failed to update profile',
@@ -285,7 +286,7 @@ export async function DELETE(request: NextRequest) {
       });
 
     } catch (error) {
-      console.error('Background delete API error:', error);
+      logger.error('Background delete API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

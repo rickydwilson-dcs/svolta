@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { FREE_EXPORT_LIMIT } from '@/lib/stripe/plans';
 import { getCurrentBillingPeriod } from '@/lib/utils/billing-period';
+import { usageLogger } from '@/lib/logger';
 
 /**
  * GET /api/usage
@@ -44,7 +45,7 @@ export async function GET() {
 
     // PGRST116 means no rows - user hasn't exported yet this month
     if (usageError && usageError.code !== 'PGRST116') {
-      console.error('Error fetching usage:', usageError);
+      usageLogger.error('Error fetching usage:', usageError);
       return NextResponse.json(
         { error: 'Failed to fetch usage data' },
         { status: 500 }
@@ -64,7 +65,7 @@ export async function GET() {
     });
 
   } catch (error) {
-    console.error('Usage API error:', error);
+    usageLogger.error('Usage API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

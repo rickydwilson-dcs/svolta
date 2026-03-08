@@ -9,6 +9,7 @@
 'use client';
 
 import * as React from 'react';
+import { editorLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import type { AnimationStyle } from '@/lib/canvas/export-gif';
 import type { Photo } from '@/types/editor';
@@ -102,7 +103,7 @@ export function GifPreview({
         setImagesVersion((n) => n + 1);
       })
       .catch((error) => {
-        if (!cancelled) console.error('Failed to load GIF preview images:', error);
+        if (!cancelled) editorLogger.error('Failed to load GIF preview images:', error);
       });
 
     return () => { cancelled = true; };

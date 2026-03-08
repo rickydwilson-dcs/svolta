@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { stripeLogger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -23,7 +24,7 @@ export async function GET() {
       .single();
 
     if (subError && subError.code !== 'PGRST116') {
-      console.error('Error fetching subscription:', subError);
+      stripeLogger.error('Error fetching subscription:', subError);
       return NextResponse.json({ error: 'Failed to fetch subscription' }, { status: 500 });
     }
 
@@ -32,7 +33,7 @@ export async function GET() {
       isPro: subscription?.tier === 'pro' && subscription?.status === 'active',
     });
   } catch (error) {
-    console.error('Subscription API error:', error);
+    stripeLogger.error('Subscription API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

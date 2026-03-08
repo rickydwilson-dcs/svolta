@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 interface RateLimitResult {
   success: boolean;
@@ -45,7 +46,7 @@ export async function withRateLimit<T>(
     });
 
     if (error) {
-      console.error('Rate limit check failed:', error);
+      logger.error('Rate limit check failed:', error);
       return NextResponse.json(
         { error: 'Service temporarily unavailable' },
         { status: 503 }
@@ -83,7 +84,7 @@ export async function withRateLimit<T>(
 
     return response;
   } catch (error) {
-    console.error('Rate limiting error:', error);
+    logger.error('Rate limiting error:', error);
     return NextResponse.json(
       { error: 'Service temporarily unavailable' },
       { status: 503 }

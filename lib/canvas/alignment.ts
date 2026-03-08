@@ -4,6 +4,7 @@
  * All calculations use normalized coordinates (0-1 range) for resolution independence
  */
 
+import { canvasLogger } from '@/lib/logger';
 import type { Landmark } from '@/types/landmarks';
 import { VISIBILITY_THRESHOLD } from '@/types/landmarks';
 
@@ -185,7 +186,7 @@ export function calculateAlignment(
     landmarks1.length < 33 ||
     landmarks2.length < 33
   ) {
-    console.warn('Invalid landmarks provided for alignment calculation');
+    canvasLogger.warn('Invalid landmarks provided for alignment calculation');
     return DEFAULT_ALIGNMENT;
   }
 
@@ -197,7 +198,7 @@ export function calculateAlignment(
   const anchor2 = calculateNormalizedCenter(landmarks2, indices);
 
   if (!anchor1 || !anchor2) {
-    console.warn(
+    canvasLogger.warn(
       'Could not calculate center points - landmarks not visible or missing'
     );
     return DEFAULT_ALIGNMENT;

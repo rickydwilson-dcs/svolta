@@ -1,3 +1,4 @@
+import { canvasLogger } from '@/lib/logger';
 import type { Photo } from '@/types/editor';
 
 // Re-export the canonical Photo type
@@ -27,7 +28,7 @@ export async function processImage(file: File): Promise<Photo> {
         type: 'image/jpeg',
       });
     } catch (error) {
-      console.error('HEIC conversion failed:', error);
+      canvasLogger.error('HEIC conversion failed:', error);
       throw new Error('Failed to convert HEIC image. Please try a different format.');
     }
   }

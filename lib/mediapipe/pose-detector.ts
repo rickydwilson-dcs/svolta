@@ -68,7 +68,7 @@ async function getAssetPaths(): Promise<{ wasmPath: string; modelPath: string }>
     return { wasmPath: LOCAL_WASM_PATH, modelPath: LOCAL_MODEL_PATH };
   }
 
-  console.warn('⚠ Local MediaPipe assets not found, using CDN fallback');
+  poseLogger.warn('Local MediaPipe assets not found, using CDN fallback');
   usingLocalAssets = false;
   return { wasmPath: CDN_WASM_URL, modelPath: CDN_MODEL_URL };
 }
@@ -134,7 +134,7 @@ export async function initializePoseDetector(): Promise<PoseLandmarker> {
         usingCpuFallback = false;
         poseLogger.info('Pose detector initialized with GPU acceleration');
       } catch (gpuError) {
-        console.warn('⚠ GPU initialization failed, falling back to CPU:', gpuError);
+        poseLogger.warn('GPU initialization failed, falling back to CPU:', gpuError);
         poseLandmarker = await createPoseLandmarker(vision, modelPath, 'CPU');
         usingCpuFallback = true;
         poseLogger.info('Pose detector initialized with CPU');

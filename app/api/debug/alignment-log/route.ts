@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { canvasLogger } from '@/lib/logger';
 
 const LOG_FILE = 'debug/alignment-log.json';
 
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       path: LOG_FILE,
     });
   } catch (error) {
-    console.error('Failed to write alignment log:', error);
+    canvasLogger.error('Failed to write alignment log:', error);
     return NextResponse.json(
       { error: 'Failed to write log entry' },
       { status: 500 }
@@ -114,7 +115,7 @@ export async function GET() {
       });
     }
   } catch (error) {
-    console.error('Failed to read alignment log:', error);
+    canvasLogger.error('Failed to read alignment log:', error);
     return NextResponse.json(
       { error: 'Failed to read log file' },
       { status: 500 }
@@ -147,7 +148,7 @@ export async function DELETE() {
       });
     }
   } catch (error) {
-    console.error('Failed to delete alignment log:', error);
+    canvasLogger.error('Failed to delete alignment log:', error);
     return NextResponse.json(
       { error: 'Failed to delete log file' },
       { status: 500 }

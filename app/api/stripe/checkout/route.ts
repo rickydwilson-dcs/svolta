@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/server';
 import { withRateLimit } from '@/lib/middleware/rate-limit';
 import { validateRequest, CreateCheckoutSchema } from '@/lib/validation/api-schemas';
+import { stripeLogger } from '@/lib/logger';
 
 /**
  * POST /api/stripe/checkout
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ url: session.url });
 
     } catch (error) {
-      console.error('Checkout error:', error);
+      stripeLogger.error('Checkout error:', error);
 
       // Handle specific Stripe errors
       if (error instanceof Error) {

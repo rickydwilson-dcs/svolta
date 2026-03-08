@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getStripe } from '@/lib/stripe/server';
 import { withRateLimit } from '@/lib/middleware/rate-limit';
 import { validateRequest, CreatePortalSchema } from '@/lib/validation/api-schemas';
+import { stripeLogger } from '@/lib/logger';
 
 /**
  * POST /api/stripe/portal
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ url: portalSession.url });
 
     } catch (error) {
-      console.error('Portal error:', error);
+      stripeLogger.error('Portal error:', error);
 
       if (error instanceof Error) {
         return NextResponse.json(

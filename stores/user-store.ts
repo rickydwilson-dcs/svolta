@@ -3,6 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile, Subscription, Usage } from '@/types/database';
 import { FREE_EXPORT_LIMIT } from '@/lib/stripe/plans';
+import { authLogger, usageLogger, stripeLogger } from '@/lib/logger';
 
 // localStorage keys for anonymous user exports
 const ANON_EXPORTS_KEY = 'svolta_anon_exports';
@@ -162,7 +163,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       // Auth state change listener is now managed by UserProvider for proper cleanup
       set({ isInitialized: true });
     } catch (error) {
-      console.error('Error initializing user store:', error);
+      authLogger.error('Error initializing user store:', error);
       set({ error: 'Failed to initialize user data' });
     } finally {
       set({ isLoading: false });
@@ -184,13 +185,13 @@ export const useUserStore = create<UserState>((set, get) => ({
 
       if (error) {
         // Profile might not exist yet if trigger hasn't run
-        console.warn('Error fetching profile:', error.message);
+        authLogger.warn('Error fetching profile:', error.message);
         return;
       }
 
       set({ profile: data });
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      authLogger.error('Error fetching profile:', error);
     }
   },
 
@@ -203,7 +204,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       const response = await fetch('/api/account/subscription');
 
       if (!response.ok) {
-        console.warn('Error fetching subscription:', response.status);
+        stripeLogger.warn('Error fetching subscription:', response.status);
         return;
       }
 
@@ -213,7 +214,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         set({ subscription: data.subscription });
       }
     } catch (error) {
-      console.error('Error fetching subscription:', error);
+      stripeLogger.error('Error fetching subscription:', error);
     }
   },
 
@@ -226,14 +227,14 @@ export const useUserStore = create<UserState>((set, get) => ({
       const response = await fetch('/api/account/usage');
 
       if (!response.ok) {
-        console.warn('Error fetching usage:', response.status);
+        usageLogger.warn('Error fetching usage:', response.status);
         return;
       }
 
       const data = await response.json();
       set({ usage: data.usage ?? null });
     } catch (error) {
-      console.error('Error fetching usage:', error);
+      usageLogger.error('Error fetching usage:', error);
     }
   },
 
@@ -293,7 +294,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         if (response.status === 403 && data.limit_reached) {
           return { success: false, remaining: 0 };
         }
-        console.error('Error incrementing usage:', data.error);
+        usageLogger.error('Error incrementing usage:', data.error);
         return { success: false, remaining: exportsRemaining() };
       }
 
@@ -305,7 +306,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         remaining: data.remaining === -1 ? Infinity : data.remaining,
       };
     } catch (error) {
-      console.error('Error incrementing usage:', error);
+      usageLogger.error('Error incrementing usage:', error);
       return { success: false, remaining: exportsRemaining() };
     }
   },
@@ -317,7 +318,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       await supabase.auth.signOut();
       get().reset();
     } catch (error) {
-      console.error('Error signing out:', error);
+      authLogger.error('Error signing out:', error);
       // Reset anyway
       get().reset();
     }

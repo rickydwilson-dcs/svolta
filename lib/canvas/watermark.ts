@@ -3,6 +3,8 @@
  * Adds watermarks to exported canvas images based on user tier
  */
 
+import { canvasLogger } from '@/lib/logger';
+
 /**
  * Watermark configuration options
  */
@@ -388,7 +390,7 @@ export async function addWatermark(
         PRO_LOGO_OPACITY
       );
     } catch (error) {
-      console.warn('Failed to load custom logo, falling back to text watermark:', error);
+      canvasLogger.warn('Failed to load custom logo, falling back to text watermark:', error);
 
       // Fallback to text watermark if logo fails to load
       drawTextWatermark(ctx, 'svolta', x, y, {
