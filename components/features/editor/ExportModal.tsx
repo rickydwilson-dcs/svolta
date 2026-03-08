@@ -44,23 +44,16 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     hasBackgroundRemoved,
   } = useExportBackgroundRemoval();
 
-  // Export config
   const [exportType, setExportType] = React.useState<ExportType>('png');
   const [animationStyle, setAnimationStyle] = React.useState<AnimationStyle>('slider');
   const [duration, setDuration] = React.useState(2);
-
-  // Options
   const [aspectRatio, setAspectRatio] = React.useState<AspectRatio>('4:5');
   const [background, setBackground] = React.useState<BackgroundState>({ type: 'original' });
   const [addLabels, setAddLabels] = React.useState(false);
   const [removeWatermark, setRemoveWatermark] = React.useState(true);
   const [addLogo, setAddLogo] = React.useState(false);
-
-  // UI expand/collapse
   const [isMoreOptionsExpanded, setIsMoreOptionsExpanded] = React.useState(false);
   const [isBackgroundExpanded, setIsBackgroundExpanded] = React.useState(false);
-
-  // Modal visibility
   const [showUpgradePrompt, setShowUpgradePrompt] = React.useState(false);
   const [showSignupPrompt, setShowSignupPrompt] = React.useState(false);
   const [upgradeTrigger, setUpgradeTrigger] = React.useState<'limit' | 'watermark' | 'format' | 'logo' | 'gif' | 'background'>('limit');
@@ -98,23 +91,14 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   );
 
   const hasPhotos = Boolean(beforePhoto && afterPhoto);
-
-  // Clear errors when modal opens/closes
   React.useEffect(() => {
     if (isOpen) {
       clearExportError();
     }
   }, [isOpen, clearExportError]);
 
-  // Format the usage text
-  const usageText = React.useMemo(() => {
-    if (isPro) {
-      return 'Unlimited exports';
-    }
-    return `${remaining} of ${limit} exports remaining`;
-  }, [isPro, remaining, limit]);
+  const usageText = isPro ? 'Unlimited exports' : `${remaining} of ${limit} exports remaining`;
 
-  // Handle export type selection
   const handleExportTypeChange = (type: string) => {
     if (type === 'gif' && !isPro) {
       setUpgradeTrigger('gif');
@@ -124,7 +108,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     setExportType(type as ExportType);
   };
 
-  // Handle watermark removal toggle (Pro only)
   const handleRemoveWatermarkToggle = () => {
     if (!isPro) {
       setUpgradeTrigger('watermark');
@@ -134,7 +117,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     setRemoveWatermark(!removeWatermark);
   };
 
-  // Handle logo toggle (Pro only)
   const handleLogoToggle = () => {
     if (!isPro) {
       setUpgradeTrigger('logo');
@@ -144,7 +126,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     setAddLogo(!addLogo);
   };
 
-  // Handle background type change
   const handleBackgroundTypeChange = async (type: string) => {
     const newType = type as BackgroundType;
 
@@ -163,7 +144,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     }
   };
 
-  // Handle colour selection
   const handleColorSelect = async (color: string) => {
     if (!hasBackgroundRemoved) {
       await handleRemoveBackgrounds();
@@ -172,7 +152,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     setBackgroundSettings({ type: 'solid', color });
   };
 
-  // Get background label for display
   const getBackgroundLabel = () => {
     switch (background.type) {
       case 'original':
@@ -190,7 +169,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
 
   const displayError = exportError || bgRemovalError;
   const isAnyExporting = isExporting || isExportingGif || isRemovingBackgrounds;
-
   return (
     <>
       <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -215,7 +193,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
               'duration-200'
             )}
           >
-            {/* Processing Overlay */}
             {isRemovingBackgrounds && (
               <div className="absolute inset-0 z-50 bg-[var(--surface-primary)]/95 backdrop-blur-sm flex items-center justify-center rounded-2xl">
                 <div className="text-center">
@@ -229,9 +206,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
               </div>
             )}
 
-            {/* Scrollable Content */}
             <div className="max-h-[90vh] overflow-y-auto">
-              {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-[var(--border-default)]">
                 <Dialog.Title className="text-lg font-semibold text-[var(--text-primary)]">
                   Export
@@ -266,7 +241,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                 </Dialog.Close>
               </div>
 
-              {/* Error Display */}
               {displayError && (
                 <div className="mx-4 mt-4 p-3 rounded-xl bg-[var(--error)]/10 border border-[var(--error)]/20">
                   <p className="text-sm text-[var(--error)]">{displayError}</p>
@@ -361,7 +335,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* Upgrade Prompt Modal */}
       <UpgradePrompt
         isOpen={showUpgradePrompt}
         onClose={() => setShowUpgradePrompt(false)}
