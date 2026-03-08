@@ -86,6 +86,8 @@ export function useGifExport(): UseGifExportReturn {
       afterPhoto: PhotoData,
       options: Omit<GifExportOptions, 'onProgress'>
     ): Promise<boolean> => {
+      let succeeded = false;
+
       // Reset state
       setError(null);
       setProgress(0);
@@ -136,6 +138,7 @@ export function useGifExport(): UseGifExportReturn {
         // Mark as complete
         setProgress(100);
         setStatus('complete');
+        succeeded = true;
 
         console.log('[useGifExport] Export successful:', {
           filename: result.filename,
@@ -160,11 +163,9 @@ export function useGifExport(): UseGifExportReturn {
 
         return false;
       } finally {
-        // Clear loading state
         setIsExporting(false);
 
-        // Reset progress after delay if complete
-        if (!cancelledRef.current && status === 'complete') {
+        if (!cancelledRef.current && succeeded) {
           setTimeout(() => {
             setProgress(0);
             setStatus('idle');
@@ -172,7 +173,7 @@ export function useGifExport(): UseGifExportReturn {
         }
       }
     },
-    [status]
+    [userFraming]
   );
 
   /**

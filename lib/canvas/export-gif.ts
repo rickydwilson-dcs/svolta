@@ -157,6 +157,12 @@ function getFrameGenerator(style: AnimationStyle): typeof generateSliderFrame {
 }
 
 /**
+ * Yield control to the browser's main thread.
+ * Allows UI updates (progress indicators) between CPU-intensive frames.
+ */
+const yieldToMain = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
  * Export animated GIF comparison with alignment
  *
  * Process:
@@ -268,6 +274,9 @@ export async function exportGif(
     // This reduces peak memory from holding all frames to ~1 frame at a time
     frame.width = 0;
     frame.height = 0;
+
+    // Yield to main thread so progress UI can update
+    await yieldToMain();
   }
 
   console.log('[GIF Export] Encoding GIF with gif.js');
