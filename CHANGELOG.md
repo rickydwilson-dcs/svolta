@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-03-08
+
+### Fixed
+
+- **Editor:** Replace stuck `isRendering` toggle with `imagesLoading` in AlignedPreview
+- **Editor:** Replace stuck `isReady` toggle with `imagesLoading`/`canvasReady` in GifPreview
+- **Export:** Surface real error messages for non-limit export failures (auth, server, network)
+- **Canvas:** Add URL type context to image load errors for debugging
+- **Infrastructure:** Add ChunkErrorReload component for stale Vercel deployment recovery
+- **Infrastructure:** Add `wasm-unsafe-eval` to CSP for MediaPipe WebAssembly support
+- **Export:** Fix preview container height for consistent rendering
+- **Export:** Fix canvas dimension calculation (resolution = total width)
+- **Store:** Improve blob URL lifecycle management on photo replacement
+
 ## [0.4.0] - 2026-03-08
 
 ### Added
