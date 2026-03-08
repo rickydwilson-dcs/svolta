@@ -1,28 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { constructWebhookEvent, getStripe } from '@/lib/stripe/server';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createServiceClient } from '@/lib/supabase/service';
 import { resolveTierFromPriceId } from '@/lib/stripe/tier-resolver';
-
-let supabaseAdminInstance: SupabaseClient | null = null;
-
-/**
- * Get Supabase admin client (lazy initialization)
- * This prevents build errors when env vars aren't set during static analysis
- */
-function getSupabaseAdmin(): SupabaseClient {
-  if (!supabaseAdminInstance) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!url || !key) {
-      throw new Error('Supabase admin credentials not configured');
-    }
-
-    supabaseAdminInstance = createClient(url, key);
-  }
-  return supabaseAdminInstance;
-}
 
 /**
  * POST /api/stripe/webhook
@@ -64,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Idempotency: Check if event was already processed
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceClient();
     const { data: existingEvent } = await supabase
       .from('webhook_events')
       .select('id')
@@ -168,7 +148,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   console.log('Checkout completed for user:', userId, 'tier:', tier);
 
   // Upsert subscription record with resolved tier
-  const { error } = await getSupabaseAdmin()
+  const { error } = await createServiceClient()
     .from('subscriptions')
     .upsert({
       user_id: userId,
@@ -195,7 +175,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
 
   if (!userId) {
     // Try to find user by customer ID
-    const { data: profile } = await getSupabaseAdmin()
+    const { data: profile } = await createServiceClient()
       .from('profiles')
       .select('id')
       .eq('stripe_customer_id', subscription.customer as string)
@@ -235,7 +215,7 @@ async function updateSubscriptionStatus(userId: string, subscription: Stripe.Sub
   const priceId = subscription.items.data[0]?.price.id;
   const tier = resolveTierFromPriceId(priceId);
 
-  const { error } = await getSupabaseAdmin()
+  const { error } = await createServiceClient()
     .from('subscriptions')
     .upsert({
       user_id: userId,
@@ -265,7 +245,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const customerId = subscription.customer as string;
 
   // Find user by customer ID
-  const { data: profile } = await getSupabaseAdmin()
+  const { data: profile } = await createServiceClient()
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', customerId)
@@ -279,7 +259,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   console.log('Subscription deleted for user:', profile.id);
 
   // Update subscription to canceled/free
-  const { error } = await getSupabaseAdmin()
+  const { error } = await createServiceClient()
     .from('subscriptions')
     .update({
       tier: 'free',
@@ -306,7 +286,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   console.log('Payment failed for subscription:', subscriptionId);
 
   // Find user by customer ID
-  const { data: profile } = await getSupabaseAdmin()
+  const { data: profile } = await createServiceClient()
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', customerId)
@@ -318,7 +298,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   }
 
   // Update subscription status
-  const { error } = await getSupabaseAdmin()
+  const { error } = await createServiceClient()
     .from('subscriptions')
     .update({
       status: 'past_due',
@@ -342,7 +322,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (!subscriptionId) return;
 
   // Find user by customer ID
-  const { data: profile } = await getSupabaseAdmin()
+  const { data: profile } = await createServiceClient()
     .from('profiles')
     .select('id')
     .eq('stripe_customer_id', customerId)
@@ -351,7 +331,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   if (!profile) return;
 
   // Ensure subscription is active
-  const { error } = await getSupabaseAdmin()
+  const { error } = await createServiceClient()
     .from('subscriptions')
     .update({
       status: 'active',

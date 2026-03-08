@@ -1,25 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createServiceClient } from '@/lib/supabase/service';
 import { getStripe } from '@/lib/stripe/server';
 import { logAuditEvent } from '@/lib/audit/logger';
 import { withRateLimit } from '@/lib/middleware/rate-limit';
 import { validateRequest, DeleteAccountSchema } from '@/lib/validation/api-schemas';
-
-/**
- * Create admin client for deletion operations (bypasses RLS)
- * Lazily initialized to avoid build-time errors when env vars aren't set
- */
-function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error('Supabase admin credentials not configured');
-  }
-
-  return createAdminClient(url, key);
-}
 
 /**
  * DELETE /api/account/delete
@@ -57,7 +42,7 @@ export async function DELETE(request: Request) {
 
     const userId = user.id;
     const userEmail = user.email;
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseAdmin = createServiceClient();
 
     // Log audit event before deletion
     await logAuditEvent(
