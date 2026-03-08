@@ -47,7 +47,7 @@ export default function HomePage() {
               className="btn-pill btn-primary w-full sm:w-auto animate-pulse-glow"
             >
               Start Free
-              <svg className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg aria-hidden="true" className="w-5 h-5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
             </Link>
@@ -75,6 +75,7 @@ export default function HomePage() {
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <svg
+                    aria-hidden="true"
                     key={i}
                     className="w-4 h-4 text-brand-orange"
                     fill="currentColor"
@@ -109,7 +110,7 @@ export default function HomePage() {
             {/* Feature Card 1 */}
             <div className="card-base p-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-brand-orange/20 to-brand-pink/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-brand-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-6 h-6 text-brand-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
@@ -122,7 +123,7 @@ export default function HomePage() {
             {/* Feature Card 2 */}
             <div className="card-base p-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-brand-purple/20 to-brand-blue/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-6 h-6 text-brand-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
@@ -135,7 +136,7 @@ export default function HomePage() {
             {/* Feature Card 3 */}
             <div className="card-base p-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-brand-blue/20 to-brand-purple/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-6 h-6 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
@@ -148,7 +149,7 @@ export default function HomePage() {
             {/* Feature Card 4 */}
             <div className="card-base p-6 text-center">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-gradient-to-br from-brand-pink/20 to-brand-orange/20 flex items-center justify-center mb-4">
-                <svg className="w-6 h-6 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg aria-hidden="true" className="w-6 h-6 text-brand-orange" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -227,19 +228,19 @@ export default function HomePage() {
               <div className="price-display mb-4">£0</div>
               <ul className="feature-list text-left mb-6">
                 <li>
-                  <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg aria-hidden="true" className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>5 exports per month</span>
                 </li>
                 <li>
-                  <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg aria-hidden="true" className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>AI alignment</span>
                 </li>
                 <li>
-                  <svg className="x-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg aria-hidden="true" className="x-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                   <span className="text-text-tertiary">Watermark on exports</span>
@@ -261,25 +262,25 @@ export default function HomePage() {
                 </div>
                 <ul className="feature-list text-left mb-6">
                   <li>
-                    <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>Unlimited exports</span>
                   </li>
                   <li>
-                    <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>No watermarks</span>
                   </li>
                   <li>
-                    <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>All export formats</span>
                   </li>
                   <li>
-                    <svg className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg aria-hidden="true" className="check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                     <span>Priority support</span>
