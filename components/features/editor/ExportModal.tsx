@@ -18,88 +18,14 @@ import type { Photo } from '@/types/editor';
 import { AlignedPreview } from './AlignedPreview';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
 import { canvasLogger, editorLogger } from '@/lib/logger';
-
-// Timeout wrapper for long-running operations
-function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(errorMessage)), ms)
-    ),
-  ]);
-}
-
-// localStorage key for anonymous user ID (persists across sessions for analytics)
-const ANON_ID_KEY = 'svolta_anon_id';
-
-/**
- * Get or create a persistent anonymous ID for analytics tracking
- */
-function getAnonId(): string {
-  if (typeof window === 'undefined') return '';
-
-  let anonId = localStorage.getItem(ANON_ID_KEY);
-  if (!anonId) {
-    // Generate a random ID (not a fingerprint - just for session grouping)
-    anonId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-    localStorage.setItem(ANON_ID_KEY, anonId);
-  }
-  return anonId;
-}
-
-/**
- * Log export event to analytics API (fire and forget)
- */
-function logExportEvent(format: 'png' | 'gif', aspectRatio: string, isAnonymous: boolean): void {
-  const body: Record<string, string> = {
-    export_format: format,
-    aspect_ratio: aspectRatio,
-  };
-
-  if (isAnonymous) {
-    body.anon_id = getAnonId();
-  }
-
-  // Fire and forget - don't block export on analytics
-  fetch('/api/exports/log', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  }).catch((err) => {
-    // Silently fail - analytics shouldn't break exports
-    canvasLogger.warn('Failed to log export analytics', err);
-  });
-}
+import { withTimeout, logExportEvent, TIMEOUT_MS, type ExportType, type AspectRatio, type BackgroundState, animationStyleOptions, imagePresets } from '@/lib/export-utils';
 
 export interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type ExportType = 'png' | 'gif';
-type AspectRatio = '4:5' | '1:1' | '9:16';
 type BackgroundType = 'original' | 'transparent' | 'color' | 'image';
-
-interface BackgroundState {
-  type: BackgroundType;
-  colorValue?: string;
-  imageId?: string;
-  customImageUrl?: string;
-}
-
-// Animation style options with icons
-const animationStyleOptions = [
-  { value: 'slider', label: '↔', title: 'Slider' },
-  { value: 'crossfade', label: '◐', title: 'Fade' },
-  { value: 'toggle', label: '⇄', title: 'Toggle' },
-];
-
-// Image presets for background (placeholder IDs)
-const imagePresets = [
-  { id: 'gym', thumbnail: '/backgrounds/gym.jpg', label: 'Gym' },
-  { id: 'studio', thumbnail: '/backgrounds/studio.jpg', label: 'Studio' },
-  { id: 'outdoor', thumbnail: '/backgrounds/outdoor.jpg', label: 'Outdoor' },
-];
 
 export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const beforePhoto = useEditorStore((s) => s.beforePhoto);
@@ -235,8 +161,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
 
     setIsRemovingBackgrounds(true);
     setLocalError(null);
-
-    const TIMEOUT_MS = 60000; // 60 second timeout per image
 
     try {
       // Remove background from "before" photo if not already done
