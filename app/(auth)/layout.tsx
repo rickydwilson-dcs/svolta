@@ -23,7 +23,7 @@ export default function AuthLayout({
       </header>
 
       {/* Centered Card Content */}
-      <main className="flex flex-1 items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
+      <main id="main-content" className="flex flex-1 items-center justify-center px-4 sm:px-6 py-8 sm:py-12">
         <div className="w-full max-w-md min-w-[320px]">
           <div className="card-base p-6 sm:p-8 w-full">
             {children}

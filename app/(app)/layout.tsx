@@ -13,7 +13,7 @@ export default function AppLayout({
         <meta name="robots" content="noindex, nofollow" />
       </head>
       {/* Editor has its own header, so no app-level header needed */}
-      {children}
+      <main id="main-content">{children}</main>
     </MediaPipeProvider>
   );
 }
