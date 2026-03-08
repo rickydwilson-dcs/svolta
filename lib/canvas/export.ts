@@ -53,14 +53,14 @@ export interface ExportResult {
  * Calculate canvas dimensions based on format and resolution
  *
  * @param format - Export format ratio
- * @param resolution - Target width in pixels
+ * @param resolution - Target total canvas width in pixels
  * @returns Object with width, height, and halfWidth
  */
 function calculateDimensions(
   format: ExportFormat,
   resolution: ExportResolution
 ): { width: number; height: number; halfWidth: number } {
-  const width = resolution * 2; // Double width for side-by-side
+  const width = resolution;
   let height: number;
 
   switch (format) {
@@ -80,7 +80,7 @@ function calculateDimensions(
   return {
     width,
     height,
-    halfWidth: resolution,
+    halfWidth: Math.round(width / 2),
   };
 }
 

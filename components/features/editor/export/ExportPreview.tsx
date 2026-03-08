@@ -45,7 +45,7 @@ export function ExportPreview({
         className={cn(
           'relative rounded-xl overflow-hidden mx-auto',
           'bg-[var(--gray-100)]',
-          'w-full min-h-[280px]'
+          'w-full h-[280px]'
         )}
       >
         {hasPhotos && beforePhoto && afterPhoto ? (

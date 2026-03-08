@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import { revokePhotoUrls } from '@/lib/utils/object-url';
+import { revokeBlobUrl, revokePhotoUrls } from '@/lib/utils/object-url';
 import type { Photo, AlignmentSettings, UserFramingOverride } from '@/types/editor';
 import { DEFAULT_USER_FRAMING } from '@/types/editor';
 import type { Landmark } from '@/types/landmarks';
@@ -55,6 +55,29 @@ const defaultBackgroundSettings: BackgroundSettings = {
   type: 'original', // Don't modify background by default
 };
 
+function revokeReplacedPhotoUrls(
+  previousPhoto: Photo | null,
+  nextPhoto: Photo | null
+): void {
+  if (!previousPhoto) return;
+
+  const nextUrls = new Set<string>();
+  if (nextPhoto?.dataUrl) nextUrls.add(nextPhoto.dataUrl);
+  if (nextPhoto?.originalDataUrl) nextUrls.add(nextPhoto.originalDataUrl);
+
+  if (!nextUrls.has(previousPhoto.dataUrl)) {
+    revokeBlobUrl(previousPhoto.dataUrl);
+  }
+
+  if (
+    previousPhoto.originalDataUrl &&
+    previousPhoto.originalDataUrl !== previousPhoto.dataUrl &&
+    !nextUrls.has(previousPhoto.originalDataUrl)
+  ) {
+    revokeBlobUrl(previousPhoto.originalDataUrl);
+  }
+}
+
 export const useEditorStore = create<EditorState>((set) => ({
   // Initial state
   beforePhoto: null,
@@ -69,12 +92,12 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   // Actions
   setBeforePhoto: (photo) => set((state) => {
-    revokePhotoUrls(state.beforePhoto);
+    revokeReplacedPhotoUrls(state.beforePhoto, photo);
     return { beforePhoto: photo };
   }),
 
   setAfterPhoto: (photo) => set((state) => {
-    revokePhotoUrls(state.afterPhoto);
+    revokeReplacedPhotoUrls(state.afterPhoto, photo);
     return { afterPhoto: photo };
   }),
 

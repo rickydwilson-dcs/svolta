@@ -57,7 +57,7 @@ export function calculateDimensions(
   format: ExportFormat,
   resolution: ExportResolution
 ): { width: number; height: number; halfWidth: number } {
-  const width = resolution * 2;
+  const width = resolution;
   let height: number;
 
   switch (format) {
@@ -74,7 +74,7 @@ export function calculateDimensions(
       height = resolution;
   }
 
-  return { width, height, halfWidth: resolution };
+  return { width, height, halfWidth: Math.round(width / 2) };
 }
 
 /**
