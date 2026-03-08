@@ -331,6 +331,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       subscription: null,
       usage: null,
       isLoading: false,
+      isInitialized: false,
       error: null,
     });
   },

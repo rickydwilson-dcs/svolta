@@ -80,9 +80,7 @@ export function useExportDownload(
         return;
       }
 
-      const customLogoUrl = isPro && (profile as unknown as { logo_url?: string })?.logo_url
-        ? (profile as unknown as { logo_url: string }).logo_url
-        : undefined;
+      const customLogoUrl = isPro && profile?.logo_url ? profile.logo_url : undefined;
 
       let success = false;
 
