@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 
 // Dynamic import with SSR disabled to prevent MediaPipe from loading on server
-const EditorContent = dynamic(() => import('./_components/EditorContent'), {
+const EditorContent = dynamic(() => import('./_components/EditorContent').then((mod) => ({ default: mod.EditorContent })), {
   ssr: false,
   loading: () => (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
