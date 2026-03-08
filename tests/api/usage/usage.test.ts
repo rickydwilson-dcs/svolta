@@ -23,6 +23,7 @@ const mockSupabaseSelect = vi.fn().mockReturnThis();
 const mockSupabaseEq = vi.fn().mockReturnThis();
 const mockSupabaseSingle = vi.fn();
 const mockSupabaseUpsert = vi.fn().mockReturnThis();
+const mockSupabaseInsert = vi.fn().mockReturnThis();
 const mockSupabaseRpc = vi.fn();
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -33,9 +34,42 @@ vi.mock('@/lib/supabase/server', () => ({
       eq: mockSupabaseEq,
       single: mockSupabaseSingle,
       upsert: mockSupabaseUpsert,
+      insert: mockSupabaseInsert,
     }),
     rpc: mockSupabaseRpc,
   })),
+}));
+
+// Mock withRateLimit to bypass rate limiting — just call the handler
+vi.mock('@/lib/middleware/rate-limit', () => ({
+  withRateLimit: vi.fn((_request: Request, _endpoint: string, handler: () => Promise<Response>) => handler()),
+  RATE_LIMIT_CONFIGS: {},
+}));
+
+// Mock validateRequest to always succeed
+vi.mock('@/lib/validation/api-schemas', () => ({
+  validateRequest: vi.fn(() => Promise.resolve({ success: true, data: {} })),
+  IncrementUsageSchema: {},
+}));
+
+// Mock audit logger
+vi.mock('@/lib/audit/logger', () => ({
+  logAuditEvent: vi.fn(() => Promise.resolve()),
+  logAuditEvents: vi.fn(() => Promise.resolve()),
+}));
+
+// Mock logger
+vi.mock('@/lib/logger', () => ({
+  usageLogger: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+  logger: { error: vi.fn(), info: vi.fn(), warn: vi.fn(), debug: vi.fn() },
+}));
+
+// Mock billing period to return a consistent value
+vi.mock('@/lib/utils/billing-period', () => ({
+  getCurrentBillingPeriod: vi.fn(() => {
+    const now = new Date();
+    return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+  }),
 }));
 
 describe('Usage API - GET /api/usage', () => {
@@ -50,7 +84,8 @@ describe('Usage API - GET /api/usage', () => {
     });
 
     const { GET } = await import('@/app/api/usage/route');
-    const response = await GET();
+    const request = new Request('http://localhost:3000/api/usage');
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -63,14 +98,15 @@ describe('Usage API - GET /api/usage', () => {
       error: null,
     });
 
-    // Mock subscription check
+    // Mock subscription check then usage check
     mockSupabaseSingle
       .mockResolvedValueOnce({ data: mockFreeSubscription, error: null }) // subscription
       .mockResolvedValueOnce({ data: mockUsage, error: null }); // usage
 
     vi.resetModules();
     const { GET } = await import('@/app/api/usage/route');
-    const response = await GET();
+    const request = new Request('http://localhost:3000/api/usage');
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -93,7 +129,8 @@ describe('Usage API - GET /api/usage', () => {
 
     vi.resetModules();
     const { GET } = await import('@/app/api/usage/route');
-    const response = await GET();
+    const request = new Request('http://localhost:3000/api/usage');
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -115,7 +152,8 @@ describe('Usage API - GET /api/usage', () => {
 
     vi.resetModules();
     const { GET } = await import('@/app/api/usage/route');
-    const response = await GET();
+    const request = new Request('http://localhost:3000/api/usage');
+    const response = await GET(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
@@ -136,7 +174,8 @@ describe('Usage API - POST /api/usage/increment', () => {
     });
 
     const { POST } = await import('@/app/api/usage/increment/route');
-    const response = await POST();
+    const request = new Request('http://localhost:3000/api/usage/increment', { method: 'POST' });
+    const response = await POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(401);
@@ -149,31 +188,18 @@ describe('Usage API - POST /api/usage/increment', () => {
       error: null,
     });
 
-    // Mock rate limit check
-    mockSupabaseRpc.mockResolvedValue({
-      data: { success: true, count: 1, limit: 100, remaining: 99, reset: Date.now() / 1000 + 60 },
-      error: null,
-    });
-
     const currentCount = 2;
 
-    // Mock subscription and current usage
+    // Mock subscription query
     mockSupabaseSingle.mockResolvedValueOnce({
       data: mockFreeSubscription,
       error: null,
     });
-    mockSupabaseSingle.mockResolvedValueOnce({
-      data: { exports_count: currentCount },
-      error: null,
-    });
 
-    // Mock upsert response
-    mockSupabaseUpsert.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
-        data: { exports_count: currentCount + 1, last_export_at: new Date().toISOString() },
-        error: null,
-      }),
+    // Mock RPC increment_export_count
+    mockSupabaseRpc.mockResolvedValueOnce({
+      data: { exports_count: currentCount + 1, remaining: FREE_EXPORT_LIMIT - (currentCount + 1), limit_reached: false },
+      error: null,
     });
 
     vi.resetModules();
@@ -195,19 +221,15 @@ describe('Usage API - POST /api/usage/increment', () => {
       error: null,
     });
 
-    // Mock rate limit check
-    mockSupabaseRpc.mockResolvedValue({
-      data: { success: true, count: 1, limit: 100, remaining: 99, reset: Date.now() / 1000 + 60 },
-      error: null,
-    });
-
-    // Mock subscription and usage at limit
+    // Mock subscription
     mockSupabaseSingle.mockResolvedValueOnce({
       data: mockFreeSubscription,
       error: null,
     });
-    mockSupabaseSingle.mockResolvedValueOnce({
-      data: { exports_count: FREE_EXPORT_LIMIT },
+
+    // Mock RPC - user was already at limit, so post-increment count exceeds limit
+    mockSupabaseRpc.mockResolvedValueOnce({
+      data: { exports_count: FREE_EXPORT_LIMIT + 1, remaining: 0, limit_reached: true },
       error: null,
     });
 
@@ -229,29 +251,16 @@ describe('Usage API - POST /api/usage/increment', () => {
       error: null,
     });
 
-    // Mock rate limit check
-    mockSupabaseRpc.mockResolvedValue({
-      data: { success: true, count: 1, limit: 100, remaining: 99, reset: Date.now() / 1000 + 60 },
-      error: null,
-    });
-
-    // Mock pro subscription and high usage
+    // Mock pro subscription
     mockSupabaseSingle.mockResolvedValueOnce({
       data: mockProSubscription,
       error: null,
     });
-    mockSupabaseSingle.mockResolvedValueOnce({
-      data: { exports_count: 1000 },
-      error: null,
-    });
 
-    // Mock upsert response
-    mockSupabaseUpsert.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
-        data: { exports_count: 1001, last_export_at: new Date().toISOString() },
-        error: null,
-      }),
+    // Mock RPC for pro user
+    mockSupabaseRpc.mockResolvedValueOnce({
+      data: { exports_count: 1001, remaining: -1, limit_reached: false },
+      error: null,
     });
 
     vi.resetModules();
@@ -271,29 +280,16 @@ describe('Usage API - POST /api/usage/increment', () => {
       error: null,
     });
 
-    // Mock rate limit check
-    mockSupabaseRpc.mockResolvedValue({
-      data: { success: true, count: 1, limit: 100, remaining: 99, reset: Date.now() / 1000 + 60 },
-      error: null,
-    });
-
-    // Mock subscription and usage at limit - 1
+    // Mock subscription
     mockSupabaseSingle.mockResolvedValueOnce({
       data: mockFreeSubscription,
       error: null,
     });
-    mockSupabaseSingle.mockResolvedValueOnce({
-      data: { exports_count: FREE_EXPORT_LIMIT - 1 },
-      error: null,
-    });
 
-    // Mock upsert response - now at limit
-    mockSupabaseUpsert.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
-        data: { exports_count: FREE_EXPORT_LIMIT, last_export_at: new Date().toISOString() },
-        error: null,
-      }),
+    // Mock RPC - exactly at limit (not over), so it's allowed but limit_reached is true
+    mockSupabaseRpc.mockResolvedValueOnce({
+      data: { exports_count: FREE_EXPORT_LIMIT, remaining: 0, limit_reached: true },
+      error: null,
     });
 
     vi.resetModules();
@@ -315,29 +311,16 @@ describe('Usage API - POST /api/usage/increment', () => {
       error: null,
     });
 
-    // Mock rate limit check
-    mockSupabaseRpc.mockResolvedValue({
-      data: { success: true, count: 1, limit: 100, remaining: 99, reset: Date.now() / 1000 + 60 },
-      error: null,
-    });
-
-    // Mock subscription and no existing usage
+    // Mock subscription
     mockSupabaseSingle.mockResolvedValueOnce({
       data: mockFreeSubscription,
       error: null,
     });
-    mockSupabaseSingle.mockResolvedValueOnce({
-      data: null,
-      error: { code: 'PGRST116' },
-    });
 
-    // Mock upsert creating new record
-    mockSupabaseUpsert.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
-        data: { exports_count: 1, last_export_at: new Date().toISOString() },
-        error: null,
-      }),
+    // Mock RPC - first export
+    mockSupabaseRpc.mockResolvedValueOnce({
+      data: { exports_count: 1, remaining: FREE_EXPORT_LIMIT - 1, limit_reached: false },
+      error: null,
     });
 
     vi.resetModules();
@@ -367,7 +350,8 @@ describe('Usage API - Billing Period', () => {
 
     vi.resetModules();
     const { GET } = await import('@/app/api/usage/route');
-    const response = await GET();
+    const request = new Request('http://localhost:3000/api/usage');
+    const response = await GET(request);
     const data = await response.json();
 
     // period_start should be in YYYY-MM-01 format

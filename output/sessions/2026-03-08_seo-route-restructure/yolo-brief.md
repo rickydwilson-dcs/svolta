@@ -323,3 +323,18 @@ Confirm this was done in the final report.
 - Use `model: haiku` for Task agents doing mechanical work (grep, import additions, find-replace); `model: sonnet` for standard edits; `model: opus` only for deep multi-file reasoning
 - The Co-Authored-By line in commits must reflect the orchestrator model used (e.g., `Claude Sonnet 4.6` not `Opus 4.6`)
 - All work stays on `feature/seo-route-restructure` — NEVER commit directly to develop
+
+---
+
+## Completed
+
+**Date:** 2026-03-08
+**Status:** All phases executed successfully
+
+Moved the upgrade/pricing page from `app/(app)/upgrade/` to `app/(marketing)/upgrade/` so it escapes the app layout's `noindex, nofollow` meta tag and becomes indexable. Added a `layout.tsx` in the new location to export page-level metadata (title, description, Open Graph tags, canonical URL) — necessary because the page is a `'use client'` component and cannot export metadata itself. Updated `sitemap.ts` to include `/upgrade` and remove the noindexed `/login` and `/signup` routes. One minor deviation: the `.next` cache held a stale type reference to the old path; clearing it with `rm -rf .next` resolved the type-check failure before Phase 1 could commit. All three verification gates passed cleanly.
+
+### Commits
+
+- `66a3d7c` fix(seo): move upgrade page to marketing route group
+- `4e34c94` feat(seo): add metadata and OG tags to upgrade page
+- `723e4cc` fix(seo): update sitemap — add /upgrade, remove noindexed auth pages
