@@ -10,6 +10,8 @@ import {
   type PoseLandmarkerResult,
 } from '@mediapipe/tasks-vision';
 
+import { poseLogger } from '@/lib/logger';
+
 import {
   type Landmark,
   type PoseResult,
@@ -61,7 +63,7 @@ async function getAssetPaths(): Promise<{ wasmPath: string; modelPath: string }>
   const hasLocalAssets = await checkLocalAssets();
 
   if (hasLocalAssets) {
-    console.log('✓ Using self-hosted MediaPipe assets');
+    poseLogger.info('Using self-hosted MediaPipe assets');
     usingLocalAssets = true;
     return { wasmPath: LOCAL_WASM_PATH, modelPath: LOCAL_MODEL_PATH };
   }
@@ -130,12 +132,12 @@ export async function initializePoseDetector(): Promise<PoseLandmarker> {
       try {
         poseLandmarker = await createPoseLandmarker(vision, modelPath, 'GPU');
         usingCpuFallback = false;
-        console.log('✓ Pose detector initialized with GPU acceleration');
+        poseLogger.info('Pose detector initialized with GPU acceleration');
       } catch (gpuError) {
         console.warn('⚠ GPU initialization failed, falling back to CPU:', gpuError);
         poseLandmarker = await createPoseLandmarker(vision, modelPath, 'CPU');
         usingCpuFallback = true;
-        console.log('✓ Pose detector initialized with CPU');
+        poseLogger.info('Pose detector initialized with CPU');
       }
 
       setProgress(100);
