@@ -58,20 +58,14 @@ const BottomSheet = ({
           </div>
 
           {/* Header */}
-          {(title || description) && (
-            <div className="px-6 pb-4 text-center">
-              {title && (
-                <Dialog.Title className="text-lg font-semibold tracking-tight text-text dark:text-white">
-                  {title}
-                </Dialog.Title>
-              )}
-              {description && (
-                <Dialog.Description className="text-sm text-text-secondary mt-1">
-                  {description}
-                </Dialog.Description>
-              )}
-            </div>
-          )}
+          <div className="px-6 pb-4 text-center">
+            <Dialog.Title className={cn(!title && 'sr-only', title && 'text-lg font-semibold tracking-tight text-text dark:text-white')}>
+              {title || 'Dialog'}
+            </Dialog.Title>
+            <Dialog.Description className={cn(!description && 'sr-only', description && 'text-sm text-text-secondary mt-1')}>
+              {description || 'Dialog content'}
+            </Dialog.Description>
+          </div>
 
           {/* Content */}
           <div className="px-6 pb-10 overflow-y-auto">

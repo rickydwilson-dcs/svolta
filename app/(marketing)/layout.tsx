@@ -13,7 +13,7 @@ export default function MarketingLayout({
       <MarketingHeader />
 
       {/* Main Content - full width, pages control their own sections */}
-      <main className="flex-1 pt-20">
+      <main id="main-content" className="flex-1 pt-20">
         {children}
       </main>
 

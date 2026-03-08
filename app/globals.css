@@ -21,7 +21,7 @@
   /* Text Colors (Light Mode) - Instagram palette */
   --text-primary: #262626;
   --text-secondary: #8E8E8E;
-  --text-tertiary: #C7C7C7;
+  --text-tertiary: #767676;
 
   /* Border Colors (Light Mode) */
   --border-default: #DBDBDB;
@@ -74,7 +74,7 @@
   /* Text Colors (Dark Mode) */
   --text-primary: #FAFAFA;
   --text-secondary: #A8A8A8;
-  --text-tertiary: #737373;
+  --text-tertiary: #8E8E8E;
 
   /* Border Colors (Dark Mode) */
   --border-default: #363636;

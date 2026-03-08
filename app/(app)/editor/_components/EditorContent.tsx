@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { closePoseDetector } from '@/lib/mediapipe/pose-detector';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useEditorStore } from '@/stores/editor-store';
@@ -34,6 +35,12 @@ export function EditorContent() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- Required for hydration safety
     setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      closePoseDetector();
+    };
   }, []);
 
   const hasPhotos = beforePhoto || afterPhoto;

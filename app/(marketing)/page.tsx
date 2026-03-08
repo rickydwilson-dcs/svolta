@@ -16,6 +16,24 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: 'svolta',
+            url: 'https://www.svolta.app',
+            description: 'Professional before/after fitness photo alignment using AI pose detection.',
+            applicationCategory: 'PhotographyApplication',
+            operatingSystem: 'Web',
+            offers: [
+              { '@type': 'Offer', price: '0', priceCurrency: 'GBP', name: 'Free', description: '5 exports per month with watermark' },
+              { '@type': 'Offer', price: '7.99', priceCurrency: 'GBP', name: 'Pro', description: 'Unlimited exports, no watermarks, all formats' },
+            ],
+          }),
+        }}
+      />
       {/* Hero Section */}
       <section className="relative py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-hero-glow overflow-hidden">
         <div className="max-w-3xl mx-auto text-center relative z-10">
