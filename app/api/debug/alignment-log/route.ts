@@ -20,6 +20,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Validate request body size (max 100KB)
+  const contentLength = request.headers.get('content-length');
+  if (contentLength && parseInt(contentLength) > 100 * 1024) {
+    return NextResponse.json(
+      { error: 'Request body too large (max 100KB)' },
+      { status: 413 }
+    );
+  }
+
   try {
     const entry = await request.json();
 
@@ -47,6 +56,13 @@ export async function POST(request: NextRequest) {
       }
     } catch {
       // File doesn't exist yet, start fresh
+    }
+
+    // Enforce max entries limit to prevent unbounded file growth
+    const MAX_ENTRIES = 1000;
+    if (logs.length >= MAX_ENTRIES) {
+      // Trim oldest entries to make room
+      logs = logs.slice(logs.length - MAX_ENTRIES + 1);
     }
 
     // Append new entry
