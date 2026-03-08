@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { useEditorStore } from '@/stores/editor-store';
 import { useUsageLimit } from '@/hooks/useUsageLimit';
-import { PhotoPanel, ExportModal } from '@/components/features/editor';
+import { PhotoPanel, ExportModal, AlignmentControls } from '@/components/features/editor';
 import { Button } from '@/components/ui';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
 
@@ -30,6 +30,11 @@ export function EditorContent() {
   const [mounted, setMounted] = useState(false);
 
   const [showExportModal, setShowExportModal] = useState(false);
+  const [controlsExpanded, setControlsExpanded] = useState(false);
+
+  const bothPhotosHaveLandmarks = !!(
+    beforePhoto?.landmarks?.length && afterPhoto?.landmarks?.length
+  );
 
   // Prevent hydration mismatch for theme - standard Next.js pattern
   useEffect(() => {
@@ -195,6 +200,24 @@ export function EditorContent() {
           </div>
         </div>
       </main>
+
+      {/* Alignment Controls — collapsible, shown when both photos have landmarks */}
+      {bothPhotosHaveLandmarks && (
+        <div className="border-t border-border">
+          <button
+            onClick={() => setControlsExpanded(!controlsExpanded)}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-text-secondary hover:text-text transition-colors"
+          >
+            <span>Alignment Controls</span>
+            <span className={`transition-transform ${controlsExpanded ? 'rotate-180' : ''}`}>▼</span>
+          </button>
+          {controlsExpanded && (
+            <div className="px-4 pb-4">
+              <AlignmentControls />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Export Modal */}
       <ExportModal
