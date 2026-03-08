@@ -36,42 +36,44 @@ export function useExportBackgroundRemoval(): UseExportBackgroundRemovalReturn {
     setError(null);
 
     try {
-      // Remove background from "before" photo if not already done
-      if (!beforePhoto.hasBackgroundRemoved) {
-        const beforeResult = await withTimeout(
-          removeBackground(beforePhoto.dataUrl),
-          TIMEOUT_MS,
-          'Background removal timed out for "Before" photo. Please try again or use a smaller image.'
-        );
-        if (beforeResult) {
-          const updatedBefore: Photo = {
-            ...beforePhoto,
-            dataUrl: beforeResult.processedDataUrl,
-            hasBackgroundRemoved: true,
-            originalDataUrl: beforePhoto.originalDataUrl || beforePhoto.dataUrl,
-            segmentationMask: beforeResult.mask,
-          };
-          setBeforePhoto(updatedBefore);
-        }
+      // Remove backgrounds in parallel for ~2x speedup
+      const [beforeResult, afterResult] = await Promise.all([
+        !beforePhoto.hasBackgroundRemoved
+          ? withTimeout(
+              removeBackground(beforePhoto.dataUrl),
+              TIMEOUT_MS,
+              'Background removal timed out for "Before" photo. Please try again or use a smaller image.'
+            )
+          : Promise.resolve(null),
+        !afterPhoto.hasBackgroundRemoved
+          ? withTimeout(
+              removeBackground(afterPhoto.dataUrl),
+              TIMEOUT_MS,
+              'Background removal timed out for "After" photo. Please try again or use a smaller image.'
+            )
+          : Promise.resolve(null),
+      ]);
+
+      if (beforeResult) {
+        const updatedBefore: Photo = {
+          ...beforePhoto,
+          dataUrl: beforeResult.processedDataUrl,
+          hasBackgroundRemoved: true,
+          originalDataUrl: beforePhoto.originalDataUrl || beforePhoto.dataUrl,
+          segmentationMask: beforeResult.mask,
+        };
+        setBeforePhoto(updatedBefore);
       }
 
-      // Remove background from "after" photo if not already done
-      if (!afterPhoto.hasBackgroundRemoved) {
-        const afterResult = await withTimeout(
-          removeBackground(afterPhoto.dataUrl),
-          TIMEOUT_MS,
-          'Background removal timed out for "After" photo. Please try again or use a smaller image.'
-        );
-        if (afterResult) {
-          const updatedAfter: Photo = {
-            ...afterPhoto,
-            dataUrl: afterResult.processedDataUrl,
-            hasBackgroundRemoved: true,
-            originalDataUrl: afterPhoto.originalDataUrl || afterPhoto.dataUrl,
-            segmentationMask: afterResult.mask,
-          };
-          setAfterPhoto(updatedAfter);
-        }
+      if (afterResult) {
+        const updatedAfter: Photo = {
+          ...afterPhoto,
+          dataUrl: afterResult.processedDataUrl,
+          hasBackgroundRemoved: true,
+          originalDataUrl: afterPhoto.originalDataUrl || afterPhoto.dataUrl,
+          segmentationMask: afterResult.mask,
+        };
+        setAfterPhoto(updatedAfter);
       }
     } catch (err) {
       editorLogger.error('Background removal failed', err);
