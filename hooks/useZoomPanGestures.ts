@@ -13,7 +13,7 @@ interface ZoomPanGestureOptions {
 export function useZoomPanGestures(
   containerRef: RefObject<HTMLElement | null>,
   options: ZoomPanGestureOptions
-) {
+): { isDragging: RefObject<boolean> } {
   const {
     minZoom = 1.0,
     maxZoom = 3.0,

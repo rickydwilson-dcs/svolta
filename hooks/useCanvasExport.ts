@@ -9,12 +9,24 @@ import type { Photo, AlignmentSettings } from '@/types/editor';
 import { useEditorStore } from '@/stores/editor-store';
 import { canvasLogger } from '@/lib/logger';
 
+export interface UseCanvasExportReturn {
+  isExporting: boolean;
+  error: string | null;
+  exportAndDownload: (
+    beforePhoto: Photo,
+    afterPhoto: Photo,
+    alignment: AlignmentSettings,
+    options: ExportOptions
+  ) => Promise<boolean>;
+  clearError: () => void;
+}
+
 /**
  * Hook for managing canvas export functionality
  *
  * @returns Object with export state and exportAndDownload function
  */
-export function useCanvasExport() {
+export function useCanvasExport(): UseCanvasExportReturn {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const userFraming = useEditorStore((state) => state.userFraming);
