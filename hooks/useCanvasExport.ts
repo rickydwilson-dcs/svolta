@@ -3,7 +3,7 @@
  * Provides functionality for exporting aligned photos with loading states
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { exportCanvas, triggerDownload, type ExportOptions } from '@/lib/canvas/export';
 import type { Photo, AlignmentSettings } from '@/types/editor';
 import { useEditorStore } from '@/stores/editor-store';
@@ -40,7 +40,7 @@ export function useCanvasExport(): UseCanvasExportReturn {
    * @param options - Export options
    * @returns Promise<boolean> - True if successful, false otherwise
    */
-  const exportAndDownload = async (
+  const exportAndDownload = useCallback(async (
     beforePhoto: Photo,
     afterPhoto: Photo,
     alignment: AlignmentSettings,
@@ -104,12 +104,12 @@ export function useCanvasExport(): UseCanvasExportReturn {
       // Clear loading state
       setIsExporting(false);
     }
-  };
+  }, [userFraming]);
 
   /**
    * Clear error state
    */
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     isExporting,
