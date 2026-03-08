@@ -11,7 +11,7 @@ let mockIsAnonymous = false;
 
 const mockExportAndDownload = vi.fn().mockResolvedValue(true);
 const mockExportGifAndDownload = vi.fn().mockResolvedValue(true);
-const mockCheckAndIncrement = vi.fn().mockResolvedValue(true);
+const mockCheckAndIncrement = vi.fn().mockResolvedValue({ success: true });
 const mockClearCanvasError = vi.fn();
 const mockClearGifError = vi.fn();
 
@@ -90,7 +90,7 @@ describe('useExportDownload', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsAnonymous = false;
-    mockCheckAndIncrement.mockResolvedValue(true);
+    mockCheckAndIncrement.mockResolvedValue({ success: true });
     mockExportAndDownload.mockResolvedValue(true);
     mockExportGifAndDownload.mockResolvedValue(true);
   });
@@ -129,7 +129,7 @@ describe('useExportDownload', () => {
   });
 
   it('calls onLimitReached with isAnonymous=false for logged-in free user', async () => {
-    mockCheckAndIncrement.mockResolvedValue(false);
+    mockCheckAndIncrement.mockResolvedValue({ success: false, reason: 'limit' });
     mockIsAnonymous = false;
     const onLimitReached = vi.fn();
 
@@ -146,7 +146,7 @@ describe('useExportDownload', () => {
   });
 
   it('calls onLimitReached with isAnonymous=true for anonymous user', async () => {
-    mockCheckAndIncrement.mockResolvedValue(false);
+    mockCheckAndIncrement.mockResolvedValue({ success: false, reason: 'limit' });
     mockIsAnonymous = true;
     const onLimitReached = vi.fn();
 
@@ -163,7 +163,7 @@ describe('useExportDownload', () => {
   });
 
   it('does not call download when checkAndIncrement returns false', async () => {
-    mockCheckAndIncrement.mockResolvedValue(false);
+    mockCheckAndIncrement.mockResolvedValue({ success: false, reason: 'limit' });
     const onSuccess = vi.fn();
 
     const { result } = renderHook(() =>
