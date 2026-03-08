@@ -61,6 +61,8 @@ export function GifPreview({
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const animationRef = React.useRef<number>(0);
+  const isVisibleRef = React.useRef(true);
+  const animateFnRef = React.useRef<((ts: number) => void) | null>(null);
   const [isReady, setIsReady] = React.useState(false);
   const userFraming = useEditorStore((state) => state.userFraming);
 
@@ -197,6 +199,26 @@ export function GifPreview({
     };
   }, [imagesVersion, format, beforePhoto.landmarks, afterPhoto.landmarks, userFraming]);
 
+  // IntersectionObserver: pause animation when off-screen
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const wasVisible = isVisibleRef.current;
+        isVisibleRef.current = entry.isIntersecting;
+        if (!wasVisible && entry.isIntersecting && animateFnRef.current) {
+          animationRef.current = requestAnimationFrame(animateFnRef.current);
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+
   // Animation loop
   React.useEffect(() => {
     if (!isReady) return;
@@ -214,6 +236,10 @@ export function GifPreview({
     let startTime: number | null = null;
 
     const animate = (timestamp: number) => {
+      if (!isVisibleRef.current) {
+        startTime = null;
+        return;
+      }
       if (!startTime) startTime = timestamp;
       const elapsed = timestamp - startTime;
       const progress = (elapsed % durationMs) / durationMs;
@@ -284,12 +310,14 @@ export function GifPreview({
       animationRef.current = requestAnimationFrame(animate);
     };
 
+    animateFnRef.current = animate;
     animationRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
+      animateFnRef.current = null;
     };
   }, [isReady, animationStyle, duration, showLabels]);
 
