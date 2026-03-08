@@ -9,12 +9,11 @@ import { useUserStore } from '@/stores/user-store';
 import { useUsageLimit } from '@/hooks/useUsageLimit';
 import { useCanvasExport } from '@/hooks/useCanvasExport';
 import { useGifExport } from '@/hooks/useGifExport';
-import { useBackgroundRemoval } from '@/hooks/useBackgroundRemoval';
 import type { ExportFormat as LibExportFormat } from '@/lib/canvas/export';
 import type { AnimationStyle } from '@/lib/canvas/export-gif';
-import type { Photo } from '@/types/editor';
-import { canvasLogger, editorLogger } from '@/lib/logger';
-import { withTimeout, logExportEvent, TIMEOUT_MS, type ExportType, type AspectRatio, type BackgroundState, imagePresets } from '@/lib/export-utils';
+import { canvasLogger } from '@/lib/logger';
+import { logExportEvent, type ExportType, type AspectRatio, type BackgroundState, imagePresets } from '@/lib/export-utils';
+import { useExportBackgroundRemoval } from '@/hooks/useExportBackgroundRemoval';
 import { ExportPreview } from './export/ExportPreview';
 import { ExportTypeToggle } from './export/ExportTypeToggle';
 import { GifControls } from './export/GifControls';
@@ -38,8 +37,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const afterPhoto = useEditorStore((s) => s.afterPhoto);
   const alignment = useEditorStore((s) => s.alignment);
   const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
-  const setBeforePhoto = useEditorStore((s) => s.setBeforePhoto);
-  const setAfterPhoto = useEditorStore((s) => s.setAfterPhoto);
   const setBackgroundSettings = useEditorStore((s) => s.setBackgroundSettings);
   const setUserFraming = useEditorStore((s) => s.setUserFraming);
   const isPro = useUserStore((state) => state.isPro());
@@ -54,9 +51,11 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     exportAndDownload: exportGifAndDownload,
   } = useGifExport();
   const {
-    processImage: removeBackground,
+    isRemovingBackgrounds,
     error: bgRemovalError,
-  } = useBackgroundRemoval();
+    removeBackgrounds: handleRemoveBackgrounds,
+    hasBackgroundRemoved,
+  } = useExportBackgroundRemoval();
 
   // Export config
   const [exportType, setExportType] = React.useState<ExportType>('png');
@@ -80,10 +79,8 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const [upgradeTrigger, setUpgradeTrigger] = React.useState<'limit' | 'watermark' | 'format' | 'logo' | 'gif' | 'background'>('limit');
 
   const [localError, setLocalError] = React.useState<string | null>(null);
-  const [isRemovingBackgrounds, setIsRemovingBackgrounds] = React.useState(false);
 
   const hasPhotos = Boolean(beforePhoto && afterPhoto);
-  const hasBackgroundRemoved = beforePhoto?.hasBackgroundRemoved || afterPhoto?.hasBackgroundRemoved;
 
   // Clear errors when modal opens/closes
   React.useEffect(() => {
@@ -159,59 +156,6 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     }
     setBackground(prev => ({ ...prev, type: 'color', colorValue: color }));
     setBackgroundSettings({ type: 'solid', color });
-  };
-
-  // Handle background removal for both photos
-  const handleRemoveBackgrounds = async () => {
-    if (!hasPhotos || !beforePhoto || !afterPhoto) return;
-
-    setIsRemovingBackgrounds(true);
-    setLocalError(null);
-
-    try {
-      // Remove background from "before" photo if not already done
-      if (!beforePhoto.hasBackgroundRemoved) {
-        const beforeResult = await withTimeout(
-          removeBackground(beforePhoto.dataUrl),
-          TIMEOUT_MS,
-          'Background removal timed out for "Before" photo. Please try again or use a smaller image.'
-        );
-        if (beforeResult) {
-          const updatedBefore: Photo = {
-            ...beforePhoto,
-            dataUrl: beforeResult.processedDataUrl,
-            hasBackgroundRemoved: true,
-            originalDataUrl: beforePhoto.originalDataUrl || beforePhoto.dataUrl,
-            segmentationMask: beforeResult.mask,
-          };
-          setBeforePhoto(updatedBefore);
-        }
-      }
-
-      // Remove background from "after" photo if not already done
-      if (!afterPhoto.hasBackgroundRemoved) {
-        const afterResult = await withTimeout(
-          removeBackground(afterPhoto.dataUrl),
-          TIMEOUT_MS,
-          'Background removal timed out for "After" photo. Please try again or use a smaller image.'
-        );
-        if (afterResult) {
-          const updatedAfter: Photo = {
-            ...afterPhoto,
-            dataUrl: afterResult.processedDataUrl,
-            hasBackgroundRemoved: true,
-            originalDataUrl: afterPhoto.originalDataUrl || afterPhoto.dataUrl,
-            segmentationMask: afterResult.mask,
-          };
-          setAfterPhoto(updatedAfter);
-        }
-      }
-    } catch (error) {
-      editorLogger.error('Background removal failed', error);
-      setLocalError(error instanceof Error ? error.message : 'Background removal failed');
-    } finally {
-      setIsRemovingBackgrounds(false);
-    }
   };
 
   // Handle download
