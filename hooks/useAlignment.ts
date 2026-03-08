@@ -36,8 +36,10 @@ const DEBOUNCE_DELAY = 100;
  */
 export function useAlignment(): UseAlignmentReturn {
   // Subscribe to editor store
-  const beforePhoto = useEditorStore((state) => state.beforePhoto);
-  const afterPhoto = useEditorStore((state) => state.afterPhoto);
+  const beforeLandmarks = useEditorStore((state) => state.beforePhoto?.landmarks ?? null);
+  const afterLandmarks = useEditorStore((state) => state.afterPhoto?.landmarks ?? null);
+  const hasBeforePhoto = useEditorStore((state) => !!state.beforePhoto);
+  const hasAfterPhoto = useEditorStore((state) => !!state.afterPhoto);
   const alignment = useEditorStore((state) => state.alignment);
   const updateAlignment = useEditorStore((state) => state.updateAlignment);
 
@@ -48,8 +50,8 @@ export function useAlignment(): UseAlignmentReturn {
    * Compute canAlign from current state (no setState in effect)
    */
   const canAlign = useMemo(() => {
-    const bothPhotosExist = beforePhoto && afterPhoto;
-    const bothHaveLandmarks = beforePhoto?.landmarks && afterPhoto?.landmarks;
+    const bothPhotosExist = hasBeforePhoto && hasAfterPhoto;
+    const bothHaveLandmarks = beforeLandmarks && afterLandmarks;
 
     if (!bothPhotosExist || !bothHaveLandmarks) {
       return false;
@@ -57,16 +59,16 @@ export function useAlignment(): UseAlignmentReturn {
 
     // Check if landmarks are valid for current anchor
     const canAlignBefore = canCalculateAlignment(
-      beforePhoto.landmarks!,
+      beforeLandmarks,
       alignment.anchor
     );
     const canAlignAfter = canCalculateAlignment(
-      afterPhoto.landmarks!,
+      afterLandmarks,
       alignment.anchor
     );
 
     return canAlignBefore && canAlignAfter;
-  }, [beforePhoto, afterPhoto, alignment.anchor]);
+  }, [hasBeforePhoto, hasAfterPhoto, beforeLandmarks, afterLandmarks, alignment.anchor]);
 
   /**
    * Compute isAligned from current state (no setState in effect)
@@ -91,15 +93,15 @@ export function useAlignment(): UseAlignmentReturn {
 
     // Debounce the alignment calculation
     debounceTimerRef.current = setTimeout(() => {
-      if (!beforePhoto?.landmarks || !afterPhoto?.landmarks) {
+      if (!beforeLandmarks || !afterLandmarks) {
         poseLogger.warn('Cannot auto-align: missing landmarks');
         return;
       }
 
       // Calculate alignment (uses normalized coordinates)
       const result = calculateAlignment(
-        beforePhoto.landmarks,
-        afterPhoto.landmarks,
+        beforeLandmarks,
+        afterLandmarks,
         alignment.anchor
       );
 
@@ -111,7 +113,7 @@ export function useAlignment(): UseAlignmentReturn {
         offsetY: result.offsetY,
       });
     }, DEBOUNCE_DELAY);
-  }, [beforePhoto, afterPhoto, alignment.anchor, updateAlignment]);
+  }, [beforeLandmarks, afterLandmarks, alignment.anchor, updateAlignment]);
 
   /**
    * Reset alignment to default values
