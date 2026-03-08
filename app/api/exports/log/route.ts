@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
+import { usageLogger } from '@/lib/logger';
 
 /**
  * POST /api/exports/log
@@ -81,14 +82,14 @@ export async function POST(request: Request) {
       .single();
 
     if (error) {
-      console.error('Error logging export:', error);
+      usageLogger.error('Error logging export', error);
       // Don't fail the user's export if logging fails
       return NextResponse.json({ success: false, error: 'Failed to log export' }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, id: data.id });
   } catch (error) {
-    console.error('Export log API error:', error);
+    usageLogger.error('Export log API error', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

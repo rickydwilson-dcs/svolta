@@ -14,6 +14,7 @@ import type { AnimationStyle } from '@/lib/canvas/export-gif';
 import type { Photo } from '@/types/editor';
 import { calculateAlignedDrawParams } from '@/lib/canvas/aligned-draw-params';
 import { useEditorStore } from '@/stores/editor-store';
+import { canvasLogger } from '@/lib/logger';
 
 export interface GifPreviewProps {
   beforePhoto: Photo;
@@ -163,7 +164,7 @@ export function GifPreview({
         setIsReady(true);
       })
       .catch((error) => {
-        console.error('Failed to prepare GIF preview:', error);
+        canvasLogger.error('Failed to prepare GIF preview', error);
       });
 
     return () => {

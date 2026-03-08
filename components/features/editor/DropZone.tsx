@@ -3,6 +3,7 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { processImage, validateImageFile, type Photo } from '@/lib/utils/image';
+import { editorLogger } from '@/lib/logger';
 
 interface DropZoneProps {
   label: string;
@@ -68,7 +69,7 @@ export function DropZone({ label, onImageLoad, photo, className }: DropZoneProps
       const processedPhoto = await processImage(file);
       onImageLoad(processedPhoto);
     } catch (err) {
-      console.error('Error processing image:', err);
+      editorLogger.error('Error processing image', err);
       setError(err instanceof Error ? err.message : 'Failed to process image');
     } finally {
       setIsProcessing(false);

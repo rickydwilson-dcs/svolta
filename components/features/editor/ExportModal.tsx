@@ -17,6 +17,7 @@ import type { AnimationStyle } from '@/lib/canvas/export-gif';
 import type { Photo } from '@/types/editor';
 import { AlignedPreview } from './AlignedPreview';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
+import { canvasLogger, editorLogger } from '@/lib/logger';
 
 // Timeout wrapper for long-running operations
 function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> {
@@ -66,7 +67,7 @@ function logExportEvent(format: 'png' | 'gif', aspectRatio: string, isAnonymous:
     body: JSON.stringify(body),
   }).catch((err) => {
     // Silently fail - analytics shouldn't break exports
-    console.warn('Failed to log export:', err);
+    canvasLogger.warn('Failed to log export analytics', err);
   });
 }
 
@@ -276,7 +277,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         }
       }
     } catch (error) {
-      console.error('Background removal failed:', error);
+      editorLogger.error('Background removal failed', error);
       setLocalError(error instanceof Error ? error.message : 'Background removal failed');
     } finally {
       setIsRemovingBackgrounds(false);
@@ -350,11 +351,11 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         );
       }
 
-      console.log('[ExportModal] Export result:', { success, exportType, aspectRatio, isAnonymous });
+      canvasLogger.info('Export result', { success, exportType, aspectRatio, isAnonymous });
 
       if (success) {
         // Log export event for analytics (fire and forget)
-        console.log('[ExportModal] Logging export event...');
+        canvasLogger.debug('Logging export event');
         logExportEvent(
           exportType === 'gif' ? 'gif' : 'png',
           aspectRatio,
@@ -365,7 +366,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         onClose();
       }
     } catch (error) {
-      console.error('Export failed:', error);
+      canvasLogger.error('Export failed', error);
       setLocalError(error instanceof Error ? error.message : 'Export failed');
     }
   };

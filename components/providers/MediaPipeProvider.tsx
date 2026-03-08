@@ -3,13 +3,14 @@
 import { useEffect } from 'react';
 import { initializePoseDetector } from '@/lib/mediapipe/pose-detector';
 import { MediaPipeLoader } from '@/components/features/editor/MediaPipeLoader';
+import { poseLogger } from '@/lib/logger';
 
 export function MediaPipeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Preload MediaPipe during idle time (non-blocking)
     const preload = () => {
       initializePoseDetector().catch((err) => {
-        console.warn('MediaPipe preload failed:', err);
+        poseLogger.warn('MediaPipe preload failed', err);
         // Fail silently - user can try again when they need it
       });
     };

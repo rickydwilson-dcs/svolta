@@ -12,6 +12,7 @@ import type { Photo } from '@/types/editor';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
 import { calculateAlignedDrawParams } from '@/lib/canvas/aligned-draw-params';
 import { useEditorStore } from '@/stores/editor-store';
+import { canvasLogger } from '@/lib/logger';
 
 export interface AlignedPreviewProps {
   beforePhoto: Photo;
@@ -196,7 +197,7 @@ export function AlignedPreview({
         setIsRendering(false);
       })
       .catch((error) => {
-        console.error('Failed to render aligned preview:', error);
+        canvasLogger.error('Failed to render aligned preview', error);
         setIsRendering(false);
       });
   }, [beforePhoto, afterPhoto, format, showLabels, backgroundSettings, userFraming]);

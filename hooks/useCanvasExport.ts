@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { exportCanvas, triggerDownload, type ExportOptions } from '@/lib/canvas/export';
 import type { Photo, AlignmentSettings } from '@/types/editor';
 import { useEditorStore } from '@/stores/editor-store';
+import { canvasLogger } from '@/lib/logger';
 
 /**
  * Hook for managing canvas export functionality
@@ -79,7 +80,7 @@ export function useCanvasExport() {
 
       return true;
     } catch (err) {
-      console.error('Export failed:', err);
+      canvasLogger.error('Export failed', err);
 
       // Set user-friendly error message
       const errorMessage =

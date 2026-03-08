@@ -13,6 +13,7 @@ import {
   type SegmentationOptions,
 } from '@/lib/segmentation/background-removal';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
+import { editorLogger } from '@/lib/logger';
 
 export interface UseBackgroundRemovalReturn {
   /** Whether background processing is in progress */
@@ -145,7 +146,7 @@ export function useBackgroundRemoval(): UseBackgroundRemovalReturn {
             ? err.message
             : 'Failed to process image';
 
-          console.error('Background removal failed:', err);
+          editorLogger.error('Background removal failed', err);
           setError(errorMessage);
         }
 
@@ -203,7 +204,7 @@ export function useBackgroundRemoval(): UseBackgroundRemovalReturn {
             ? err.message
             : 'Failed to apply background';
 
-          console.error('Background application failed:', err);
+          editorLogger.error('Background application failed', err);
           setError(errorMessage);
         }
 

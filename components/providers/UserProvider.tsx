@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useUserStore } from '@/stores/user-store';
 import { createClient } from '@/lib/supabase/client';
+import { authLogger } from '@/lib/logger';
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const initialize = useUserStore((state) => state.initialize);
@@ -22,13 +23,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
       if (!supabaseUrl || !supabaseKey || !supabaseUrl.startsWith('http')) {
-        console.warn('Supabase not configured, skipping user initialization');
+        authLogger.warn('Supabase not configured, skipping user initialization');
         initErrorRef.current = 'Supabase environment variables not configured';
         return;
       }
 
       initialize().catch((error) => {
-        console.error('Failed to initialize user:', error);
+        authLogger.error('Failed to initialize user', error);
         initErrorRef.current = error.message;
       });
     }
