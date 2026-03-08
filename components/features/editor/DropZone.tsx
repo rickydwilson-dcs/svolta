@@ -98,6 +98,14 @@ export function DropZone({ label, onImageLoad, photo, className }: DropZoneProps
 
       {/* Drop Zone */}
       <div
+        role={!photo && !isProcessing ? 'button' : undefined}
+        tabIndex={!photo && !isProcessing ? 0 : undefined}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !photo && !isProcessing) {
+            e.preventDefault();
+            fileInputRef.current?.click();
+          }
+        }}
         className={cn(
           'relative rounded-2xl border-2 border-dashed transition-all duration-300 ease-apple overflow-hidden',
           'min-h-[400px] flex items-center justify-center',

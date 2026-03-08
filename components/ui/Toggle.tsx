@@ -48,6 +48,7 @@ const Toggle = React.forwardRef<HTMLInputElement, ToggleProps>(
             id={toggleId}
             ref={ref}
             type="checkbox"
+            role="switch"
             checked={currentChecked}
             defaultChecked={defaultChecked}
             onChange={handleChange}
