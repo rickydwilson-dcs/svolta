@@ -63,7 +63,8 @@ export function GifPreview({
   const animationRef = React.useRef<number>(0);
   const isVisibleRef = React.useRef(true);
   const animateFnRef = React.useRef<((ts: number) => void) | null>(null);
-  const [isReady, setIsReady] = React.useState(false);
+  const [imagesLoading, setImagesLoading] = React.useState(true);
+  const [canvasReady, setCanvasReady] = React.useState(false);
   const userFraming = useEditorStore((state) => state.userFraming);
 
   // Store pre-rendered frames
@@ -79,6 +80,28 @@ export function GifPreview({
   }>({ beforeImg: null, afterImg: null, beforeDataUrl: null, afterDataUrl: null });
 
   const [imagesVersion, setImagesVersion] = React.useState(0);
+  const [containerSize, setContainerSize] = React.useState({ width: 0, height: 0 });
+
+  // Track container size changes (handles dialog open animation)
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        setContainerSize((prev) =>
+          prev.width === Math.round(width) && prev.height === Math.round(height)
+            ? prev
+            : { width: Math.round(width), height: Math.round(height) }
+        );
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // Effect 1: Load images when data URLs change
   React.useEffect(() => {
@@ -96,16 +119,20 @@ export function GifPreview({
       return;
     }
 
-    setIsReady(false);
+    setImagesLoading(true);
 
     Promise.all([loadImage(before), loadImage(after)])
       .then(([beforeImg, afterImg]) => {
         if (cancelled) return;
         imagesRef.current = { beforeImg, afterImg, beforeDataUrl: before, afterDataUrl: after };
         setImagesVersion((n) => n + 1);
+        setImagesLoading(false);
       })
       .catch((error) => {
-        if (!cancelled) editorLogger.error('Failed to load GIF preview images:', error);
+        if (!cancelled) {
+          editorLogger.error('Failed to load GIF preview images:', error);
+          setImagesLoading(false);
+        }
       });
 
     return () => { cancelled = true; };
@@ -113,13 +140,12 @@ export function GifPreview({
 
   // Effect 2: Pre-render canvases (runs when images or alignment params change)
   React.useEffect(() => {
-    const container = containerRef.current;
     const { beforeImg, afterImg } = imagesRef.current;
-    if (!container || !beforeImg || !afterImg) return;
+    if (!beforeImg || !afterImg) return;
+    if (containerSize.width === 0 || containerSize.height === 0) return;
 
-    const containerRect = container.getBoundingClientRect();
-    const containerWidth = containerRect.width || 400;
-    const containerHeight = containerRect.height || 300;
+    const containerWidth = containerSize.width;
+    const containerHeight = containerSize.height;
 
     // Calculate target dimensions based on format
     const aspectRatio = getAspectRatio(format);
@@ -190,14 +216,14 @@ export function GifPreview({
       canvas.height = targetHeight;
     }
 
-    setIsReady(true);
+    setCanvasReady(true);
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [imagesVersion, format, beforePhoto.landmarks, afterPhoto.landmarks, userFraming]);
+  }, [imagesVersion, format, beforePhoto.landmarks, afterPhoto.landmarks, userFraming, containerSize]);
 
   // IntersectionObserver: pause animation when off-screen
   React.useEffect(() => {
@@ -221,7 +247,7 @@ export function GifPreview({
 
   // Animation loop
   React.useEffect(() => {
-    if (!isReady) return;
+    if (!canvasReady) return;
 
     const canvas = canvasRef.current;
     const beforeCanvas = beforeCanvasRef.current;
@@ -319,7 +345,7 @@ export function GifPreview({
       }
       animateFnRef.current = null;
     };
-  }, [isReady, animationStyle, duration, showLabels]);
+  }, [canvasReady, animationStyle, duration, showLabels]);
 
   return (
     <div
@@ -334,9 +360,9 @@ export function GifPreview({
         aria-label="Animated before and after preview"
         ref={canvasRef}
         className="max-w-full max-h-full object-contain"
-        style={{ display: isReady ? 'block' : 'none' }}
+
       />
-      {!isReady && (
+      {imagesLoading && (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]" />
         </div>
