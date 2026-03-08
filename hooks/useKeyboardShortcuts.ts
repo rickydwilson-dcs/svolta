@@ -93,9 +93,9 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
         case 'r':
         case 'R':
           e.preventDefault();
-          // Reset alignment to defaults
+          // Reset alignment to store defaults
           updateAlignment({
-            anchor: 'shoulders',
+            anchor: 'full',
             scale: 1,
             offsetX: 0,
             offsetY: 0,
