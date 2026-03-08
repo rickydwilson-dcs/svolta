@@ -15,7 +15,6 @@ import type { Photo } from '@/types/editor';
 import { calculateAlignedDrawParams } from '@/lib/canvas/aligned-draw-params';
 import { loadImage } from '@/lib/canvas/load-image';
 import { useEditorStore } from '@/stores/editor-store';
-import { canvasLogger } from '@/lib/logger';
 
 export interface GifPreviewProps {
   beforePhoto: Photo;
