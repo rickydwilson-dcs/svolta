@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "svolta — see change",
+  title: "Svolta — Before & After Photo Alignment for Fitness Coaches",
   description: "Professional before/after fitness photo alignment using AI pose detection. Create stunning progress comparisons with perfect alignment.",
   keywords: ["fitness", "before after", "photo alignment", "pose detection", "progress tracking", "transformation"],
   authors: [{ name: "svolta" }],

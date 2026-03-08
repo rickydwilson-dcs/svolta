@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: 'svolta — Perfect Before & After Photos for Fitness Coaches',
   description:
     'AI-powered photo alignment for fitness coaches. Create professional before and after comparisons in seconds. Privacy first — photos never leave your device.',
+  alternates: {
+    canonical: 'https://www.svolta.app',
+  },
   openGraph: {
     title: 'svolta — Perfect Before & After Photos for Fitness Coaches',
     description:
