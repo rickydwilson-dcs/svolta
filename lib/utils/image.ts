@@ -1,4 +1,3 @@
-import heic2any from 'heic2any';
 import type { Photo } from '@/types/editor';
 
 // Re-export the canonical Photo type
@@ -15,6 +14,7 @@ export async function processImage(file: File): Promise<Photo> {
   // Convert HEIC to JPEG if needed
   if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
     try {
+      const { default: heic2any } = await import('heic2any');
       const convertedBlob = await heic2any({
         blob: file,
         toType: 'image/jpeg',

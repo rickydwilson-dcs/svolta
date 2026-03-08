@@ -5,7 +5,7 @@
  * Used for before/after photos in the editor
  */
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { DropZone } from './DropZone';
 import { LandmarkOverlay } from './LandmarkOverlay';
@@ -134,28 +134,24 @@ export function PhotoPanel({
     onPhotoChange(restoredPhoto);
   }, [photo, onPhotoChange]);
 
-  // Calculate image display dimensions
-  const getImageDisplaySize = () => {
+  const displaySize = useMemo(() => {
     if (!photo || containerSize.width === 0) {
       return { width: 0, height: 0, scale: 1 };
     }
 
-    const padding = 0;
-    const availableWidth = containerSize.width - padding * 2;
-    const availableHeight = containerSize.height - padding * 2;
+    const availableWidth = containerSize.width;
+    const availableHeight = containerSize.height;
 
     const scaleX = availableWidth / photo.width;
     const scaleY = availableHeight / photo.height;
-    const scale = Math.min(scaleX, scaleY, 1); // Don't scale up
+    const scale = Math.min(scaleX, scaleY, 1);
 
     return {
       width: photo.width * scale,
       height: photo.height * scale,
       scale,
     };
-  };
-
-  const displaySize = getImageDisplaySize();
+  }, [photo, containerSize.width, containerSize.height]);
 
   const panPixelsX = userFraming.panX * (displaySize.width * (userFraming.zoom - 1)) / 2;
   const panPixelsY = userFraming.panY * (displaySize.height * (userFraming.zoom - 1)) / 2;

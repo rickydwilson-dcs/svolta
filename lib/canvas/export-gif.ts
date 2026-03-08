@@ -16,6 +16,8 @@
  */
 
 import GIF from 'gif.js';
+import { loadImage } from './load-image';
+export { triggerDownload as triggerGifDownload } from './export';
 import { addWatermark, type WatermarkOptions } from './watermark';
 import type { Landmark } from '@/types/landmarks';
 import type { ExportFormat } from './export';
@@ -71,23 +73,6 @@ export interface PhotoData {
   width: number;
   height: number;
   landmarks?: Landmark[] | null;
-}
-
-/**
- * Load an image from a data URL
- *
- * @param dataUrl - Data URL of the image to load
- * @returns Promise<HTMLImageElement> - Loaded image element
- */
-async function loadImage(dataUrl: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Failed to load image'));
-
-    img.src = dataUrl;
-  });
 }
 
 /**
@@ -170,6 +155,12 @@ function getFrameGenerator(style: AnimationStyle): typeof generateSliderFrame {
       return generateCrossfadeFrame;
   }
 }
+
+/**
+ * Yield control to the browser's main thread.
+ * Allows UI updates (progress indicators) between CPU-intensive frames.
+ */
+const yieldToMain = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
 /**
  * Export animated GIF comparison with alignment
@@ -283,6 +274,9 @@ export async function exportGif(
     // This reduces peak memory from holding all frames to ~1 frame at a time
     frame.width = 0;
     frame.height = 0;
+
+    // Yield to main thread so progress UI can update
+    await yieldToMain();
   }
 
   console.log('[GIF Export] Encoding GIF with gif.js');
@@ -342,23 +336,3 @@ export async function exportGif(
   };
 }
 
-/**
- * Trigger browser download of a GIF blob
- *
- * @param blob - Blob to download
- * @param filename - Filename for the download
- */
-export function triggerGifDownload(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = filename;
-
-  // Append to body, click, and remove
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  // Clean up the object URL
-  setTimeout(() => URL.revokeObjectURL(url), 100);
-}

@@ -10,6 +10,7 @@
  * @see docs/features/alignment-export.md for full documentation
  */
 
+import { loadImage } from './load-image';
 import { addWatermark, type WatermarkOptions } from './watermark';
 import type { Landmark } from '@/types/landmarks';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
@@ -45,23 +46,6 @@ export interface ExportResult {
   filename: string;
   width: number;
   height: number;
-}
-
-/**
- * Load an image from a data URL
- *
- * @param dataUrl - Data URL of the image to load
- * @returns Promise<HTMLImageElement> - Loaded image element
- */
-async function loadImage(dataUrl: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Failed to load image'));
-
-    img.src = dataUrl;
-  });
 }
 
 /**

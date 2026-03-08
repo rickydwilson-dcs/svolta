@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import type { AnimationStyle } from '@/lib/canvas/export-gif';
 import type { Photo } from '@/types/editor';
 import { calculateAlignedDrawParams } from '@/lib/canvas/aligned-draw-params';
+import { loadImage } from '@/lib/canvas/load-image';
 import { useEditorStore } from '@/stores/editor-store';
 
 export interface GifPreviewProps {
@@ -67,10 +68,51 @@ export function GifPreview({
   const afterCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const dimensionsRef = React.useRef<{ width: number; height: number }>({ width: 0, height: 0 });
 
-  // Pre-render aligned images
+  const imagesRef = React.useRef<{
+    beforeImg: HTMLImageElement | null;
+    afterImg: HTMLImageElement | null;
+    beforeDataUrl: string | null;
+    afterDataUrl: string | null;
+  }>({ beforeImg: null, afterImg: null, beforeDataUrl: null, afterDataUrl: null });
+
+  const [imagesVersion, setImagesVersion] = React.useState(0);
+
+  // Effect 1: Load images when data URLs change
+  React.useEffect(() => {
+    let cancelled = false;
+
+    const before = beforePhoto.dataUrl;
+    const after = afterPhoto.dataUrl;
+
+    if (
+      imagesRef.current.beforeDataUrl === before &&
+      imagesRef.current.afterDataUrl === after &&
+      imagesRef.current.beforeImg &&
+      imagesRef.current.afterImg
+    ) {
+      return;
+    }
+
+    setIsReady(false);
+
+    Promise.all([loadImage(before), loadImage(after)])
+      .then(([beforeImg, afterImg]) => {
+        if (cancelled) return;
+        imagesRef.current = { beforeImg, afterImg, beforeDataUrl: before, afterDataUrl: after };
+        setImagesVersion((n) => n + 1);
+      })
+      .catch((error) => {
+        if (!cancelled) console.error('Failed to load GIF preview images:', error);
+      });
+
+    return () => { cancelled = true; };
+  }, [beforePhoto.dataUrl, afterPhoto.dataUrl]);
+
+  // Effect 2: Pre-render canvases (runs when images or alignment params change)
   React.useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    const { beforeImg, afterImg } = imagesRef.current;
+    if (!container || !beforeImg || !afterImg) return;
 
     const containerRect = container.getBoundingClientRect();
     const containerWidth = containerRect.width || 400;
@@ -89,89 +131,70 @@ export function GifPreview({
       targetHeight = targetWidth / aspectRatio;
     }
 
-    // Load images
-    const loadImage = (dataUrl: string): Promise<HTMLImageElement> => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = dataUrl;
-      });
-    };
+    // Calculate aligned draw parameters using the shared function
+    const alignParams = calculateAlignedDrawParams(
+      { width: beforeImg.width, height: beforeImg.height },
+      { width: afterImg.width, height: afterImg.height },
+      beforePhoto.landmarks,
+      afterPhoto.landmarks,
+      targetWidth,
+      targetHeight,
+      userFraming
+    );
 
-    Promise.all([
-      loadImage(beforePhoto.dataUrl),
-      loadImage(afterPhoto.dataUrl),
-    ])
-      .then(([beforeImg, afterImg]) => {
-        // Calculate aligned draw parameters using the shared function
-        const alignParams = calculateAlignedDrawParams(
-          { width: beforeImg.width, height: beforeImg.height },
-          { width: afterImg.width, height: afterImg.height },
-          beforePhoto.landmarks,
-          afterPhoto.landmarks,
-          targetWidth,
-          targetHeight,
-          userFraming
-        );
+    // Create before canvas
+    const beforeCanvas = document.createElement('canvas');
+    beforeCanvas.width = targetWidth;
+    beforeCanvas.height = targetHeight;
+    const beforeCtx = beforeCanvas.getContext('2d');
+    if (beforeCtx) {
+      beforeCtx.fillStyle = '#ffffff';
+      beforeCtx.fillRect(0, 0, targetWidth, targetHeight);
+      beforeCtx.drawImage(
+        beforeImg,
+        alignParams.before.drawX,
+        alignParams.before.drawY,
+        alignParams.before.drawWidth,
+        alignParams.before.drawHeight
+      );
+    }
+    beforeCanvasRef.current = beforeCanvas;
 
-        // Create before canvas
-        const beforeCanvas = document.createElement('canvas');
-        beforeCanvas.width = targetWidth;
-        beforeCanvas.height = targetHeight;
-        const beforeCtx = beforeCanvas.getContext('2d');
-        if (beforeCtx) {
-          beforeCtx.fillStyle = '#ffffff';
-          beforeCtx.fillRect(0, 0, targetWidth, targetHeight);
-          beforeCtx.drawImage(
-            beforeImg,
-            alignParams.before.drawX,
-            alignParams.before.drawY,
-            alignParams.before.drawWidth,
-            alignParams.before.drawHeight
-          );
-        }
-        beforeCanvasRef.current = beforeCanvas;
+    // Create after canvas
+    const afterCanvas = document.createElement('canvas');
+    afterCanvas.width = targetWidth;
+    afterCanvas.height = targetHeight;
+    const afterCtx = afterCanvas.getContext('2d');
+    if (afterCtx) {
+      afterCtx.fillStyle = '#ffffff';
+      afterCtx.fillRect(0, 0, targetWidth, targetHeight);
+      afterCtx.drawImage(
+        afterImg,
+        alignParams.after.drawX,
+        alignParams.after.drawY,
+        alignParams.after.drawWidth,
+        alignParams.after.drawHeight
+      );
+    }
+    afterCanvasRef.current = afterCanvas;
 
-        // Create after canvas
-        const afterCanvas = document.createElement('canvas');
-        afterCanvas.width = targetWidth;
-        afterCanvas.height = targetHeight;
-        const afterCtx = afterCanvas.getContext('2d');
-        if (afterCtx) {
-          afterCtx.fillStyle = '#ffffff';
-          afterCtx.fillRect(0, 0, targetWidth, targetHeight);
-          afterCtx.drawImage(
-            afterImg,
-            alignParams.after.drawX,
-            alignParams.after.drawY,
-            alignParams.after.drawWidth,
-            alignParams.after.drawHeight
-          );
-        }
-        afterCanvasRef.current = afterCanvas;
+    dimensionsRef.current = { width: targetWidth, height: targetHeight };
 
-        dimensionsRef.current = { width: targetWidth, height: targetHeight };
+    // Set main canvas size
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+    }
 
-        // Set main canvas size
-        const canvas = canvasRef.current;
-        if (canvas) {
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-        }
-
-        setIsReady(true);
-      })
-      .catch((error) => {
-        console.error('Failed to prepare GIF preview:', error);
-      });
+    setIsReady(true);
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [beforePhoto, afterPhoto, format, userFraming]);
+  }, [imagesVersion, format, beforePhoto.landmarks, afterPhoto.landmarks, userFraming]);
 
   // Animation loop
   React.useEffect(() => {
