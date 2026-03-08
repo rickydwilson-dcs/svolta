@@ -59,6 +59,13 @@ export const CreateAlignmentLogSchema = z.object({
   }),
 });
 
+// Export log
+export const ExportLogSchema = z.object({
+  export_format: z.enum(['png', 'gif']),
+  aspect_ratio: z.enum(['1:1', '4:5', '9:16']).optional(),
+  anon_id: z.string().max(128).optional(),
+});
+
 // Validation helper
 export async function validateRequest<T>(
   request: Request,

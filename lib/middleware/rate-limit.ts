@@ -11,6 +11,7 @@ interface RateLimitResult {
 }
 
 export const RATE_LIMIT_CONFIGS = {
+  'exports-log': { maxRequests: 30, windowSeconds: 60 }, // 30/min
   'usage-increment': { maxRequests: 100, windowSeconds: 60 }, // 100/min
   'backgrounds-upload': { maxRequests: 10, windowSeconds: 900 }, // 10/15min
   'logos-upload': { maxRequests: 10, windowSeconds: 900 }, // 10/15min

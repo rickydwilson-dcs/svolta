@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { usageLogger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/middleware/rate-limit';
+import { validateRequest, ExportLogSchema } from '@/lib/validation/api-schemas';
 
 /**
  * POST /api/exports/log
@@ -10,86 +12,68 @@ import { usageLogger } from '@/lib/logger';
  * Called after every successful export (anonymous, free, or pro).
  *
  * Uses service role client to bypass RLS for analytics logging.
- *
- * Request body:
- * {
- *   export_format: 'png' | 'gif',
- *   aspect_ratio?: '1:1' | '4:5' | '9:16',
- *   anon_id?: string  // For anonymous users - browser fingerprint or session ID
- * }
- *
- * Response:
- * { success: true, id: string }
  */
 export async function POST(request: Request) {
-  try {
-    const body = await request.json().catch(() => ({}));
+  return withRateLimit<
+    | { error: string }
+    | { success: false; error: string }
+    | { success: true; id: string }
+  >(request, 'exports-log', async () => {
+    try {
+      const validation = await validateRequest(request, ExportLogSchema);
+      if (!validation.success) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
 
-    const { export_format, aspect_ratio, anon_id } = body;
+      const { export_format, aspect_ratio, anon_id } = validation.data;
 
-    // Validate export_format
-    if (!export_format || !['png', 'gif'].includes(export_format)) {
-      return NextResponse.json(
-        { error: 'Invalid export_format. Must be "png" or "gif".' },
-        { status: 400 }
-      );
-    }
+      // Use regular client to check authentication
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
 
-    // Validate aspect_ratio if provided
-    if (aspect_ratio && !['1:1', '4:5', '9:16'].includes(aspect_ratio)) {
-      return NextResponse.json(
-        { error: 'Invalid aspect_ratio. Must be "1:1", "4:5", or "9:16".' },
-        { status: 400 }
-      );
-    }
+      let userType: 'anonymous' | 'free' | 'pro' = 'anonymous';
+      let userId: string | null = null;
 
-    // Use regular client to check authentication
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        userId = user.id;
 
-    let userType: 'anonymous' | 'free' | 'pro' = 'anonymous';
-    let userId: string | null = null;
+        // Check subscription status
+        const { data: subscription } = await supabase
+          .from('subscriptions')
+          .select('tier, status')
+          .eq('user_id', user.id)
+          .single();
 
-    if (user) {
-      userId = user.id;
+        if (subscription?.tier === 'pro' && subscription?.status === 'active') {
+          userType = 'pro';
+        } else {
+          userType = 'free';
+        }
+      }
 
-      // Check subscription status
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('tier, status')
-        .eq('user_id', user.id)
+      // Service role client -- bypasses RLS to insert analytics without per-user write policies
+      const serviceClient = createServiceClient();
+      const { data, error } = await serviceClient
+        .from('exports')
+        .insert({
+          user_id: userId,
+          user_type: userType,
+          anon_id: userType === 'anonymous' ? anon_id : null,
+          export_format,
+          aspect_ratio: aspect_ratio || null,
+        })
+        .select('id')
         .single();
 
-      if (subscription?.tier === 'pro' && subscription?.status === 'active') {
-        userType = 'pro';
-      } else {
-        userType = 'free';
+      if (error) {
+        usageLogger.error('Error logging export', error);
+        return NextResponse.json({ success: false, error: 'Failed to log export' }, { status: 500 });
       }
+
+      return NextResponse.json({ success: true, id: data.id });
+    } catch (error) {
+      usageLogger.error('Export log API error', error);
+      return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
-
-    // Service role client -- bypasses RLS to insert analytics without per-user write policies
-    const serviceClient = createServiceClient();
-    const { data, error } = await serviceClient
-      .from('exports')
-      .insert({
-        user_id: userId,
-        user_type: userType,
-        anon_id: userType === 'anonymous' ? anon_id : null,
-        export_format,
-        aspect_ratio: aspect_ratio || null,
-      })
-      .select('id')
-      .single();
-
-    if (error) {
-      usageLogger.error('Error logging export', error);
-      // Don't fail the user's export if logging fails
-      return NextResponse.json({ success: false, error: 'Failed to log export' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, id: data.id });
-  } catch (error) {
-    usageLogger.error('Export log API error', error);
-    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
-  }
+  });
 }
