@@ -13,7 +13,7 @@ Svolta enables fitness professionals and coaches to create perfectly aligned bef
 - **UI Components:** Radix UI primitives
 - **Animation:** Framer Motion
 - **State Management:** Zustand
-- **Canvas Rendering:** Fabric.js
+- **Canvas Rendering:** Native Canvas API
 - **Pose Detection:** MediaPipe Tasks Vision
 - **Auth & Database:** Supabase
 - **Payments:** Stripe (integrated)
@@ -48,14 +48,16 @@ components/
 └── ui/             # Reusable UI primitives
 
 hooks/              # Custom React hooks
-├── useAlignment.ts           # Alignment calculations
-├── useBackgroundRemoval.ts   # Background removal with @imgly
-├── useCanvasExport.ts        # Canvas export functionality
-├── useGifExport.ts           # Animated GIF export
+├── useAlignment.ts                # Alignment calculations
+├── useBackgroundRemoval.ts        # Background removal with @imgly
+├── useCanvasExport.ts             # Canvas export functionality
+├── useExportBackgroundRemoval.ts  # Export-specific background removal
+├── useExportDownload.ts           # Download orchestration
+├── useGifExport.ts                # Animated GIF export
 ├── useKeyboardShortcuts.ts
-├── usePoseDetection.ts       # MediaPipe integration
-├── useUsageLimit.ts          # Usage limit tracking
-└── useZoomPanGestures.ts     # Zoom/pan gesture handling
+├── usePoseDetection.ts            # MediaPipe integration
+├── useUsageLimit.ts               # Usage limit tracking
+└── useZoomPanGestures.ts          # Zoom/pan gesture handling
 
 lib/
 ├── canvas/         # Canvas utilities & watermark
@@ -147,17 +149,17 @@ MIT
 
 ## Current Scope
 
-| Metric               | Count             |
-| -------------------- | ----------------- |
-| Source Files         | 95 TypeScript/TSX |
-| Custom Hooks         | 8                 |
-| State Stores         | 2                 |
-| UI Components        | 13                |
-| API Routes           | 7                 |
-| Test Files           | 5                 |
-| Visual Test Fixtures | 170               |
+| Metric               | Count              |
+| -------------------- | ------------------ |
+| Source Files         | 112 TypeScript/TSX |
+| Custom Hooks         | 10                 |
+| State Stores         | 2                  |
+| UI Components        | 13                 |
+| API Routes           | 7                  |
+| Test Files           | 7                  |
+| Visual Test Fixtures | 170                |
 
 ---
 
 **Domain:** www.svolta.app
-**Last Updated:** 2026-03-07
+**Last Updated:** 2026-03-08

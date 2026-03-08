@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-08
+
+### Added
+
+- **Editor:** Wire AlignmentControls into EditorContent layout (ARCH-008)
+- **SEO:** Add metadata and OG tags to upgrade page
+- **SEO:** Move upgrade page to marketing route group for better indexing
+
+### Changed
+
+- **Export:** Refactor ExportModal into thin container with extracted hooks and utilities
+- **Export:** Extract `useExportBackgroundRemoval` and `useExportDownload` hooks
+- **Export:** Extract child UI components and utility functions to dedicated modules
+- **Performance:** Remove dead Fabric.js dependency and unsafe-eval CSP (PERF-003, SEC-005)
+- **Performance:** Dynamic import @imgly/background-removal to reduce initial bundle (PERF-002)
+- **Performance:** Parallelize background removal with Promise.all (PERF-011)
+- **Performance:** Return blob URLs from removeBackground/applyBackground (PERF-001)
+- **Performance:** Replace toDataURL with toBlob + blob URLs in scaleImage (PERF-008)
+- **Performance:** Narrow useAlignment selectors to landmarks only (PERF-010)
+- **Performance:** Pause GifPreview animation when off-screen via IntersectionObserver (PERF-006)
+- **Performance:** Add requestAnimationFrame guard to AlignedPreview draw effect (PERF-005)
+- **Logging:** Replace all console calls with structured loggers across codebase
+
+### Fixed
+
+- **Tests:** Update usage API tests to match refactored route handlers
+- **Billing:** Remove stale profile subscription columns, add webhook tests (ARCH-001)
+- **Store:** Revoke blob URLs on photo replacement and editor reset (PERF-001)
+- **Store:** Add isInitialized to reset(), remove logo_url type cast (CQ-010, ARCH-010)
+- **Store:** Replace isPro() selector anti-pattern with direct subscription selection (ARCH-002)
+- **Hooks:** Stabilize useExportDownload callbacks with refs (PERF-009)
+- **Hooks:** Memoize exportAndDownload and clearError with useCallback (CQ-017, CQ-018)
+- **Hooks:** Use ref for alignment in useKeyboardShortcuts to prevent stale closure (ARCH-006)
+- **Security:** Add rate limiting and Zod validation to exports/log (SEC-001)
+- **Security:** Add rate limiting to GET endpoints (SEC-002)
+- **SEO:** Update sitemap — add /upgrade, remove noindexed auth pages
+- **SEO:** Expand root title with keywords, add canonical URL (SEO-004, SEO-006)
+- **A11y:** Add skip-link, focus-visible rings, aria-labels, sr-only headings (A11Y-001 through A11Y-008)
+- **Mechanical:** Use client directives, prop exports, JSX to Tailwind conversions
+
+### Technical
+
+- 112 TypeScript/TSX source files (up from 95)
+- 10 custom React hooks (added useExportBackgroundRemoval, useExportDownload)
+- 7 test files (up from 5)
+- Removed Fabric.js dependency — now using native Canvas API
+- Added object-url lifecycle utility for blob URL management
+
+---
+
 ## [0.3.7] - 2026-03-07
 
 ### Technical

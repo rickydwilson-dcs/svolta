@@ -45,7 +45,7 @@
 | Tailwind CSS 4 | Utility-first styling           |
 | Supabase       | Auth, PostgreSQL, RPC functions |
 | MediaPipe      | Client-side pose detection      |
-| Fabric.js      | Canvas manipulation             |
+| Canvas API     | Native canvas rendering         |
 | Stripe         | Payments and subscriptions      |
 | Zustand        | State management                |
 

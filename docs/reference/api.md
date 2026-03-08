@@ -1,7 +1,7 @@
 # Svolta API Reference
 
-**Version:** 1.1.0
-**Last Updated:** 2026-01-04
+**Version:** 1.2.0
+**Last Updated:** 2026-03-08
 **Base URL:** `https://www.svolta.app/api` (Production) | `http://localhost:3000/api` (Development)
 
 ## Overview
@@ -817,13 +817,13 @@ async function callAPI() {
 
 ## Rate Limiting
 
-**Current Status:** No rate limiting implemented
+**Current Status:** Implemented via `withRateLimit` middleware
 
-**Recommended Future Implementation:**
+Rate limiting is applied to API endpoints using a server-side utility. Current limits:
 
-- **Authentication endpoints:** 5 requests/minute per IP
-- **Payment endpoints:** 10 requests/minute per user
-- **Usage endpoints:** 30 requests/minute per user
+- **Upload endpoints** (logos, backgrounds): 10 requests per 15 minutes per user
+- **Export log endpoint:** Rate limited per user
+- **GET endpoints** (usage, account): Rate limited per user
 - **Webhook endpoint:** No limit (Stripe-controlled)
 
 ---
@@ -972,7 +972,7 @@ stripe trigger checkout.session.completed
 
 ---
 
-**Last Updated:** 2026-01-04
-**API Version:** 1.1.0
+**Last Updated:** 2026-03-08
+**API Version:** 1.2.0
 **Next.js Version:** 16.1.1
 **Supabase SDK:** Latest

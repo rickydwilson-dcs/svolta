@@ -1,7 +1,7 @@
 # How State Management Works
 
-**Version:** 1.1.0
-**Last Updated:** 2026-01-04
+**Version:** 1.2.0
+**Last Updated:** 2026-03-08
 **Scope:** Zustand stores and custom React hooks architecture
 
 ## Why This Matters
@@ -10,18 +10,20 @@ Zustand was chosen over Redux and React Context because it provides global state
 
 ## Key Files
 
-| File                            | Purpose                                                     |
-| ------------------------------- | ----------------------------------------------------------- |
-| `stores/editor-store.ts`        | Editor state: photos, landmarks, alignment settings, canvas |
-| `stores/user-store.ts`          | Auth and subscription state: user, tier, usage counts       |
-| `hooks/useAlignment.ts`         | Alignment calculation driven by editor store                |
-| `hooks/useBackgroundRemoval.ts` | Background removal with @imgly/background-removal           |
-| `hooks/useCanvasExport.ts`      | PNG/JPEG export pipeline                                    |
-| `hooks/useGifExport.ts`         | Animated GIF export (3 styles)                              |
-| `hooks/useKeyboardShortcuts.ts` | Keyboard shortcut bindings                                  |
-| `hooks/usePoseDetection.ts`     | MediaPipe pose detection                                    |
-| `hooks/useUsageLimit.ts`        | Export limit enforcement                                    |
-| `hooks/useZoomPanGestures.ts`   | Pinch-to-zoom and pan gestures                              |
+| File                                  | Purpose                                                     |
+| ------------------------------------- | ----------------------------------------------------------- |
+| `stores/editor-store.ts`              | Editor state: photos, landmarks, alignment settings, canvas |
+| `stores/user-store.ts`                | Auth and subscription state: user, tier, usage counts       |
+| `hooks/useAlignment.ts`               | Alignment calculation driven by editor store                |
+| `hooks/useBackgroundRemoval.ts`       | Background removal with @imgly/background-removal           |
+| `hooks/useCanvasExport.ts`            | PNG/JPEG export pipeline                                    |
+| `hooks/useExportBackgroundRemoval.ts` | Export-specific background removal orchestration            |
+| `hooks/useExportDownload.ts`          | Download orchestration for export flows                     |
+| `hooks/useGifExport.ts`               | Animated GIF export (3 styles)                              |
+| `hooks/useKeyboardShortcuts.ts`       | Keyboard shortcut bindings                                  |
+| `hooks/usePoseDetection.ts`           | MediaPipe pose detection                                    |
+| `hooks/useUsageLimit.ts`              | Export limit enforcement                                    |
+| `hooks/useZoomPanGestures.ts`         | Pinch-to-zoom and pan gestures                              |
 
 ## Table of Contents
 
@@ -33,6 +35,8 @@ Zustand was chosen over Redux and React Context because it provides global state
   - [useAlignment](#usealignment)
   - [useBackgroundRemoval](#usebackgroundremoval)
   - [useCanvasExport](#usecanvasexport)
+  - [useExportBackgroundRemoval](#useexportbackgroundremoval)
+  - [useExportDownload](#useexportdownload)
   - [useGifExport](#usegifexport)
   - [useKeyboardShortcuts](#usekeyboardshortcuts)
   - [usePoseDetection](#useposedetection)
@@ -66,6 +70,8 @@ graph TB
         UA[useAlignment]
         UBR[useBackgroundRemoval]
         UCE[useCanvasExport]
+        UEBR[useExportBackgroundRemoval]
+        UED[useExportDownload]
         UGE[useGifExport]
         UKS[useKeyboardShortcuts]
         UPD[usePoseDetection]

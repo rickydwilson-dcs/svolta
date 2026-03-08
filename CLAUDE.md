@@ -223,7 +223,7 @@ Use `/commit.changes` to commit with proper workflow.
 - **UI:** Radix UI primitives
 - **Animation:** Framer Motion
 - **State:** Zustand
-- **Canvas:** Fabric.js
+- **Canvas:** Native Canvas API
 
 ### Backend
 
@@ -279,12 +279,12 @@ Use `/commit.changes` to commit with proper workflow.
 
 ## Current Scope
 
-**Source Files:** 95 TypeScript/TSX files
-**Custom Hooks:** 8 (useAlignment, useBackgroundRemoval, useCanvasExport, useGifExport, useKeyboardShortcuts, usePoseDetection, useUsageLimit, useZoomPanGestures)
+**Source Files:** 112 TypeScript/TSX files
+**Custom Hooks:** 10 (useAlignment, useBackgroundRemoval, useCanvasExport, useExportBackgroundRemoval, useExportDownload, useGifExport, useKeyboardShortcuts, usePoseDetection, useUsageLimit, useZoomPanGestures)
 **State Stores:** 2 (editor-store, user-store)
 **UI Components:** 13 primitives (Button, BottomSheet, Card, ErrorBoundary, Input, MagicLinkForm, Modal, OAuthButtons, SegmentedControl, Slider, SvoltaLogo, Toggle, UpgradePrompt)
 **API Routes:** 7 directories (account, backgrounds, debug, exports, logos, stripe, usage)
-**Test Files:** 5 test files
+**Test Files:** 7 test files
 **Visual Test Fixtures:** 170 fixtures
 **New Features:** Animated GIF export (3 styles), Background removal with @imgly/background-removal
 **Documentation:** See `docs/` folder for technical documentation
@@ -335,4 +335,4 @@ Use `/commit.changes` to commit with proper workflow.
 
 ---
 
-**Last Updated:** 2026-03-07 (Updated scope: 95 source files, 8 hooks, 7 API routes, 5 test files)
+**Last Updated:** 2026-03-08 (Updated scope: 112 source files, 10 hooks, 7 API routes, 7 test files)

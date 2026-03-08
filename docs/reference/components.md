@@ -3,7 +3,7 @@
 Comprehensive API documentation for all UI and feature components in Svolta.
 
 **Version:** 1.2.0
-**Last Updated:** 2026-01-04
+**Last Updated:** 2026-03-08
 **Scope:** UI primitives and editor feature components
 
 > **Design System:** See [brand-guidelines.md](../standards/brand-guidelines.md) and [design-tokens.md](../standards/design-tokens.md) for visual style, colors, and spacing tokens.
