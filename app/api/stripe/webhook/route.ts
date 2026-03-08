@@ -3,6 +3,7 @@ import type Stripe from 'stripe';
 import { constructWebhookEvent, getStripe } from '@/lib/stripe/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { resolveTierFromPriceId } from '@/lib/stripe/tier-resolver';
+import { webhookLogger } from '@/lib/logger';
 
 /**
  * POST /api/stripe/webhook
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     try {
       event = await constructWebhookEvent(body, signature);
     } catch (err) {
-      console.error('Webhook signature verification failed:', err);
+      webhookLogger.error('Webhook signature verification failed:', err);
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     // Security: Reject test events in production
     const isProduction = process.env.NODE_ENV === 'production';
     if (isProduction && !event.livemode) {
-      console.warn('Rejected test event in production:', event.id);
+      webhookLogger.warn('Rejected test event in production:', event.id);
       return NextResponse.json(
         { error: 'Test events rejected in production' },
         { status: 400 }
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (existingEvent) {
-      console.log('Duplicate event skipped:', event.id);
+      webhookLogger.info('Duplicate event skipped:', event.id);
       return NextResponse.json({ received: true, duplicate: true });
     }
 
@@ -67,11 +68,11 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       // If insert fails due to unique constraint, another worker got it first
       if (insertError.code === '23505') {
-        console.log('Event already being processed by another worker:', event.id);
+        webhookLogger.info('Event already being processed:', event.id);
         return NextResponse.json({ received: true, duplicate: true });
       }
       // Any other error - fail fast, let Stripe retry
-      console.error('Failed to record webhook event:', insertError);
+      webhookLogger.error('Failed to record webhook event:', insertError);
       return NextResponse.json(
         { error: 'Database error recording webhook event' },
         { status: 500 }
@@ -111,13 +112,13 @@ export async function POST(request: NextRequest) {
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        webhookLogger.warn('Unhandled event type:', event.type);
     }
 
     return NextResponse.json({ received: true });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    webhookLogger.error('Webhook error:', error);
     return NextResponse.json(
       { error: 'Webhook handler failed' },
       { status: 500 }
@@ -135,7 +136,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const customerId = session.customer as string;
 
   if (!userId) {
-    console.error('No user_id in checkout session metadata');
+    webhookLogger.error('No user_id in checkout session metadata');
     return;
   }
 
@@ -145,7 +146,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const priceId = lineItems.data[0]?.price?.id;
   const tier = resolveTierFromPriceId(priceId);
 
-  console.log('Checkout completed for user:', userId, 'tier:', tier);
+  webhookLogger.info('Checkout completed', { userId, tier });
 
   // Upsert subscription record with resolved tier
   const { error } = await createServiceClient()
@@ -162,7 +163,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     });
 
   if (error) {
-    console.error('Error upserting subscription:', error);
+    webhookLogger.error('Error upserting subscription:', error);
   }
 }
 
@@ -182,7 +183,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
       .single();
 
     if (!profile) {
-      console.error('Could not find user for subscription:', subscription.id);
+      webhookLogger.error('Could not find user for subscription:', subscription.id);
       return;
     }
 
@@ -233,7 +234,7 @@ async function updateSubscriptionStatus(userId: string, subscription: Stripe.Sub
     });
 
   if (error) {
-    console.error('Error updating subscription:', error);
+    webhookLogger.error('Error updating subscription:', error);
   }
 }
 
@@ -252,11 +253,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .single();
 
   if (!profile) {
-    console.error('Could not find user for deleted subscription');
+    webhookLogger.error('Could not find user for deleted subscription');
     return;
   }
 
-  console.log('Subscription deleted for user:', profile.id);
+  webhookLogger.info('Subscription deleted', { userId: profile.id });
 
   // Update subscription to canceled/free
   const { error } = await createServiceClient()
@@ -269,7 +270,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .eq('user_id', profile.id);
 
   if (error) {
-    console.error('Error downgrading subscription:', error);
+    webhookLogger.error('Error downgrading subscription:', error);
   }
 }
 
@@ -283,7 +284,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
 
   if (!subscriptionId) return;
 
-  console.log('Payment failed for subscription:', subscriptionId);
+  webhookLogger.warn('Payment failed', { subscriptionId });
 
   // Find user by customer ID
   const { data: profile } = await createServiceClient()
@@ -293,7 +294,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     .single();
 
   if (!profile) {
-    console.error('Could not find user for failed payment');
+    webhookLogger.error('Could not find user for failed payment');
     return;
   }
 
@@ -307,7 +308,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     .eq('user_id', profile.id);
 
   if (error) {
-    console.error('Error updating subscription status:', error);
+    webhookLogger.error('Error updating subscription status:', error);
   }
 }
 
@@ -340,6 +341,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
     .eq('user_id', profile.id);
 
   if (error) {
-    console.error('Error updating subscription status:', error);
+    webhookLogger.error('Error updating subscription status:', error);
   }
 }
