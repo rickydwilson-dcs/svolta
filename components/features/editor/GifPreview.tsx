@@ -278,6 +278,8 @@ export function GifPreview({
       )}
     >
       <canvas
+        role="img"
+        aria-label="Animated before and after preview"
         ref={canvasRef}
         className="max-w-full max-h-full object-contain"
         style={{ display: isReady ? 'block' : 'none' }}

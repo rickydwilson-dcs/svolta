@@ -40,6 +40,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || loading}
+        aria-busy={loading}
         className={cn(
           baseStyles,
           variantStyles[variant],
@@ -57,6 +58,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
         {loading && (
           <svg
+            aria-hidden="true"
             className="animate-spin h-4 w-4"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

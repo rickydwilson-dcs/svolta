@@ -96,12 +96,14 @@ export default function UpgradePage() {
         <div className="billing-toggle">
           <button
             onClick={() => setBillingPeriod('monthly')}
+            aria-pressed={billingPeriod === 'monthly'}
             className={billingPeriod === 'monthly' ? 'active' : ''}
           >
             Monthly
           </button>
           <button
             onClick={() => setBillingPeriod('yearly')}
+            aria-pressed={billingPeriod === 'yearly'}
             className={`flex items-center gap-2 ${billingPeriod === 'yearly' ? 'active' : ''}`}
           >
             Yearly

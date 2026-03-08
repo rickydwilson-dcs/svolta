@@ -1,5 +1,10 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default function AuthLayout({
   children,
@@ -11,7 +16,7 @@ export default function AuthLayout({
       {/* Minimal Header */}
       <header className="w-full py-6">
         <div className="mx-auto max-w-md px-4 sm:px-6">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center" aria-label="Svolta home">
             <SvoltaLogo size={32} mode="dark" showWordmark wordmarkStyle="gradient" />
           </Link>
         </div>

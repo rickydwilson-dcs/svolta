@@ -46,8 +46,10 @@ export async function withRateLimit<T>(
 
     if (error) {
       console.error('Rate limit check failed:', error);
-      // Fail open - allow request if rate limit check fails
-      return handler();
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      ) as NextResponse<T>;
     }
 
     const result = data as RateLimitResult;
@@ -82,7 +84,9 @@ export async function withRateLimit<T>(
     return response;
   } catch (error) {
     console.error('Rate limiting error:', error);
-    // Fail open - allow request if rate limiting fails
-    return handler();
+    return NextResponse.json(
+      { error: 'Service temporarily unavailable' },
+      { status: 503 }
+    ) as NextResponse<T>;
   }
 }

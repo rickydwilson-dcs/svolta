@@ -25,7 +25,7 @@ export default function MarketingLayout({
             <SvoltaLogo size={24} mode="dark" showWordmark wordmarkStyle="gradient" />
 
             {/* Links */}
-            <nav className="flex flex-wrap items-center justify-center gap-6 text-sm">
+            <nav aria-label="Footer" className="flex flex-wrap items-center justify-center gap-6 text-sm">
               <Link href="/privacy" className="text-text-secondary hover:text-text transition-colors">
                 Privacy
               </Link>

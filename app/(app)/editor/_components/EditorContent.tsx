@@ -15,7 +15,7 @@ import { PhotoPanel, ExportModal } from '@/components/features/editor';
 import { Button } from '@/components/ui';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
 
-export default function EditorContent() {
+export function EditorContent() {
   const beforePhoto = useEditorStore((s) => s.beforePhoto);
   const afterPhoto = useEditorStore((s) => s.afterPhoto);
   const setBeforePhoto = useEditorStore((s) => s.setBeforePhoto);
@@ -73,6 +73,7 @@ export default function EditorContent() {
                   href="/upgrade"
                   className="text-brand-pink hover:text-brand-pink/80 transition-colors"
                   title="Upgrade for unlimited"
+                  aria-label="Upgrade to Pro"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -86,6 +87,7 @@ export default function EditorContent() {
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
               title={mounted ? `Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode` : 'Toggle theme'}
+              aria-label="Toggle theme"
             >
               {mounted && resolvedTheme === 'dark' ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,6 +114,7 @@ export default function EditorContent() {
             <Link
               href="/settings"
               className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
+              aria-label="Settings"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

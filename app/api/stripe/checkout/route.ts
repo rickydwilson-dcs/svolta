@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
       // Handle specific Stripe errors
       if (error instanceof Error) {
         return NextResponse.json(
-          { error: error.message },
+          { error: 'Failed to create checkout session' },
           { status: 500 }
         );
       }

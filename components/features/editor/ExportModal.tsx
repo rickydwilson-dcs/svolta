@@ -589,6 +589,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                             key={style.value}
                             onClick={() => setAnimationStyle(style.value as AnimationStyle)}
                             title={style.title}
+                            aria-label={style.title}
                             className={cn(
                               'flex-1 h-10 rounded-lg text-lg font-medium transition-all duration-150',
                               animationStyle === style.value

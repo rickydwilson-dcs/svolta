@@ -3,7 +3,11 @@
 import { ThemeProvider } from './ThemeProvider';
 import { UserProvider } from './UserProvider';
 
-export function Providers({ children }: { children: React.ReactNode }) {
+interface ProvidersProps {
+  children: React.ReactNode;
+}
+
+export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider
       attribute="class"
