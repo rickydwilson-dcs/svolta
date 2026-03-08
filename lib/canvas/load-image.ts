@@ -11,7 +11,7 @@ export async function loadImage(src: string): Promise<HTMLImageElement> {
     const img = new Image();
 
     img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () => reject(new Error(`Failed to load image (${src.startsWith('blob:') ? 'blob URL — may have been revoked' : src.startsWith('data:') ? 'data URL' : 'URL'})`));
 
     img.src = src;
   });
