@@ -7,6 +7,7 @@
  */
 
 import * as React from 'react';
+import { editorLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import type { Photo } from '@/types/editor';
 import type { BackgroundSettings } from '@/lib/segmentation/backgrounds';
@@ -94,7 +95,7 @@ export function AlignedPreview({
       })
       .catch((error) => {
         if (!cancelled) {
-          console.error('Failed to load aligned preview images:', error);
+          editorLogger.error('Failed to load aligned preview images:', error);
           setIsRendering(false);
         }
       });
