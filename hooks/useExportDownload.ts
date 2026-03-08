@@ -43,7 +43,8 @@ export function useExportDownload(
   const afterPhoto = useEditorStore((s) => s.afterPhoto);
   const alignment = useEditorStore((s) => s.alignment);
   const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
-  const isPro = useUserStore((state) => state.isPro());
+  const subscription = useUserStore((s) => s.subscription);
+  const isPro = subscription?.tier === 'pro' && subscription?.status === 'active';
   const profile = useUserStore((state) => state.profile);
   const { checkAndIncrement, isAnonymous } = useUsageLimit();
   const { isExporting, error: canvasError, exportAndDownload, clearError: clearCanvasError } = useCanvasExport();

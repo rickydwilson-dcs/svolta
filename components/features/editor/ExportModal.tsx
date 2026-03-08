@@ -35,7 +35,8 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
   const setBackgroundSettings = useEditorStore((s) => s.setBackgroundSettings);
   const setUserFraming = useEditorStore((s) => s.setUserFraming);
-  const isPro = useUserStore((state) => state.isPro());
+  const subscription = useUserStore((s) => s.subscription);
+  const isPro = subscription?.tier === 'pro' && subscription?.status === 'active';
   const { limit, remaining } = useUsageLimit();
   const {
     isRemovingBackgrounds,

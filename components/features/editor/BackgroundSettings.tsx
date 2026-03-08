@@ -53,7 +53,8 @@ export function BackgroundSettings({
 }: BackgroundSettingsProps): React.ReactElement {
   const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
   const setBackgroundSettings = useEditorStore((s) => s.setBackgroundSettings);
-  const isPro = useUserStore((state) => state.isPro());
+  const subscription = useUserStore((s) => s.subscription);
+  const isPro = subscription?.tier === 'pro' && subscription?.status === 'active';
 
   const [customColor, setCustomColor] = React.useState('#ffffff');
 
