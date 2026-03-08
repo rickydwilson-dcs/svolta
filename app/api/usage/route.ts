@@ -3,13 +3,18 @@ import { createClient } from '@/lib/supabase/server';
 import { FREE_EXPORT_LIMIT } from '@/lib/stripe/plans';
 import { getCurrentBillingPeriod } from '@/lib/utils/billing-period';
 import { usageLogger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/middleware/rate-limit';
 
 /**
  * GET /api/usage
  *
  * Returns current month's usage for authenticated user.
  */
-export async function GET() {
+export async function GET(request: Request) {
+  return withRateLimit<
+    | { error: string }
+    | { exports_count: number; period_start: string; limit: number; remaining: number; is_pro: boolean; last_export_at: string | null }
+  >(request, 'default', async () => {
   try {
     const supabase = await createClient();
 
@@ -71,4 +76,5 @@ export async function GET() {
       { status: 500 }
     );
   }
+  });
 }

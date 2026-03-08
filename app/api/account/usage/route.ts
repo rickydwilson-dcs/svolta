@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentBillingPeriod } from '@/lib/utils/billing-period';
 import { usageLogger } from '@/lib/logger';
+import { withRateLimit } from '@/lib/middleware/rate-limit';
 
-export async function GET() {
+export async function GET(request: Request) {
+  return withRateLimit<
+    | { error: string }
+    | { usage: unknown }
+  >(request, 'default', async () => {
   try {
     const supabase = await createClient();
 
@@ -39,4 +44,5 @@ export async function GET() {
     usageLogger.error('Usage API error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+  });
 }
