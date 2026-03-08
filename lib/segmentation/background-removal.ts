@@ -6,7 +6,7 @@
  * unlike binary segmentation masks.
  */
 
-import { removeBackground as imglyRemoveBackground, preload, type Config } from '@imgly/background-removal';
+import type { Config } from '@imgly/background-removal';
 import { drawBackground, type BackgroundSettings } from './backgrounds';
 
 export interface SegmentationResult {
@@ -58,6 +58,7 @@ export async function preloadModel(): Promise<void> {
     },
   };
 
+  const { preload } = await import('@imgly/background-removal');
   preloadPromise = preload(config).then(() => {
     isPreloaded = true;
   });
@@ -190,6 +191,7 @@ export async function removeBackground(
     onProgress?.(0.15);
 
     // Run background removal with imgly
+    const { removeBackground: imglyRemoveBackground } = await import('@imgly/background-removal');
     const resultBlob = await imglyRemoveBackground(imageBlob, config);
 
     onProgress?.(0.9);
