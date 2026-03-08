@@ -19,7 +19,6 @@ interface LogEntry {
 }
 
 const isProduction = process.env.NODE_ENV === 'production';
-const isBrowser = typeof window !== 'undefined';
 
 /**
  * Format log entry for console output
