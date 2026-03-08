@@ -4,6 +4,7 @@
  */
 
 import { create } from 'zustand';
+import { revokePhotoUrls } from '@/lib/utils/object-url';
 import type { Photo, AlignmentSettings, UserFramingOverride } from '@/types/editor';
 import { DEFAULT_USER_FRAMING } from '@/types/editor';
 import type { Landmark } from '@/types/landmarks';
@@ -67,9 +68,15 @@ export const useEditorStore = create<EditorState>((set) => ({
   error: null,
 
   // Actions
-  setBeforePhoto: (photo) => set({ beforePhoto: photo }),
+  setBeforePhoto: (photo) => set((state) => {
+    revokePhotoUrls(state.beforePhoto);
+    return { beforePhoto: photo };
+  }),
 
-  setAfterPhoto: (photo) => set({ afterPhoto: photo }),
+  setAfterPhoto: (photo) => set((state) => {
+    revokePhotoUrls(state.afterPhoto);
+    return { afterPhoto: photo };
+  }),
 
   setBeforeLandmarks: (landmarks) =>
     set((state) => ({
@@ -111,8 +118,10 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   setError: (error) => set({ error }),
 
-  reset: () =>
-    set({
+  reset: () => set((state) => {
+    revokePhotoUrls(state.beforePhoto);
+    revokePhotoUrls(state.afterPhoto);
+    return {
       beforePhoto: null,
       afterPhoto: null,
       alignment: initialAlignment,
@@ -122,5 +131,6 @@ export const useEditorStore = create<EditorState>((set) => ({
       backgroundSettings: defaultBackgroundSettings,
       isDetecting: false,
       error: null,
-    }),
+    };
+  }),
 }));
