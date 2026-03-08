@@ -5,6 +5,7 @@ import { getCurrentBillingPeriod } from '@/lib/utils/billing-period';
 import { logAuditEvent } from '@/lib/audit/logger';
 import { withRateLimit } from '@/lib/middleware/rate-limit';
 import { validateRequest, IncrementUsageSchema } from '@/lib/validation/api-schemas';
+import { usageLogger } from '@/lib/logger';
 
 /**
  * POST /api/usage/increment
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
     // Get current billing period (UTC-based for consistency)
     const currentMonth = getCurrentBillingPeriod();
 
-    // Fetch user's subscription to determine limit
+    // Fetch user's subscription to determine if Pro
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('tier, status')
@@ -72,62 +73,83 @@ export async function POST(request: Request) {
 
     const isPro = subscription?.tier === 'pro' && subscription?.status === 'active';
 
-    // Fetch current month's usage
-    const { data: currentUsage } = await supabase
-      .from('usage')
-      .select('exports_count')
-      .eq('user_id', user.id)
-      .eq('month', currentMonth)
-      .single();
+    // Pro users: always allow, just increment
+    if (isPro) {
+      // Increment via RPC for consistency
+      const { data: rpcResult, error: rpcError } = await supabase
+        .rpc('increment_export_count', { p_user_id: user.id });
 
-    const currentCount = currentUsage?.exports_count ?? 0;
+      if (rpcError) {
+        usageLogger.error('RPC increment failed for pro user:', rpcError);
+        return NextResponse.json(
+          { error: 'Failed to update usage data' },
+          { status: 500 }
+        );
+      }
 
-    // For Free users, check if limit is reached
-    if (!isPro && currentCount >= FREE_EXPORT_LIMIT) {
-      return NextResponse.json(
+      const result = rpcResult as { exports_count: number; remaining: number; limit_reached: boolean };
+
+      await logAuditEvent(
+        user.id,
         {
-          error: 'Export limit reached',
-          message: `You've reached your limit of ${FREE_EXPORT_LIMIT} exports per month. Upgrade to Pro for unlimited exports.`,
-          exports_count: currentCount,
-          remaining: 0,
-          can_export: false,
-          limit_reached: true,
+          action: 'usage.incremented',
+          resourceType: 'usage',
+          resourceId: currentMonth,
+          metadata: {
+            exports_count: result.exports_count,
+            tier: 'pro',
+            limit_reached: false,
+          },
         },
-        { status: 403 }
+        request
       );
+
+      return NextResponse.json({
+        success: true,
+        exports_count: result.exports_count,
+        remaining: -1,
+        can_export: true,
+        limit_reached: false,
+      });
     }
 
-    // Upsert usage record (increment or create)
-    const { data: updatedUsage, error: upsertError } = await supabase
-      .from('usage')
-      .upsert(
-        {
-          user_id: user.id,
-          month: currentMonth,
-          exports_count: currentCount + 1,
-          last_export_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'user_id,month',
-        }
-      )
-      .select('exports_count, last_export_at')
-      .single();
+    // Free users: atomic increment with limit check via RPC
+    const { data: rpcResult, error: rpcError } = await supabase
+      .rpc('increment_export_count', { p_user_id: user.id });
 
-    if (upsertError) {
-      console.error('Error upserting usage:', upsertError);
+    if (rpcError) {
+      usageLogger.error('RPC increment failed:', rpcError);
       return NextResponse.json(
         { error: 'Failed to update usage data' },
         { status: 500 }
       );
     }
 
-    const newCount = updatedUsage.exports_count;
-    const remaining = isPro ? -1 : Math.max(0, FREE_EXPORT_LIMIT - newCount);
-    const canExport = isPro || newCount < FREE_EXPORT_LIMIT;
-    const limitReached = !isPro && newCount >= FREE_EXPORT_LIMIT;
+    const result = rpcResult as { exports_count: number; remaining: number; limit_reached: boolean };
 
-    // Log audit event for successful export
+    // If limit was already reached before this call, the RPC still incremented.
+    // Check if we need to reject. The RPC returns limit_reached based on post-increment state.
+    if (result.limit_reached) {
+      // Check if this increment pushed us over (count > limit) vs exactly at limit
+      // If count exceeds limit, we were already at the limit before this call
+      if (result.exports_count > FREE_EXPORT_LIMIT) {
+        return NextResponse.json(
+          {
+            error: 'Export limit reached',
+            message: `You've reached your limit of ${FREE_EXPORT_LIMIT} exports per month. Upgrade to Pro for unlimited exports.`,
+            exports_count: result.exports_count,
+            remaining: 0,
+            can_export: false,
+            limit_reached: true,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    const remaining = Math.max(0, FREE_EXPORT_LIMIT - result.exports_count);
+    const canExport = result.exports_count < FREE_EXPORT_LIMIT;
+
     await logAuditEvent(
       user.id,
       {
@@ -135,24 +157,24 @@ export async function POST(request: Request) {
         resourceType: 'usage',
         resourceId: currentMonth,
         metadata: {
-          exports_count: newCount,
-          tier: isPro ? 'pro' : 'free',
-          limit_reached: limitReached
-        }
+          exports_count: result.exports_count,
+          tier: 'free',
+          limit_reached: result.limit_reached,
+        },
       },
       request
     );
 
     return NextResponse.json({
       success: true,
-      exports_count: newCount,
+      exports_count: result.exports_count,
       remaining,
       can_export: canExport,
-      limit_reached: limitReached,
+      limit_reached: result.limit_reached,
     });
 
     } catch (error) {
-      console.error('Usage increment API error:', error);
+      usageLogger.error('Usage increment API error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

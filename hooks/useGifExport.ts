@@ -6,6 +6,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { exportGif, triggerGifDownload, type GifExportOptions, type PhotoData } from '@/lib/canvas/export-gif';
 import { useEditorStore } from '@/stores/editor-store';
+import { canvasLogger } from '@/lib/logger';
 
 /**
  * Status of GIF export operation
@@ -140,7 +141,7 @@ export function useGifExport(): UseGifExportReturn {
         setStatus('complete');
         succeeded = true;
 
-        console.log('[useGifExport] Export successful:', {
+        canvasLogger.info('GIF export successful', {
           filename: result.filename,
           fileSize: `${(result.fileSize / 1024 / 1024).toFixed(2)} MB`,
           frameCount: result.frameCount,
@@ -150,11 +151,11 @@ export function useGifExport(): UseGifExportReturn {
       } catch (err) {
         // Don't show error if cancelled
         if (cancelledRef.current) {
-          console.log('[useGifExport] Export cancelled');
+          canvasLogger.info('GIF export cancelled');
           return false;
         }
 
-        console.error('[useGifExport] Export failed:', err);
+        canvasLogger.error('GIF export failed', err);
 
         // Set user-friendly error message
         const errorMessage = err instanceof Error ? err.message : 'Failed to export GIF';
@@ -181,7 +182,7 @@ export function useGifExport(): UseGifExportReturn {
    */
   const cancel = useCallback(() => {
     if (isExporting) {
-      console.log('[useGifExport] Cancelling export');
+      canvasLogger.info('GIF export cancelling');
       cancelledRef.current = true;
       setIsExporting(false);
       setProgress(0);

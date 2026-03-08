@@ -6,6 +6,7 @@
 
 import { useEffect, useMemo, useCallback, useRef } from 'react';
 import { useEditorStore } from '@/stores/editor-store';
+import { poseLogger } from '@/lib/logger';
 import { calculateAlignment, canCalculateAlignment } from '@/lib/canvas/alignment';
 import type { AlignmentSettings } from '@/types/editor';
 
@@ -91,7 +92,7 @@ export function useAlignment(): UseAlignmentReturn {
     // Debounce the alignment calculation
     debounceTimerRef.current = setTimeout(() => {
       if (!beforePhoto?.landmarks || !afterPhoto?.landmarks) {
-        console.warn('Cannot auto-align: missing landmarks');
+        poseLogger.warn('Cannot auto-align: missing landmarks');
         return;
       }
 

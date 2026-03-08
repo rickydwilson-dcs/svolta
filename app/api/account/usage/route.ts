@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentBillingPeriod } from '@/lib/utils/billing-period';
+import { usageLogger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -18,7 +19,7 @@ export async function GET() {
 
     const currentMonth = getCurrentBillingPeriod();
 
-    // Fetch usage using server client (bypasses RLS issues)
+    // Fetch usage for authenticated user (uses session-scoped client with RLS)
     const { data: usage, error: usageError } = await supabase
       .from('usage')
       .select('*')
@@ -27,7 +28,7 @@ export async function GET() {
       .single();
 
     if (usageError && usageError.code !== 'PGRST116') {
-      console.error('Error fetching usage:', usageError);
+      usageLogger.error('Error fetching usage', usageError);
       return NextResponse.json({ error: 'Failed to fetch usage' }, { status: 500 });
     }
 
@@ -35,7 +36,7 @@ export async function GET() {
       usage: usage || null,
     });
   } catch (error) {
-    console.error('Usage API error:', error);
+    usageLogger.error('Usage API error', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

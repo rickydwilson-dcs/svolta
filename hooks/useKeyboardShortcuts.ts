@@ -24,7 +24,7 @@ export interface KeyboardShortcutsOptions {
  * - L: Toggle landmarks
  * - G: Toggle grid
  */
-export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
+export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}): void {
   const { enabled = true, onAutoAlign } = options;
 
   const alignment = useEditorStore((s) => s.alignment);
@@ -93,9 +93,9 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
         case 'r':
         case 'R':
           e.preventDefault();
-          // Reset alignment to defaults
+          // Reset alignment to store defaults
           updateAlignment({
-            anchor: 'shoulders',
+            anchor: 'full',
             scale: 1,
             offsetX: 0,
             offsetY: 0,
