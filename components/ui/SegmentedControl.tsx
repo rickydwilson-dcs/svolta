@@ -18,6 +18,7 @@ export interface SegmentedControlProps {
   size?: 'sm' | 'md';
   fullWidth?: boolean;
   className?: string;
+  ariaLabel?: string;
 }
 
 const SegmentedControl = ({
@@ -28,6 +29,7 @@ const SegmentedControl = ({
   size = 'md',
   fullWidth = true,
   className,
+  ariaLabel,
 }: SegmentedControlProps) => {
   const sizeStyles = {
     sm: 'h-8 text-xs',
@@ -42,6 +44,7 @@ const SegmentedControl = ({
       onValueChange={(newValue) => {
         if (newValue) onValueChange?.(newValue);
       }}
+      aria-label={ariaLabel}
       className={cn(
         'flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl',
         fullWidth && 'w-full',

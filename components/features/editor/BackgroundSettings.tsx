@@ -236,6 +236,7 @@ export function BackgroundSettings({
           onValueChange={handleTypeChange}
           size="md"
           fullWidth
+          ariaLabel="Background type"
         />
       </div>
 

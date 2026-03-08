@@ -39,7 +39,7 @@ export function MarketingHeader() {
         </Link>
 
         {/* Navigation */}
-        <nav className="flex items-center gap-3">
+        <nav aria-label="Main navigation" className="flex items-center gap-3">
           <Link
             href="/login"
             className={cn(
