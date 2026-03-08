@@ -97,6 +97,7 @@ export function LandmarkOverlay({
 
   return (
     <svg
+      aria-hidden="true"
       className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${className}`}
       width={width}
       height={height}

@@ -204,6 +204,8 @@ export function AlignedPreview({
   return (
     <div ref={containerRef} className={cn('flex items-center justify-center', className)}>
       <canvas
+        role="img"
+        aria-label="Aligned before and after photo preview"
         ref={canvasRef}
         className="max-w-full max-h-full object-contain"
         style={{ display: isRendering ? 'none' : 'block' }}
