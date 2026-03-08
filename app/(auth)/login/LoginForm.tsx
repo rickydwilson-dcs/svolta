@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { OAuthButtons } from '@/components/ui/OAuthButtons';
 import { MagicLinkForm } from '@/components/ui/MagicLinkForm';
 
-export default function LoginForm() {
+export function LoginForm() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/editor';
   const errorParam = searchParams.get('error');
