@@ -68,7 +68,7 @@
     "playwright": "^1.57.0",
     "pngjs": "^7.0.0",
     "prettier": "^3.7.4",
-    "supabase": "^2.70.5",
+    "supabase": "^2.77.1",
     "tailwindcss": "^4.1.18",
     "typescript": "5.9.3",
     "vitest": "^4.0.18"
