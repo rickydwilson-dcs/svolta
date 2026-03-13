@@ -455,11 +455,6 @@ export async function exportCanvasNode(
   const finalHalfWidth = targetHalfWidth;
   const finalHeight = targetHeight;
 
-  // Calculate visible photo area (clip to shortest image bottom to avoid photo-area white space)
-  const beforeBottom = alignParams.before.drawY + alignParams.before.drawHeight;
-  const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
-  const photoClipHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
-
   // Create canvas
   const canvas = createCanvas(finalWidth, finalHeight);
   const ctx = canvas.getContext('2d');
@@ -472,10 +467,10 @@ export async function exportCanvasNode(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, finalWidth, finalHeight);
 
-  // Draw before photo (left half), clipped to photo area
+  // Draw before photo (left half)
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, 0, finalHalfWidth, photoClipHeight);
+  ctx.rect(0, 0, finalHalfWidth, finalHeight);
   ctx.clip();
   ctx.drawImage(
     beforeImg,
@@ -486,10 +481,10 @@ export async function exportCanvasNode(
   );
   ctx.restore();
 
-  // Draw after photo (right half), clipped to photo area
+  // Draw after photo (right half)
   ctx.save();
   ctx.beginPath();
-  ctx.rect(finalHalfWidth, 0, finalHalfWidth, photoClipHeight);
+  ctx.rect(finalHalfWidth, 0, finalHalfWidth, finalHeight);
   ctx.clip();
   ctx.drawImage(
     afterImg,

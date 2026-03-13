@@ -210,15 +210,10 @@ export function AlignedPreview({
     // Keep canvas at target dimensions (exact ratio)
     const finalHalfWidth = halfWidth;
 
-    // Calculate photo clip height (avoid white space at bottom of photo area)
-    const beforeBottom = alignParams.before.drawY + alignParams.before.drawHeight;
-    const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
-    const photoClipHeight = Math.min(beforeBottom, afterBottom, targetHeight);
-
     // Draw before photo (left half)
     ctx.save();
     ctx.beginPath();
-    ctx.rect(0, 0, finalHalfWidth, photoClipHeight);
+    ctx.rect(0, 0, finalHalfWidth, targetHeight);
     ctx.clip();
     ctx.drawImage(
       beforeImg,
@@ -232,7 +227,7 @@ export function AlignedPreview({
     // Draw after photo (right half)
     ctx.save();
     ctx.beginPath();
-    ctx.rect(finalHalfWidth, 0, finalHalfWidth, photoClipHeight);
+    ctx.rect(finalHalfWidth, 0, finalHalfWidth, targetHeight);
     ctx.clip();
     ctx.drawImage(
       afterImg,

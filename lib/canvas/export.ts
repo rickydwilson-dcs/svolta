@@ -255,16 +255,10 @@ export async function exportCanvas(
   const finalHalfWidth = targetHalfWidth;
   const finalHeight = targetHeight;
 
-  // Calculate visible photo area (clip to shortest image bottom to avoid photo-area white space)
-  const beforeBottom = alignParams.before.drawY + alignParams.before.drawHeight;
-  const afterBottom = alignParams.after.drawY + alignParams.after.drawHeight;
-  const photoClipHeight = Math.round(Math.min(beforeBottom, afterBottom, targetHeight));
-
   canvasLogger.debug('[Export] Dynamic dimensions:', {
     targetHeight,
-    beforeBottom,
-    afterBottom,
-    photoClipHeight,
+    beforeBottom: alignParams.before.drawY + alignParams.before.drawHeight,
+    afterBottom: alignParams.after.drawY + alignParams.after.drawHeight,
     finalWidth,
     finalHeight
   });
@@ -290,7 +284,7 @@ export async function exportCanvas(
   // Draw before photo on left half, clipped to photo area
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, 0, finalHalfWidth, photoClipHeight);
+  ctx.rect(0, 0, finalHalfWidth, finalHeight);
   ctx.clip();
   drawPhotoWithParams(ctx, beforeImg, 0, 0, alignParams.before);
   ctx.restore();
@@ -298,7 +292,7 @@ export async function exportCanvas(
   // Draw after photo on right half, clipped to photo area
   ctx.save();
   ctx.beginPath();
-  ctx.rect(finalHalfWidth, 0, finalHalfWidth, photoClipHeight);
+  ctx.rect(finalHalfWidth, 0, finalHalfWidth, finalHeight);
   ctx.clip();
   drawPhotoWithParams(ctx, afterImg, finalHalfWidth, 0, alignParams.after);
   ctx.restore();
