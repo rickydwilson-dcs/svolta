@@ -26,14 +26,6 @@ const WATERMARK_FONT_SIZE = 32;
 const WATERMARK_FONT = 'Inter, system-ui, sans-serif';
 const MAX_LOGO_WIDTH_PERCENT = 0.15; // 15% of canvas width
 
-// Logo mark colours (light mode for visibility on images)
-const LOGO_COLORS = {
-  lines: '#5C3D7A',
-  head: '#F58529',
-  shoulders: '#DD2A7B',
-  hips: '#515BD4',
-};
-
 // Wordmark gradient colours
 const WORDMARK_GRADIENT = ['#F58529', '#DD2A7B', '#8134AF', '#515BD4'];
 
@@ -54,110 +46,6 @@ async function loadImage(url: string): Promise<HTMLImageElement> {
     img.crossOrigin = 'anonymous';
     img.src = url;
   });
-}
-
-/**
- * Draw the Svolta logo mark on canvas
- *
- * @param ctx - Canvas rendering context
- * @param x - Center X coordinate
- * @param y - Center Y coordinate
- * @param size - Size of the logo mark
- */
-function drawLogoMark(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  size: number
-): void {
-  const scale = size / 100; // Original viewBox is 100x100
-  const offsetX = x - size / 2;
-  const offsetY = y - size / 2;
-
-  ctx.save();
-
-  // Set line properties
-  ctx.lineWidth = 2 * scale;
-  ctx.lineCap = 'round';
-
-  // Draw spine (vertical center line)
-  ctx.strokeStyle = LOGO_COLORS.lines;
-  ctx.beginPath();
-  ctx.moveTo(offsetX + 50 * scale, offsetY + 22 * scale);
-  ctx.lineTo(offsetX + 50 * scale, offsetY + 78 * scale);
-  ctx.stroke();
-
-  // Draw shoulder bar (horizontal)
-  ctx.beginPath();
-  ctx.moveTo(offsetX + 25 * scale, offsetY + 38 * scale);
-  ctx.lineTo(offsetX + 75 * scale, offsetY + 38 * scale);
-  ctx.stroke();
-
-  // Draw hip bar (horizontal)
-  ctx.beginPath();
-  ctx.moveTo(offsetX + 30 * scale, offsetY + 72 * scale);
-  ctx.lineTo(offsetX + 70 * scale, offsetY + 72 * scale);
-  ctx.stroke();
-
-  // Draw head node (top center, largest)
-  ctx.fillStyle = LOGO_COLORS.head;
-  ctx.beginPath();
-  ctx.arc(offsetX + 50 * scale, offsetY + 15 * scale, 8.5 * scale, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Draw shoulder nodes
-  ctx.fillStyle = LOGO_COLORS.shoulders;
-  ctx.beginPath();
-  ctx.arc(offsetX + 25 * scale, offsetY + 38 * scale, 5.2 * scale, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(offsetX + 75 * scale, offsetY + 38 * scale, 5.2 * scale, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Draw hip nodes
-  ctx.fillStyle = LOGO_COLORS.hips;
-  ctx.beginPath();
-  ctx.arc(offsetX + 30 * scale, offsetY + 72 * scale, 5.2 * scale, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(offsetX + 70 * scale, offsetY + 72 * scale, 5.2 * scale, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.restore();
-}
-
-/**
- * Draw wordmark with gradient
- *
- * @param ctx - Canvas rendering context
- * @param x - X coordinate (left edge)
- * @param y - Y coordinate (baseline)
- * @param fontSize - Font size
- */
-function drawWordmark(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  fontSize: number
-): void {
-  ctx.save();
-
-  ctx.font = `300 ${fontSize}px ${WATERMARK_FONT}`;
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-
-  // Create gradient for wordmark
-  const textWidth = ctx.measureText('svolta').width;
-  const gradient = ctx.createLinearGradient(x, y, x + textWidth, y);
-  gradient.addColorStop(0, WORDMARK_GRADIENT[0]);
-  gradient.addColorStop(0.33, WORDMARK_GRADIENT[1]);
-  gradient.addColorStop(0.66, WORDMARK_GRADIENT[2]);
-  gradient.addColorStop(1, WORDMARK_GRADIENT[3]);
-
-  ctx.fillStyle = gradient;
-  ctx.fillText('svolta', x, y);
-
-  ctx.restore();
 }
 
 /**

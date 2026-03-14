@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-14
+
+### Changed
+
+- **Watermark:** Redesign from centered logo to diagonal repeating gradient text at 45% opacity for better coverage
+- **Editor:** Move zoom/pan gesture controls from PhotoPanel to ExportPreview (users frame their export, not the edit view)
+- **Auth:** Use global sign out scope; keep `isInitialized` true on reset to prevent flash
+- **Export:** Reset framing button in ExportPreview top-right corner with cursor states and ARIA labels
+- **Export:** Watermark preview in ExportPreview matches actual export watermark style
+
+### Added
+
+- **Auth:** Redirect authenticated users away from login page
+- **Project:** Add BACKLOG.md for project management
+- **Assets:** Add svolta-logo.png for email templates
+- **Templates:** Supabase email templates for confirm signup and magic link
+
+### Removed
+
+- **Editor:** Remove Crop Zoom slider and Reset Framing button from AlignmentControls (moved to ExportPreview)
+- **Editor:** Remove zoom/pan gestures from PhotoPanel
+- **Watermark:** Remove position/opacity options from export callers (now uses consistent defaults)
+
+### Technical
+
+- 113 TypeScript/TSX source files
+- 10 custom React hooks
+- 7 API route directories
+
+---
+
 ## [0.4.1] - 2026-03-08
 
 ### Fixed

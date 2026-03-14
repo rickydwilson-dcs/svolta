@@ -335,4 +335,4 @@ Use `/commit.changes` to commit with proper workflow.
 
 ---
 
-**Last Updated:** 2026-03-08 (Updated scope: 113 source files, 10 hooks, 7 API routes, 7 test files)
+**Last Updated:** 2026-03-14 (Updated scope: 113 source files, 10 hooks, 7 API routes, 7 test files)

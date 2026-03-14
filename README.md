@@ -162,4 +162,4 @@ MIT
 ---
 
 **Domain:** www.svolta.app
-**Last Updated:** 2026-03-08
+**Last Updated:** 2026-03-14
