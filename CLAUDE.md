@@ -10,7 +10,7 @@
 
 ## Project Management
 
-- **Linear Project:** https://linear.app/rickydwilson/project/svolta-832cc9c427e2
+- **Backlog:** See `BACKLOG.md` in the repo root
 
 ---
 

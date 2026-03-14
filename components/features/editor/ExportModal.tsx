@@ -34,7 +34,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
   const afterPhoto = useEditorStore((s) => s.afterPhoto);
   const backgroundSettings = useEditorStore((s) => s.backgroundSettings);
   const setBackgroundSettings = useEditorStore((s) => s.setBackgroundSettings);
-  const setUserFraming = useEditorStore((s) => s.setUserFraming);
+  const resetUserFraming = useEditorStore((s) => s.resetUserFraming);
   const subscription = useUserStore((s) => s.subscription);
   const isPro = subscription?.tier === 'pro' && subscription?.status === 'active';
   const { limit, remaining } = useUsageLimit();
@@ -282,7 +282,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
               >
                 <AspectRatioSelector
                   value={aspectRatio}
-                  onChange={(ratio) => { setAspectRatio(ratio); setUserFraming({ panX: 0, panY: 0 }); }}
+                  onChange={(ratio) => { setAspectRatio(ratio); resetUserFraming(); }}
                 />
 
                 <BackgroundSection

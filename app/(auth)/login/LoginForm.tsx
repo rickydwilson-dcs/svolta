@@ -1,13 +1,25 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { OAuthButtons } from '@/components/ui/OAuthButtons';
 import { MagicLinkForm } from '@/components/ui/MagicLinkForm';
+import { useUserStore } from '@/stores/user-store';
 
 export function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/editor';
+  const user = useUserStore((state) => state.user);
+  const isInitialized = useUserStore((state) => state.isInitialized);
+
+  // Redirect authenticated users away from login
+  useEffect(() => {
+    if (isInitialized && user) {
+      router.replace(redirectTo);
+    }
+  }, [isInitialized, user, redirectTo, router]);
   const errorParam = searchParams.get('error');
 
   const error = errorParam ? decodeURIComponent(errorParam) : null;

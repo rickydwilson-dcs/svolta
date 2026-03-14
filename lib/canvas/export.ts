@@ -306,8 +306,6 @@ export async function exportCanvas(
   const watermarkOptions: WatermarkOptions = {
     isPro: options.watermark.isPro,
     customLogoUrl: options.watermark.customLogoUrl,
-    position: 'bottom-right',
-    opacity: 0.7,
   };
 
   await addWatermark(ctx, finalWidth, finalHeight, watermarkOptions);

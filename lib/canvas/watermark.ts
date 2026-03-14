@@ -19,7 +19,7 @@ export interface WatermarkOptions {
  * Default watermark settings
  */
 const DEFAULT_POSITION: WatermarkOptions['position'] = 'center';
-const DEFAULT_OPACITY = 0.9;
+const DEFAULT_OPACITY = 0.45;
 const PRO_LOGO_OPACITY = 0.9;
 const WATERMARK_PADDING = 20;
 const WATERMARK_FONT_SIZE = 32;
@@ -161,7 +161,12 @@ function drawWordmark(
 }
 
 /**
- * Draw centered logo watermark with logo mark and wordmark
+ * Draw diagonal repeating watermark with brand gradient
+ *
+ * Tiles "svolta" across the entire canvas at a -25° angle with the brand
+ * gradient (orange → pink → purple → blue) at low opacity. This is
+ * translucent enough to see through clearly but present enough to
+ * encourage upgrading to Pro for clean exports.
  *
  * @param ctx - Canvas rendering context
  * @param canvasWidth - Width of the canvas
@@ -172,51 +177,39 @@ function drawCenteredLogoWatermark(
   canvasWidth: number,
   canvasHeight: number
 ): void {
-  // Calculate sizes based on canvas dimensions
-  const logoSize = Math.min(canvasWidth, canvasHeight) * 0.12; // 12% of smaller dimension
-  const fontSize = logoSize * 0.7;
-  const gap = logoSize * 0.3;
-  const padding = logoSize * 0.5;
-  const borderRadius = logoSize * 0.25;
-
-  // Calculate total width of logo + gap + wordmark
-  ctx.font = `300 ${fontSize}px ${WATERMARK_FONT}`;
-  const wordmarkWidth = ctx.measureText('svolta').width;
-  const totalWidth = logoSize + gap + wordmarkWidth;
-  const totalHeight = logoSize;
-
-  // Calculate centered position
-  const containerWidth = totalWidth + padding * 2;
-  const containerHeight = totalHeight + padding * 1.6;
-  const containerX = (canvasWidth - containerWidth) / 2;
-  const containerY = (canvasHeight - containerHeight) / 2;
-
   ctx.save();
 
-  // Draw background container with rounded corners
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-  ctx.beginPath();
-  ctx.roundRect(containerX, containerY, containerWidth, containerHeight, borderRadius);
-  ctx.fill();
+  const fontSize = Math.min(canvasWidth, canvasHeight) * 0.07;
+  const spacing = fontSize * 5;
 
-  // Add subtle shadow
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-  ctx.shadowBlur = 20;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 4;
-  ctx.fill();
+  ctx.font = `500 ${fontSize}px ${WATERMARK_FONT}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Brand gradient across the full canvas width
+  const gradient = ctx.createLinearGradient(0, 0, canvasWidth, 0);
+  gradient.addColorStop(0, WORDMARK_GRADIENT[0]);
+  gradient.addColorStop(0.33, WORDMARK_GRADIENT[1]);
+  gradient.addColorStop(0.66, WORDMARK_GRADIENT[2]);
+  gradient.addColorStop(1, WORDMARK_GRADIENT[3]);
+
+  ctx.fillStyle = gradient;
+  ctx.globalAlpha = DEFAULT_OPACITY;
+
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+  ctx.shadowBlur = 3;
+
+  // Rotate -25° and tile across the entire canvas
+  ctx.translate(canvasWidth / 2, canvasHeight / 2);
+  ctx.rotate(-25 * Math.PI / 180);
+
+  for (let y = -canvasHeight; y < canvasHeight * 2; y += spacing) {
+    for (let x = -canvasWidth; x < canvasWidth * 2; x += spacing) {
+      ctx.fillText('svolta', x, y);
+    }
+  }
 
   ctx.restore();
-
-  // Draw logo mark
-  const logoX = containerX + padding + logoSize / 2;
-  const logoY = containerY + containerHeight / 2;
-  drawLogoMark(ctx, logoX, logoY, logoSize);
-
-  // Draw wordmark
-  const wordmarkX = containerX + padding + logoSize + gap;
-  const wordmarkY = containerY + containerHeight / 2;
-  drawWordmark(ctx, wordmarkX, wordmarkY, fontSize);
 }
 
 /**

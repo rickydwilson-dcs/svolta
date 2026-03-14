@@ -11,8 +11,6 @@ import { DropZone } from './DropZone';
 import { LandmarkOverlay } from './LandmarkOverlay';
 import { usePoseDetection } from '@/hooks/usePoseDetection';
 import { useBackgroundRemoval } from '@/hooks/useBackgroundRemoval';
-import { useZoomPanGestures } from '@/hooks/useZoomPanGestures';
-import { useEditorStore } from '@/stores/editor-store';
 import type { Photo } from '@/types/editor';
 import type { Landmark } from '@/types/landmarks';
 
@@ -35,9 +33,6 @@ export function PhotoPanel({
 }: PhotoPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [isDraggingLocal, setIsDraggingLocal] = useState(false);
-  const userFraming = useEditorStore((state) => state.userFraming);
-  const setUserFraming = useEditorStore((state) => state.setUserFraming);
   const { detect, isDetecting, error: detectionError } = usePoseDetection();
   const {
     processImage: removeBackground,
@@ -45,18 +40,6 @@ export function PhotoPanel({
     progress: bgRemovalProgress,
     error: bgRemovalError,
   } = useBackgroundRemoval();
-
-  useZoomPanGestures(containerRef, {
-    onZoomChange: (newZoom) => setUserFraming({ zoom: newZoom }),
-    onPanChange: (newPanX, newPanY) => {
-      setIsDraggingLocal(true);
-      setUserFraming({ panX: newPanX, panY: newPanY });
-      // Clear dragging indicator after a short delay
-      setTimeout(() => setIsDraggingLocal(false), 150);
-    },
-    getCurrentState: () => userFraming,
-    enabled: !!photo,
-  });
 
   // Update container size on resize
   useEffect(() => {
@@ -157,9 +140,6 @@ export function PhotoPanel({
     };
   }, [photo, containerSize.width, containerSize.height]);
 
-  const panPixelsX = userFraming.panX * (displaySize.width * (userFraming.zoom - 1)) / 2;
-  const panPixelsY = userFraming.panY * (displaySize.height * (userFraming.zoom - 1)) / 2;
-
   return (
     <div className={cn('flex flex-col', className)}>
       {/* Panel Header */}
@@ -197,8 +177,7 @@ export function PhotoPanel({
         {photo ? (
           <div
             className="absolute inset-0 flex items-center justify-center group"
-            role="application"
-            aria-label={`${label} photo — pinch or scroll to zoom, drag to pan`}
+            aria-label={`${label} photo`}
           >
             {/* Photo */}
             <div
@@ -229,11 +208,6 @@ export function PhotoPanel({
                 src={photo.dataUrl}
                 alt={`${label} photo`}
                 className="w-full h-full object-contain relative z-10"
-                style={{
-                  transform: `scale(${userFraming.zoom}) translate(${panPixelsX}px, ${panPixelsY}px)`,
-                  transformOrigin: 'center',
-                  cursor: isDraggingLocal ? 'grabbing' : userFraming.zoom >= 3 ? 'grab' : 'zoom-in',
-                }}
               />
 
               {/* Landmark Overlay */}

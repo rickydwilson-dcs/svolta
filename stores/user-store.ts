@@ -323,7 +323,7 @@ export const useUserStore = create<UserState>((set, get) => ({
     const supabase = createClient();
 
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'global' });
       get().reset();
     } catch (error) {
       authLogger.error('Error signing out:', error);
@@ -339,7 +339,7 @@ export const useUserStore = create<UserState>((set, get) => ({
       subscription: null,
       usage: null,
       isLoading: false,
-      isInitialized: false,
+      isInitialized: true,
       error: null,
     });
   },
