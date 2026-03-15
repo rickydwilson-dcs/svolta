@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2026-03-15
+
+### Fixed
+
+- **Editor:** Split divider line now stops at the bottom of the drop zone, not below it
+- **Settings:** Page is now a fixed-height scrollable container (`h-dvh overflow-y-auto`) — prevents scrolling past content to reveal tab bar gap below
+
+---
+
 ## [0.6.2] - 2026-03-15
 
 ### Fixed

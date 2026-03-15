@@ -157,10 +157,10 @@ export function EditorContent() {
       </header>
 
       {/* Main Editor Area */}
-      <main className="flex-1 pt-14 pb-[calc(var(--tab-bar-height)+1.5rem)] lg:pb-24 overflow-hidden">
-        <div className="h-full grid grid-cols-2 relative">
+      <main className="flex-1 pt-14 overflow-hidden">
+        <div className="h-full grid grid-cols-2 relative pb-[calc(var(--tab-bar-height)+1.5rem)] lg:pb-24">
           {/* Split Divider */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2 z-10">
+          <div className="absolute left-1/2 top-0 bottom-[calc(var(--tab-bar-height)+1.5rem)] lg:bottom-24 w-px bg-border -translate-x-1/2 z-10">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-surface border border-border flex items-center justify-center shadow-sm">
               <svg className="w-3 h-3 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
