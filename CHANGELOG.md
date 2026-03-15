@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-03-15
+
+### Added
+
+- **Navigation:** Mobile header simplified to logo-only (desktop retains full nav)
+- **Pages:** Add `/help` page with structured FAQ (getting started, editor, exports, billing, privacy)
+- **Pages:** Add `/privacy` page — full GDPR-compliant privacy policy (Palma Wilson Ltd data controller)
+- **Pages:** Add `/cookie-policy` page with essential/analytics/advertising cookie breakdown
+- **Pages:** Add `/contact` page with `mailto:ciao@svolta.app` link (no form)
+
+### Changed
+
+- **AppTabBar:** Gradient background (brand-pink → brand-purple), squircle buttons with white text/icons
+- **Footer:** Upgraded with Help, Privacy Policy, Cookie Policy, Contact links and Palma Wilson Ltd copyright gutter
+- **Layout:** Footer moved inside `<main>` scroll area so it scrolls naturally behind the fixed bottom tab bar
+
+### Technical
+
+- 125 TypeScript/TSX source files (up from 121)
+
+---
+
 ## [0.6.0] - 2026-03-15
 
 ### Added
