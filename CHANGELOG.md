@@ -16,16 +16,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.6.2] - 2026-03-15
 
+### Changed
+
+- **AppTabBar:** Restyled with gradient squircle buttons on a white/black bar, fixed-width buttons so negative space grows on wider screens
+
 ### Fixed
 
 - **UpgradeNudge:** Inline `maxWidth: 36rem` to bypass Tailwind 4 `--spacing-xl` conflict causing `max-w-xl` to resolve to 2rem
-- **AppTabBar:** Fixed-width buttons (`w-20`) so negative space grows on wider screens instead of buttons stretching
 - **AppTabBar:** Now visible on all mobile browsers, not only PWA standalone mode
 - **Layout:** Added `w-full` to client component sections to prevent flex width collapse on mobile
 
 ### Technical
 
-- 128 TypeScript/TSX source files
+- 128 TypeScript/TSX source files (up from 125)
+- 26 documentation files
 
 ---
 
@@ -481,6 +485,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[0.6.3]: https://github.com/rickydwilson/svolta/compare/v0.6.2...v0.6.3
+[0.6.2]: https://github.com/rickydwilson/svolta/compare/v0.6.1...v0.6.2
+[0.6.1]: https://github.com/rickydwilson/svolta/compare/v0.6.0...v0.6.1
+[0.6.0]: https://github.com/rickydwilson/svolta/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/rickydwilson/svolta/compare/v0.4.1...v0.5.0
+[0.4.1]: https://github.com/rickydwilson/svolta/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/rickydwilson/svolta/compare/v0.3.7...v0.4.0
+[0.3.7]: https://github.com/rickydwilson/svolta/compare/v0.3.6...v0.3.7
+[0.3.6]: https://github.com/rickydwilson/svolta/compare/v0.3.5...v0.3.6
+[0.3.5]: https://github.com/rickydwilson/svolta/compare/v0.3.4...v0.3.5
+[0.3.4]: https://github.com/rickydwilson/svolta/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/rickydwilson/svolta/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/rickydwilson/svolta/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/rickydwilson/svolta/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/rickydwilson/svolta/compare/v0.2.0...v0.3.0
