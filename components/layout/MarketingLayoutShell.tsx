@@ -22,12 +22,13 @@ export function MarketingLayoutShell({ children, footer }: MarketingLayoutShellP
 
       <main id="main-content" className={`flex-1 ${isStandalone ? 'lg:pt-20' : 'pt-20'}`}>
         {children}
+        {/* Footer scrolls into view from behind the bottom nav */}
+        <div className={isStandalone ? 'hidden lg:block' : ''}>
+          {footer}
+        </div>
       </main>
 
-      {/* Footer: always on web, desktop-only in standalone */}
-      <div className={isStandalone ? 'hidden lg:block' : ''}>
-        {footer}
-      </div>
+      {/* No footer rendered here — it's now inside main above */}
 
       {/* Standalone-only: app home overlay + tab bar */}
       <AppHomeOverlay />
