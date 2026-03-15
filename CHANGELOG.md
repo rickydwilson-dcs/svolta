@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-03-15
+
+### Fixed
+
+- **UpgradeNudge:** Inline `maxWidth: 36rem` to bypass Tailwind 4 `--spacing-xl` conflict causing `max-w-xl` to resolve to 2rem
+- **AppTabBar:** Fixed-width buttons (`w-20`) so negative space grows on wider screens instead of buttons stretching
+- **AppTabBar:** Now visible on all mobile browsers, not only PWA standalone mode
+- **Layout:** Added `w-full` to client component sections to prevent flex width collapse on mobile
+
+### Technical
+
+- 128 TypeScript/TSX source files
+
+---
+
 ## [0.6.1] - 2026-03-15
 
 ### Added

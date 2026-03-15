@@ -151,13 +151,14 @@ MIT
 
 | Metric               | Count              |
 | -------------------- | ------------------ |
-| Source Files         | 125 TypeScript/TSX |
+| Source Files         | 128 TypeScript/TSX |
 | Custom Hooks         | 10                 |
 | State Stores         | 2                  |
 | UI Components        | 13                 |
 | API Routes           | 7                  |
 | Test Files           | 7                  |
 | Visual Test Fixtures | 170                |
+| Documentation Files  | 26                 |
 
 ---
 

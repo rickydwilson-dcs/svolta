@@ -12,7 +12,7 @@ export function UpgradeNudge({ urgent = false }: UpgradeNudgeProps) {
 
   return (
     <section className="py-12 sm:py-16 px-4 sm:px-6 bg-surface w-full">
-      <div className="max-w-xl mx-auto text-center">
+      <div className="mx-auto text-center" style={{ maxWidth: '36rem' }}>
         {urgent ? (
           <>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-text mb-3">

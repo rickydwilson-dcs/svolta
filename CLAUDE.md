@@ -279,7 +279,7 @@ Use `/commit.changes` to commit with proper workflow.
 
 ## Current Scope
 
-**Source Files:** 125 TypeScript/TSX files
+**Source Files:** 128 TypeScript/TSX files
 **Custom Hooks:** 10 (useAlignment, useBackgroundRemoval, useCanvasExport, useExportBackgroundRemoval, useExportDownload, useGifExport, useKeyboardShortcuts, usePoseDetection, useUsageLimit, useZoomPanGestures)
 **State Stores:** 2 (editor-store, user-store)
 **UI Components:** 13 primitives (Button, BottomSheet, Card, ErrorBoundary, Input, MagicLinkForm, Modal, OAuthButtons, SegmentedControl, Slider, SvoltaLogo, Toggle, UpgradePrompt)
@@ -335,4 +335,4 @@ Use `/commit.changes` to commit with proper workflow.
 
 ---
 
-**Last Updated:** 2026-03-15 (Updated scope: 125 source files, 10 hooks, 7 API routes, 7 test files)
+**Last Updated:** 2026-03-15 (Updated scope: 128 source files, 10 hooks, 7 API routes, 7 test files)
