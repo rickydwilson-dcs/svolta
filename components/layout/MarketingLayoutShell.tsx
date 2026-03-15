@@ -20,7 +20,7 @@ export function MarketingLayoutShell({ children, footer }: MarketingLayoutShellP
         <MarketingHeader />
       </div>
 
-      <main id="main-content" className={`flex-1 ${isStandalone ? 'lg:pt-20' : 'pt-20'}`}>
+      <main id="main-content" className={`flex-1 w-full ${isStandalone ? 'lg:pt-20' : 'pt-20'}`}>
         {children}
         {/* Footer scrolls into view from behind the bottom nav */}
         {footer}

@@ -626,16 +626,16 @@ input[type="range"].accent-purple::-moz-range-thumb {
    =================================== */
 
 :root {
-  --tab-bar-height: 64px;
+  --tab-bar-height: 56px;
 }
 
 .app-tab-bar {
-  background: linear-gradient(135deg, var(--brand-pink), var(--brand-purple));
+  background: #ffffff;
   border-top: none;
 }
 
 :is(.dark) .app-tab-bar {
-  background: linear-gradient(135deg, var(--brand-pink), var(--brand-purple));
+  background: #000000;
 }
 
 /* ===================================

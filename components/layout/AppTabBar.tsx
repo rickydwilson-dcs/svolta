@@ -42,15 +42,15 @@ export function AppTabBar() {
 
   return (
     <nav className="app-tab-bar safe-bottom fixed bottom-0 left-0 right-0 z-40 lg:hidden">
-      <div className="flex items-center justify-around h-16">
+      <div className="flex items-center justify-around h-14">
         {tabs.map(({ href, label, Icon }) => {
           const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 mx-1 my-2 rounded-xl transition-colors ${
-                isActive ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white'
+              className={`flex flex-col items-center justify-center gap-1 flex-1 mx-1 my-1.5 rounded-xl transition-opacity bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-purple)] text-white py-2 ${
+                isActive ? 'opacity-100' : 'opacity-60 hover:opacity-80'
               }`}
             >
               <Icon />
