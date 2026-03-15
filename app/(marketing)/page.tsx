@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { InstallAppBanner } from '@/components/home/InstallAppBanner';
 
 export const metadata: Metadata = {
   title: 'svolta — Perfect Before & After Photos for Fitness Coaches',
@@ -315,6 +316,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <InstallAppBanner />
 
       {/* Final CTA Section */}
       <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-canvas">
