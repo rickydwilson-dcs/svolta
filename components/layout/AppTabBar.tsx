@@ -49,7 +49,7 @@ export function AppTabBar() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 mx-1 my-1.5 rounded-xl transition-opacity bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-purple)] text-white py-2 ${
+              className={`flex flex-col items-center justify-center gap-1 w-20 my-1.5 rounded-xl transition-opacity bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-purple)] text-white py-2 ${
                 isActive ? 'opacity-100' : 'opacity-60 hover:opacity-80'
               }`}
             >
