@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-03-15
+
+### Added
+
+- **PWA:** Add `useIsStandalone` hook for detecting PWA standalone mode
+- **PWA:** Create `AppTabBar` component with Editor, Home, and Settings tabs
+- **PWA:** Create `AppHomeOverlay` for standalone PWA home screen with usage tracking
+- **PWA:** Create `InstallAppBanner` for desktop web visitors with install instructions
+- **Marketing:** Auth-aware home page with 4 user states (anonymous, free, free-exhausted, pro)
+- **Marketing:** `UsageIndicator` component showing export progress bar for free users
+- **Marketing:** `UpgradeNudge` component replacing pricing section for logged-in free users
+- **Layout:** `MarketingLayoutShell` with standalone-aware header/footer
+
+### Changed
+
+- **Marketing:** Extract page content into `MarketingPageContent` client component for auth state detection
+- **Marketing:** Pro users see minimal "Welcome back" + "Open Editor" instead of full sales funnel
+- **Header:** Always show Editor/Try Free button in `MarketingHeader` regardless of Pro status
+- **Settings:** Remove back-to-editor link, add tab bar padding
+- **Editor:** Make editor header responsive for bottom tab bar
+
+### Technical
+
+- 121 TypeScript/TSX source files (up from 113)
+- 10 custom React hooks
+- 7 API route directories
+
+---
+
 ## [0.5.0] - 2026-03-14
 
 ### Changed

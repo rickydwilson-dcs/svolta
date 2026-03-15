@@ -279,14 +279,14 @@ Use `/commit.changes` to commit with proper workflow.
 
 ## Current Scope
 
-**Source Files:** 113 TypeScript/TSX files
+**Source Files:** 121 TypeScript/TSX files
 **Custom Hooks:** 10 (useAlignment, useBackgroundRemoval, useCanvasExport, useExportBackgroundRemoval, useExportDownload, useGifExport, useKeyboardShortcuts, usePoseDetection, useUsageLimit, useZoomPanGestures)
 **State Stores:** 2 (editor-store, user-store)
 **UI Components:** 13 primitives (Button, BottomSheet, Card, ErrorBoundary, Input, MagicLinkForm, Modal, OAuthButtons, SegmentedControl, Slider, SvoltaLogo, Toggle, UpgradePrompt)
 **API Routes:** 7 directories (account, backgrounds, debug, exports, logos, stripe, usage)
 **Test Files:** 7 test files
 **Visual Test Fixtures:** 170 fixtures
-**New Features:** Animated GIF export (3 styles), Background removal with @imgly/background-removal
+**New Features:** Animated GIF export (3 styles), Background removal with @imgly/background-removal, Auth-aware marketing home page, PWA standalone support
 **Documentation:** See `docs/` folder for technical documentation
 
 ---
@@ -335,4 +335,4 @@ Use `/commit.changes` to commit with proper workflow.
 
 ---
 
-**Last Updated:** 2026-03-14 (Updated scope: 113 source files, 10 hooks, 7 API routes, 7 test files)
+**Last Updated:** 2026-03-15 (Updated scope: 121 source files, 10 hooks, 7 API routes, 7 test files)
