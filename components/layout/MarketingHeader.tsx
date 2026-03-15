@@ -4,16 +4,17 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
+import { useUserStore } from '@/stores/user-store';
 
 export function MarketingHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const user = useUserStore((s) => s.user);
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
 
-    // Check initial scroll position
     handleScroll();
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -41,7 +42,7 @@ export function MarketingHeader() {
         {/* Navigation */}
         <nav aria-label="Main navigation" className="flex items-center gap-3">
           <Link
-            href="/login"
+            href={user ? '/settings' : '/login'}
             className={cn(
               'px-4 py-2 text-sm font-medium transition-colors',
               isScrolled
@@ -49,7 +50,7 @@ export function MarketingHeader() {
                 : 'text-text-secondary hover:text-text'
             )}
           >
-            Sign In
+            {user ? 'Settings' : 'Sign In'}
           </Link>
           <Link
             href="/editor"
@@ -60,7 +61,7 @@ export function MarketingHeader() {
                 : 'btn-pill btn-primary'
             )}
           >
-            Try Free
+            {user ? 'Editor' : 'Try Free'}
           </Link>
         </nav>
       </div>
