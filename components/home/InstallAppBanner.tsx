@@ -8,7 +8,7 @@ export function InstallAppBanner() {
   if (isStandalone) return null;
 
   return (
-    <section className="hidden lg:block py-12 px-4 sm:px-6 bg-canvas">
+    <section className="hidden lg:block py-12 px-4 sm:px-6 bg-canvas w-full">
       <div className="max-w-3xl mx-auto">
         <div className="card-base p-8 text-center relative overflow-hidden">
           {/* Subtle gradient accent at top */}

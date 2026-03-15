@@ -11,7 +11,7 @@ export function UpgradeNudge({ urgent = false }: UpgradeNudgeProps) {
   const proFeatures = PLANS.pro.features;
 
   return (
-    <section className="py-12 sm:py-16 px-4 sm:px-6 bg-surface">
+    <section className="py-12 sm:py-16 px-4 sm:px-6 bg-surface w-full">
       <div className="max-w-xl mx-auto text-center">
         {urgent ? (
           <>

@@ -13,7 +13,7 @@ export function UsageIndicator() {
   const isExhausted = !canExport;
 
   return (
-    <section className="py-8 px-4 sm:px-6 bg-surface">
+    <section className="py-8 px-4 sm:px-6 bg-surface w-full">
       <div className="max-w-xl mx-auto">
         <div className="card-base p-5">
           <div className="flex items-center justify-between mb-2">
