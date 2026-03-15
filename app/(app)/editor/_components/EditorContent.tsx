@@ -57,10 +57,13 @@ export function EditorContent() {
       <header className="floating-header fixed top-0 left-0 right-0 z-40 safe-top">
         <div className="h-14 px-4 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="hidden lg:flex items-center">
             <SvoltaLogo size={32} mode="dark" showWordmark wordmarkStyle="gradient" className="hidden sm:flex" />
             <SvoltaLogo size={32} mode="dark" className="sm:hidden" />
           </Link>
+          <div className="flex items-center lg:hidden">
+            <SvoltaLogo size={32} mode="dark" />
+          </div>
 
           {/* Center Actions */}
           {hasPhotos && (
@@ -97,7 +100,7 @@ export function EditorContent() {
             {/* Theme Toggle */}
             <button
               onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
+              className="hidden lg:block p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
               title={mounted ? `Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode` : 'Toggle theme'}
               aria-label="Toggle theme"
             >
@@ -125,7 +128,7 @@ export function EditorContent() {
             {/* Settings */}
             <Link
               href="/settings"
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
+              className="hidden lg:block p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
               aria-label="Settings"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,7 +157,7 @@ export function EditorContent() {
       </header>
 
       {/* Main Editor Area */}
-      <main className="flex-1 pt-14 pb-24 overflow-hidden">
+      <main className="flex-1 pt-14 pb-[calc(var(--tab-bar-height)+1.5rem)] lg:pb-24 overflow-hidden">
         <div className="h-full grid grid-cols-2 relative">
           {/* Split Divider */}
           <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2 z-10">
@@ -203,7 +206,7 @@ export function EditorContent() {
 
       {/* Alignment Controls — collapsible, shown when both photos have landmarks */}
       {bothPhotosHaveLandmarks && (
-        <div className="border-t border-border">
+        <div className="border-t border-border mb-[var(--tab-bar-height)] lg:mb-0">
           <button
             onClick={() => setControlsExpanded(!controlsExpanded)}
             className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-text-secondary hover:text-text transition-colors"
