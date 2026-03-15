@@ -622,6 +622,25 @@ input[type="range"].accent-purple::-moz-range-thumb {
 }
 
 /* ===================================
+   App Tab Bar
+   =================================== */
+
+:root {
+  --tab-bar-height: 64px;
+}
+
+.app-tab-bar {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+}
+
+:is(.dark) .app-tab-bar {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* ===================================
    Landing Page - Hero Backgrounds
    =================================== */
 
