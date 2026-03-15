@@ -49,8 +49,8 @@ export function AppTabBar() {
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors ${
-                isActive ? 'text-[var(--brand-pink)]' : 'text-[var(--text-secondary)]'
+              className={`flex flex-col items-center justify-center gap-1 flex-1 py-2 mx-1 my-2 rounded-xl transition-colors ${
+                isActive ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white'
               }`}
             >
               <Icon />

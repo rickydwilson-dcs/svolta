@@ -40,7 +40,7 @@ export function MarketingHeader() {
         </Link>
 
         {/* Navigation */}
-        <nav aria-label="Main navigation" className="flex items-center gap-3">
+        <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-3">
           <Link
             href={user ? '/settings' : '/login'}
             className={cn(

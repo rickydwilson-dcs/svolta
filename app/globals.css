@@ -630,14 +630,12 @@ input[type="range"].accent-purple::-moz-range-thumb {
 }
 
 .app-tab-bar {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--brand-pink), var(--brand-purple));
+  border-top: none;
 }
 
 :is(.dark) .app-tab-bar {
-  background: rgba(0, 0, 0, 0.85);
+  background: linear-gradient(135deg, var(--brand-pink), var(--brand-purple));
 }
 
 /* ===================================
