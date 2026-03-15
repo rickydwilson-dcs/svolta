@@ -3,6 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+function HomeIcon() {
+  return (
+    <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+      <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1m-2 0h2" />
+    </svg>
+  );
+}
+
 function EditorIcon() {
   return (
     <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -24,6 +32,7 @@ function SettingsIcon() {
 }
 
 const tabs = [
+  { href: '/', label: 'Home', Icon: HomeIcon },
   { href: '/editor', label: 'Editor', Icon: EditorIcon },
   { href: '/settings', label: 'Settings', Icon: SettingsIcon },
 ];
@@ -35,7 +44,7 @@ export function AppTabBar() {
     <nav className="app-tab-bar safe-bottom fixed bottom-0 left-0 right-0 z-40 lg:hidden">
       <div className="flex items-center justify-around h-16">
         {tabs.map(({ href, label, Icon }) => {
-          const isActive = pathname.startsWith(href);
+          const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
           return (
             <Link
               key={href}
