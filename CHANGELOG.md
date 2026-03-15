@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.4] - 2026-03-15
+
+### Changed
+
+- **Header:** Unified all pages (home, editor, settings) under a single shared `MarketingHeader` component — same logo, same visual style everywhere
+- **AppTabBar:** Equal vertical padding (`py-4`) on the inner flex row for balanced button spacing above and below
+- **Editor:** Removed custom floating header; editor actions (Export, New, usage counter, theme toggle, settings) now inject into the shared header via `HeaderSlot`
+- **Settings:** Receives shared header from `(app)` layout; no per-page header needed
+
+### Added
+
+- **`HeaderSlotContext`:** React context provider + `useHeaderSlot` hook for injecting page-specific content into the shared header's right slot
+- **`HeaderSlot`:** Zero-render component that pages use to push dynamic content into the header — clears automatically on unmount
+
+### Technical
+
+- 127 TypeScript/TSX source files
+
+---
+
 ## [0.6.3] - 2026-03-15
 
 ### Fixed

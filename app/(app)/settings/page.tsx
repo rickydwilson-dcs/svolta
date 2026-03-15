@@ -447,7 +447,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="h-dvh overflow-y-auto bg-[var(--surface-secondary)] py-12 px-4 sm:px-6 lg:px-8 pb-[var(--tab-bar-height)] lg:pb-0">
+    <div className="min-h-dvh overflow-y-auto bg-[var(--surface-secondary)] pt-24 pb-[calc(var(--tab-bar-height)+2rem)] lg:pb-12 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight text-[var(--text-primary)] mb-3">

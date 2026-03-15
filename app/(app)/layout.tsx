@@ -2,6 +2,8 @@
 
 import { MediaPipeProvider } from '@/components/providers/MediaPipeProvider';
 import { AppTabBar } from '@/components/layout/AppTabBar';
+import { MarketingHeader } from '@/components/layout/MarketingHeader';
+import { HeaderSlotProvider } from '@/components/layout/HeaderSlotContext';
 
 export default function AppLayout({
   children,
@@ -13,8 +15,11 @@ export default function AppLayout({
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>
-      <main id="main-content">{children}</main>
-      <AppTabBar />
+      <HeaderSlotProvider>
+        <MarketingHeader />
+        <main id="main-content">{children}</main>
+        <AppTabBar />
+      </HeaderSlotProvider>
     </MediaPipeProvider>
   );
 }

@@ -42,7 +42,7 @@ export function AppTabBar() {
 
   return (
     <nav className="app-tab-bar safe-bottom fixed bottom-0 left-0 right-0 z-40 lg:hidden">
-      <div className="flex items-center justify-around h-14">
+      <div className="flex items-center justify-around py-4">
         {tabs.map(({ href, label, Icon }) => {
           const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
           return (

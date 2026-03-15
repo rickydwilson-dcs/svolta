@@ -14,7 +14,7 @@ import { useEditorStore } from '@/stores/editor-store';
 import { useUsageLimit } from '@/hooks/useUsageLimit';
 import { PhotoPanel, ExportModal, AlignmentControls } from '@/components/features/editor';
 import { Button } from '@/components/ui';
-import { SvoltaLogo } from '@/components/ui/SvoltaLogo';
+import { HeaderSlot } from '@/components/layout/HeaderSlot';
 
 export function EditorContent() {
   const beforePhoto = useEditorStore((s) => s.beforePhoto);
@@ -53,111 +53,82 @@ export function EditorContent() {
 
   return (
     <div className="flex flex-col h-dvh bg-canvas">
-      {/* Floating Header */}
-      <header className="floating-header fixed top-0 left-0 right-0 z-40 safe-top">
-        <div className="h-14 px-4 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="hidden lg:flex items-center">
-            <SvoltaLogo size={32} mode="dark" showWordmark wordmarkStyle="gradient" className="hidden sm:flex" />
-            <SvoltaLogo size={32} mode="dark" className="sm:hidden" />
-          </Link>
-          <div className="flex items-center lg:hidden">
-            <SvoltaLogo size={32} mode="dark" />
-          </div>
-
-          {/* Center Actions */}
+      {/* Inject editor actions into the shared header */}
+      <HeaderSlot>
+        <div className="flex items-center gap-3">
+          {/* New button — only when photos loaded */}
           {hasPhotos && (
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
-              <button
-                onClick={reset}
-                className="px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-text hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all"
+            <button
+              onClick={reset}
+              className="px-3 py-1.5 text-sm font-medium text-text-secondary hover:text-text hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-all"
+            >
+              New
+            </button>
+          )}
+
+          {/* Usage Counter — free users only, desktop */}
+          {!isPro && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800">
+              <span className="text-sm text-text-secondary">Exports:</span>
+              <span className="text-sm font-semibold text-text">{used}/{limit}</span>
+              <Link
+                href="/upgrade"
+                className="text-brand-pink hover:text-brand-pink/80 transition-colors"
+                title="Upgrade for unlimited"
+                aria-label="Upgrade to Pro"
               >
-                New
-              </button>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+              </Link>
             </div>
           )}
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-3">
-            {/* Usage Counter - hide for Pro users */}
-            {!isPro && (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800">
-                <span className="text-sm text-text-secondary">Exports:</span>
-                <span className="text-sm font-semibold text-text">{used}/{limit}</span>
-                <Link
-                  href="/upgrade"
-                  className="text-brand-pink hover:text-brand-pink/80 transition-colors"
-                  title="Upgrade for unlimited"
-                  aria-label="Upgrade to Pro"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                  </svg>
-                </Link>
-              </div>
-            )}
-
-            {/* Theme Toggle */}
-            <button
-              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-              className="hidden lg:block p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
-              title={mounted ? `Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode` : 'Toggle theme'}
-              aria-label="Toggle theme"
-            >
-              {mounted && resolvedTheme === 'dark' ? (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                  />
-                </svg>
-              )}
-            </button>
-
-            {/* Settings */}
-            <Link
-              href="/settings"
-              className="hidden lg:block p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
-              aria-label="Settings"
-            >
+          {/* Theme Toggle — desktop only */}
+          <button
+            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+            className="hidden lg:block p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
+            title={mounted ? `Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode` : 'Toggle theme'}
+            aria-label="Toggle theme"
+          >
+            {mounted && resolvedTheme === 'dark' ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
-            </Link>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+          </button>
 
-            {/* Export Button */}
-            <Button
-              variant="primary"
-              size="sm"
-              disabled={!hasBothPhotos}
-              className="px-5"
-              onClick={() => setShowExportModal(true)}
-            >
-              Export
-            </Button>
-          </div>
+          {/* Settings — desktop only */}
+          <Link
+            href="/settings"
+            className="hidden lg:block p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-text-secondary hover:text-text"
+            aria-label="Settings"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </Link>
+
+          {/* Export Button */}
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={!hasBothPhotos}
+            className="px-5"
+            onClick={() => setShowExportModal(true)}
+          >
+            Export
+          </Button>
         </div>
-      </header>
+      </HeaderSlot>
 
       {/* Main Editor Area */}
-      <main className="flex-1 pt-14 overflow-hidden">
+      <main className="flex-1 pt-20 overflow-hidden">
         <div className="h-full grid grid-cols-2 relative pb-[calc(var(--tab-bar-height)+1.5rem)] lg:pb-24">
           {/* Split Divider */}
           <div className="absolute left-1/2 top-0 bottom-[calc(var(--tab-bar-height)+1.5rem)] lg:bottom-24 w-px bg-border -translate-x-1/2 z-10">
