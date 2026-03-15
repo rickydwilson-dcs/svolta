@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -448,31 +447,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--surface-secondary)] py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[var(--surface-secondary)] py-12 px-4 sm:px-6 lg:px-8 pb-[var(--tab-bar-height)] lg:pb-0">
       <div className="mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="mb-4">
-          <Link
-            href="/editor"
-            className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Back to Editor
-          </Link>
-        </div>
-
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight text-[var(--text-primary)] mb-3">
             Settings
