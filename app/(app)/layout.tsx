@@ -1,6 +1,7 @@
 'use client';
 
 import { MediaPipeProvider } from '@/components/providers/MediaPipeProvider';
+import { AppTabBar } from '@/components/layout/AppTabBar';
 
 export default function AppLayout({
   children,
@@ -12,8 +13,8 @@ export default function AppLayout({
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>
-      {/* Editor has its own header, so no app-level header needed */}
       <main id="main-content">{children}</main>
+      <AppTabBar />
     </MediaPipeProvider>
   );
 }
