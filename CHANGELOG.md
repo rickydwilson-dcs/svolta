@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.5] - 2026-03-18
+
+### Fixed
+
+- **Settings:** Sign out button now performs a hard navigation (`window.location.href`) to `/login` after signing out, ensuring the Supabase session is fully cleared from in-memory state and the user is correctly redirected
+
+---
+
 ## [0.6.4] - 2026-03-15
 
 ### Changed

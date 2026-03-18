@@ -388,7 +388,7 @@ export default function SettingsPage() {
   // Sign out
   const handleSignOut = async () => {
     await signOut();
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   // Delete account
